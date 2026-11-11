@@ -1,0 +1,35 @@
+# Lớp phủ cho VPS: docker compose --env-file deploy/.env.prod -f compose.yaml -f deploy/compose.prod.yaml up -d --build
+# Chỉ Caddy mở ra Internet (80/443, HTTPS + đăng nhập); backend và web chỉ nằm trong mạng nội bộ của compose.
+services:
+  backend:
+    ports: !reset []
+    restart: unless-stopped
+    environment:
+      CORS_ORIGINS: '["https://${DOMAIN}"]'
+  web:
+    ports: !reset []
+    restart: unless-stopped
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      DOMAIN: ${DOMAIN:?đặt DOMAIN trong deploy/.env.prod}
+      BASIC_USER: ${BASIC_USER:?đặt BASIC_USER trong deploy/.env.prod}
+      BASIC_HASH: ${BASIC_HASH:?đặt BASIC_HASH trong deploy/.env.prod}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - web
+      - backend
+    security_opt:
+      - no-new-privileges:true
+
+volumes:
+  caddy-data:
+  caddy-config:

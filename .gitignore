@@ -1,0 +1,40 @@
+# Tài liệu nội bộ (spec, kế hoạch sprint, đề xuất, prototype) — không đưa lên repo
+/docs/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+build/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+.pnpm-store/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+
+# Python (backend/)
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.llm_cache/
+*.db
+backend/data/
+
+# Môi trường và bí mật
+.env
+.env.*
+!.env.example
+
+# Hệ điều hành / IDE
+.DS_Store
+.idea/
+*.swp
+

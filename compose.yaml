@@ -1,0 +1,58 @@
+# Chạy cả hệ thống trên máy: docker compose up --build
+#   web      http://localhost:3000
+#   backend  http://localhost:8000/docs (chỉ mở trên máy này)
+# Cần thư mục spec-gate (nhánh cleanup-scripts, chứa pipeline ADOM) cạnh repo này, hoặc đặt SPEC_GATE_DIR.
+# Server công khai dùng thêm deploy/compose.prod.yaml (Caddy, HTTPS, đăng nhập), xem deploy/README.md.
+name: specgate
+
+services:
+  backend:
+    build:
+      context: ./backend
+      additional_contexts:
+        spec_gate: ${SPEC_GATE_DIR:-../spec-gate}
+    ports:
+      - "127.0.0.1:8000:8000"
+    env_file:
+      - path: ./backend/.env
+        required: false
+    environment:
+      ADOM_DIR: /opt/spec-gate/adom
+      RUNS_DIR: /data/runs
+      DATABASE_URL: sqlite:////data/specgate.db
+      CORS_ORIGINS: '["http://localhost:3000"]'
+    volumes:
+      - backend-data:/data
+      - dataset-cache:/home/app/.cache
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 15s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 256
+    mem_limit: ${BACKEND_MEM:-4g}
+    cpus: ${BACKEND_CPUS:-4}
+
+  web:
+    build:
+      context: ./web_ui
+      args:
+        BACKEND_URL: http://backend:8000
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+
+volumes:
+  backend-data:
+  dataset-cache:

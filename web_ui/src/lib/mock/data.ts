@@ -1,0 +1,700 @@
+// Dữ liệu giả của prototype.
+import type {
+  Agent,
+  BoardItem,
+  Criterion,
+  Invite,
+  JoinRequest,
+  Message,
+  Profile,
+  RepairRow,
+  Run,
+  TaskResult,
+  Workspace,
+} from "@/lib/types";
+
+export const profiles: Record<string, Profile> = {
+  lan: { id: "lan", displayName: "Lan", initial: "L" },
+  huy: { id: "huy", displayName: "Huy", initial: "H" },
+  vy: { id: "vy", displayName: "Vy", initial: "V" },
+  trang: { id: "trang", displayName: "Trang", initial: "T" },
+  khach: { id: "khach", displayName: "Khách", initial: "K" },
+};
+
+const GENERATOR_PROMPT = "Đề xuất ý mới bám theo đề bài và ràng buộc. Mỗi ý một câu. Không đề xuất lại ý đã loại.";
+const CRITIC_PROMPT =
+  "Tìm điểm yếu của ý đang bàn theo ràng buộc trong đề bài. Nêu tối đa ba điểm, mỗi điểm một câu. Không đề xuất ý mới.";
+const SYNTH_PROMPT = "Tóm tắt phần đã bàn: ý nào đã chốt, đã loại, còn mở. Không thêm ý của riêng mình.";
+
+function agent(id: string, handle: string, role: Agent["role"], over: Partial<Agent>): Agent {
+  const base: Record<Agent["role"], Pick<Agent, "provider" | "model" | "systemPrompt">> = {
+    generator: { provider: "Anthropic", model: "claude-sonnet-5-5", systemPrompt: GENERATOR_PROMPT },
+    critic: { provider: "OpenAI-compatible", model: "gpt-6-luna", systemPrompt: CRITIC_PROMPT },
+    synthesizer: { provider: "OpenAI-compatible", model: "qwen-3.8-max", systemPrompt: SYNTH_PROMPT },
+    custom: { provider: "OpenAI-compatible", model: "", systemPrompt: "" },
+  };
+  return {
+    id,
+    handle,
+    role,
+    keyLast4: "0000",
+    budgetUsd: 5,
+    spentUsd: 0,
+    enabled: true,
+    ...base[role],
+    ...over,
+  };
+}
+
+export const agents: Record<string, Agent> = {
+  "gen-trang": agent("gen-trang", "generator", "generator", { keyLast4: "a21c", spentUsd: 0.08, budgetUsd: 2 }),
+  "gen-da": agent("gen-da", "generator", "generator", { keyLast4: "k3f9", spentUsd: 0.64 }),
+  "critic-da": agent("critic-da", "critic", "critic", { keyLast4: "q81b", spentUsd: 0.51 }),
+  "synth-da": agent("synth-da", "synth", "synthesizer", { keyLast4: "07cd", spentUsd: 0.12, budgetUsd: 2 }),
+  "gen-adom": agent("gen-adom", "generator", "generator", { keyLast4: "k3f9", spentUsd: 1.42 }),
+  "critic-adom": agent("critic-adom", "critic", "critic", { keyLast4: "q81b", spentUsd: 4.86 }),
+  "synth-adom": agent("synth-adom", "synth", "synthesizer", {
+    keyLast4: "07cd",
+    spentUsd: 0.2,
+    budgetUsd: 2,
+    enabled: false,
+  }),
+};
+
+const twoChannels = [
+  { id: "chung", name: "chung" },
+  { id: "phan-bien", name: "phan-bien" },
+];
+
+export const workspaces: Record<string, Workspace> = {
+  "rieng-trang": {
+    id: "rieng-trang",
+    name: "Của riêng Trang",
+    short: "T",
+    kind: "personal",
+    visibility: "hidden",
+    ownerId: "trang",
+    brief: "Ý tưởng cá nhân trước khi đưa ra nhóm: hướng kiểm thử cho đồ án.",
+    modules: [],
+    members: [{ userId: "trang", role: "owner" }],
+    channels: twoChannels,
+    agentIds: ["gen-trang"],
+  },
+  "rieng-lan": {
+    id: "rieng-lan",
+    name: "Của riêng Lan",
+    short: "L",
+    kind: "personal",
+    visibility: "hidden",
+    ownerId: "lan",
+    brief: "Ghi chú cá nhân của Lan.",
+    modules: [],
+    members: [{ userId: "lan", role: "owner" }],
+    channels: [{ id: "chung", name: "chung" }],
+    agentIds: [],
+  },
+  "do-an": {
+    id: "do-an",
+    name: "Đồ án Kiểm chứng",
+    short: "ĐA",
+    kind: "shared",
+    visibility: "discoverable",
+    ownerId: "lan",
+    brief: "Chọn đề tài đồ án môn Kiểm chứng phần mềm. Làm được trong 3 tuần, 2 người, có phần kiểm thử đo đếm được.",
+    modules: [],
+    members: [
+      { userId: "lan", role: "owner" },
+      { userId: "huy", role: "member" },
+      { userId: "trang", role: "member" },
+    ],
+    channels: twoChannels,
+    agentIds: ["gen-da", "critic-da", "synth-da"],
+  },
+  adom: {
+    id: "adom",
+    name: "Nghiên cứu ADOM",
+    short: "AD",
+    kind: "shared",
+    visibility: "discoverable",
+    ownerId: "lan",
+    brief: "Làm sao để tiêu chí 3 có dữ liệu ở lượt chạy sau, mà không vi phạm kỷ luật thực nghiệm của bài báo.",
+    modules: ["adom"],
+    members: [
+      { userId: "lan", role: "owner" },
+      { userId: "huy", role: "member" },
+      { userId: "vy", role: "member" },
+    ],
+    channels: twoChannels,
+    agentIds: ["gen-adom", "critic-adom", "synth-adom"],
+  },
+  "on-thi": {
+    id: "on-thi",
+    name: "Ôn thi Kiểm thử",
+    short: "KT",
+    kind: "shared",
+    visibility: "discoverable",
+    ownerId: "vy",
+    brief: "Gom câu hỏi ôn tập và lời giải theo từng chương.",
+    modules: [],
+    members: Array.from({ length: 6 }, (_, i) => ({ userId: `u${i}`, role: i === 0 ? "owner" : "member" })),
+    channels: [{ id: "chung", name: "chung" }],
+    agentIds: [],
+  },
+};
+
+export const accounts: Record<string, string> = {
+  "trang@example.edu": "trang",
+  "lan@example.edu": "lan",
+  "huy@example.edu": "huy",
+  "vy@example.edu": "vy",
+};
+
+export const invites: Invite[] = [
+  { code: "doan-kc26", workspaceId: "do-an", createdBy: "lan", uses: 2, expiresAt: "19/11/2026" },
+  { code: "adom-main", workspaceId: "adom", createdBy: "lan", uses: 3, expiresAt: "26/11/2026" },
+];
+
+export const messages: Record<string, Message[]> = {
+  "rieng-trang/chung": [
+    {
+      id: "m1",
+      channelId: "chung",
+      senderKind: "human",
+      senderId: "trang",
+      at: "09:12",
+      body: [
+        { t: "text", v: "Mình muốn có vài hướng kiểm thử cho đồ án trước khi đưa ra nhóm. " },
+        { t: "mention", v: "generator" },
+        { t: "text", v: " gợi ý ba hướng, mỗi hướng một câu." },
+      ],
+    },
+    {
+      id: "m2",
+      channelId: "chung",
+      senderKind: "agent",
+      senderId: "gen-trang",
+      at: "09:12",
+      body: [],
+      list: [
+        "Kiểm thử đột biến: đo chất lượng bộ test bằng tỷ lệ đột biến bị bắt.",
+        "Kiểm thử dựa trên thuộc tính: phát biểu bất biến, để công cụ sinh đầu vào.",
+        "Kiểm thử hợp đồng API: sinh ca thử từ đặc tả OpenAPI.",
+      ],
+    },
+    {
+      id: "m3",
+      channelId: "chung",
+      senderKind: "human",
+      senderId: "trang",
+      at: "09:14",
+      replyTo: { senderId: "gen-trang", excerpt: "1. Kiểm thử đột biến: đo chất lượng bộ test…" },
+      body: [
+        { t: "command", v: "/pin" },
+        { t: "text", v: " giữ hướng 1." },
+      ],
+      attachment: { type: "board-receipt", text: "Đã ghim ý #1 của generator lên bảng", status: "proposed" },
+    },
+    {
+      id: "m4",
+      channelId: "chung",
+      senderKind: "human",
+      senderId: "trang",
+      at: "09:15",
+      body: [
+        { t: "command", v: "/idea" },
+        { t: "text", v: " Kiểm thử dựa trên thuộc tính cho một thư viện có sẵn. Hướng 3 để sau." },
+      ],
+      attachment: { type: "board-receipt", text: "Đã ghi ý #2 lên bảng", status: "proposed" },
+    },
+  ],
+  "do-an/chung": [
+    {
+      id: "d1",
+      channelId: "chung",
+      senderKind: "human",
+      senderId: "lan",
+      at: "14:02",
+      body: [
+        { t: "text", v: "Đề tài đột biến đã chốt. Còn hướng thuộc tính của Huy thì sao? " },
+        { t: "mention", v: "critic" },
+        { t: "text", v: " phản biện giúp, bám theo ràng buộc trong đề bài." },
+      ],
+    },
+    {
+      id: "d2",
+      channelId: "chung",
+      senderKind: "agent",
+      senderId: "critic-da",
+      at: "14:02",
+      body: [
+        {
+          t: "text",
+          v: 'Hai điểm yếu. Một: thư viện ngày giờ đã được kiểm thử kỹ, khó tìm ra lỗi mới trong 3 tuần, nên kết quả dễ thành "không thấy gì". Hai: số đo chưa rõ, cần chốt trước là đếm số bất biến hay số phản ví dụ. Điểm mạnh: trùng kỹ thuật với ý đã chốt ở mức công cụ, tiết kiệm công dựng.',
+        },
+      ],
+    },
+    {
+      id: "d3",
+      channelId: "chung",
+      senderKind: "human",
+      senderId: "huy",
+      at: "14:05",
+      body: [
+        { t: "text", v: "Hợp lý. " },
+        { t: "mention", v: "generator" },
+        { t: "text", v: " đề xuất một thư viện ít được kiểm thử hơn để giữ hướng này, đừng lặp lại ý đã loại." },
+      ],
+    },
+    {
+      id: "d4",
+      channelId: "chung",
+      senderKind: "agent",
+      senderId: "gen-da",
+      at: "14:05",
+      streaming: true,
+      body: [
+        {
+          t: "text",
+          v: "Gợi ý: bộ phân tích biểu thức cron của một dự án nhỏ. Bất biến dễ phát biểu (phân tích rồi in lại ra chính nó), và dự án ít test nên có khả năng tìm ra phản ví dụ. Tôi không đề xuất lại hướng Coq vì bảng ghi đã loại do không kịp 3 tuần",
+        },
+      ],
+    },
+  ],
+  "adom/chung": [
+    {
+      id: "a1",
+      channelId: "chung",
+      senderKind: "human",
+      senderId: "lan",
+      at: "10:30",
+      body: [
+        { t: "command", v: "/stats" },
+        { t: "text", v: " MAIN" },
+      ],
+      attachment: { type: "stats", runId: "main" },
+    },
+    {
+      id: "a2",
+      channelId: "chung",
+      senderKind: "human",
+      senderId: "lan",
+      at: "10:31",
+      body: [
+        { t: "mention", v: "generator" },
+        { t: "text", v: " vì sao " },
+        { t: "ref", ref: { module: "adom", kind: "criterion", runId: "main", criterion: 3, label: "MAIN · tiêu chí 3" } },
+        { t: "text", v: " có n = 0, và có cách nào để lượt sau có mẫu?" },
+      ],
+    },
+    {
+      id: "a3",
+      channelId: "chung",
+      senderKind: "agent",
+      senderId: "gen-adom",
+      at: "10:31",
+      body: [
+        {
+          t: "text",
+          v: 'Theo số liệu được gắn: tiêu chí 3 đếm số bản sửa nhầm bên mà Cổng chặn được, và ở lượt này Cổng không gặp ca nhầm bên nào (cột "Nhầm bên" bằng 0 ở cả ba phương pháp). Lưu ý lượt MAIN đang ',
+        },
+        { t: "flag", v: "invalidated" },
+        {
+          t: "text",
+          v: ", nên con số này chưa dùng để kết luận. Hai hướng: (1) thêm tác vụ mà hai bản nháp dễ sai giống nhau; (2) đăng ký riêng một ô lỗi tiêm, báo cáo tách khỏi ô chính.",
+        },
+      ],
+    },
+    {
+      id: "a4",
+      channelId: "chung",
+      senderKind: "human",
+      senderId: "huy",
+      at: "10:34",
+      body: [
+        { t: "text", v: "Hướng 2 hợp với quy định không gộp lỗi tiêm. " },
+        { t: "command", v: "/idea" },
+        { t: "text", v: " Đăng ký một ô lỗi tiêm riêng cho " },
+        { t: "ref", ref: { module: "adom", kind: "criterion", runId: "main", criterion: 3, label: "tiêu chí 3" } },
+      ],
+      attachment: { type: "board-receipt", text: "Đã ghi ý #4 lên bảng", status: "proposed" },
+    },
+    {
+      id: "a5",
+      channelId: "chung",
+      senderKind: "human",
+      senderId: "huy",
+      at: "10:36",
+      body: [
+        { t: "text", v: "Thử pipeline trước đã. " },
+        { t: "command", v: "/run" },
+        { t: "text", v: " HumanEval/53 HumanEval/13 HumanEval/23" },
+      ],
+      attachment: {
+        type: "run-progress",
+        tasks: ["HumanEval/53", "HumanEval/13", "HumanEval/23"],
+        seconds: 14,
+        violations: 0,
+      },
+    },
+  ],
+};
+
+export const boards: Record<string, BoardItem[]> = {
+  "rieng-trang": [
+    {
+      id: "t1",
+      number: 1,
+      kind: "idea",
+      body: "Kiểm thử đột biến: đo chất lượng bộ test bằng tỷ lệ đột biến bị bắt",
+      status: "proposed",
+      createdBy: { kind: "agent", id: "gen-trang" },
+      at: "09:14",
+    },
+    {
+      id: "t2",
+      number: 2,
+      kind: "idea",
+      body: "Kiểm thử dựa trên thuộc tính cho một thư viện có sẵn",
+      status: "proposed",
+      createdBy: { kind: "human", id: "trang" },
+      at: "09:15",
+    },
+    {
+      id: "t3",
+      number: 3,
+      kind: "note",
+      body: "Ràng buộc: 3 tuần, 2 người, phải có số đo.",
+      createdBy: { kind: "human", id: "trang" },
+      at: "09:16",
+    },
+  ],
+  "do-an": [
+    {
+      id: "i1",
+      number: 1,
+      kind: "idea",
+      body: "Công cụ so sánh độ phủ giữa test do người viết và test do LLM sinh",
+      status: "proposed",
+      createdBy: { kind: "agent", id: "gen-da" },
+      at: "14:01",
+    },
+    {
+      id: "i2",
+      number: 2,
+      kind: "idea",
+      body: "Kiểm thử dựa trên thuộc tính cho bộ phân tích biểu thức cron",
+      status: "proposed",
+      createdBy: { kind: "agent", id: "gen-da" },
+      at: "14:05",
+    },
+    {
+      id: "i4",
+      number: 4,
+      kind: "idea",
+      body: "Kiểm thử dựa trên thuộc tính cho một thư viện xử lý ngày giờ",
+      status: "discussing",
+      createdBy: { kind: "human", id: "huy" },
+      at: "13:50",
+      critiques: 2,
+      latestCritique: 'thư viện đã được kiểm thử kỹ, dễ ra kết quả "không thấy gì".',
+    },
+    {
+      id: "i5",
+      number: 5,
+      kind: "idea",
+      body: "Kiểm thử hợp đồng API cho một dịch vụ mã nguồn mở",
+      status: "discussing",
+      createdBy: { kind: "human", id: "trang" },
+      at: "13:55",
+      fromCapsule: true,
+    },
+    {
+      id: "i3",
+      number: 3,
+      kind: "idea",
+      body: "Kiểm thử đột biến cho bộ kiểm tra hợp lệ của biểu mẫu",
+      status: "decided",
+      reason: "Đo được bằng điểm đột biến, vừa 3 tuần.",
+      createdBy: { kind: "human", id: "lan" },
+      decidedBy: { id: "lan", at: "13:40" },
+      at: "13:10",
+    },
+    {
+      id: "i6",
+      number: 6,
+      kind: "idea",
+      body: "Chứng minh hình thức một thuật toán sắp xếp bằng Coq",
+      status: "rejected",
+      reason: "Không ai trong nhóm biết Coq, không kịp.",
+      createdBy: { kind: "agent", id: "gen-da" },
+      decidedBy: { id: "lan", at: "13:22" },
+      at: "13:05",
+    },
+    {
+      id: "i7",
+      number: 7,
+      kind: "idea",
+      body: "Kiểm thử hiệu năng cho một máy chủ web",
+      status: "rejected",
+      reason: "Cần hạ tầng mà nhóm không có.",
+      createdBy: { kind: "human", id: "huy" },
+      decidedBy: { id: "huy", at: "13:30" },
+      at: "13:12",
+    },
+    {
+      id: "n1",
+      number: 8,
+      kind: "note",
+      body: "Ràng buộc: 3 tuần, 2 người, phải có số đo.",
+      createdBy: { kind: "human", id: "lan" },
+      at: "13:00",
+    },
+    {
+      id: "n2",
+      number: 9,
+      kind: "note",
+      body: "Giảng viên ưu tiên đề tài có so sánh hai kỹ thuật.",
+      createdBy: { kind: "human", id: "huy" },
+      at: "13:02",
+    },
+    {
+      id: "q1",
+      number: 10,
+      kind: "question",
+      body: "Có được dùng thư viện bên ngoài để sinh đột biến không?",
+      status: "open",
+      createdBy: { kind: "human", id: "trang" },
+      at: "13:45",
+    },
+    {
+      id: "q2",
+      number: 11,
+      kind: "question",
+      body: "Báo cáo nộp bằng tiếng Việt hay tiếng Anh?",
+      reason: "Nộp báo cáo bằng tiếng Việt.",
+      status: "answered",
+      createdBy: { kind: "human", id: "huy" },
+      at: "13:20",
+    },
+    {
+      id: "s1",
+      number: 12,
+      kind: "summary",
+      body: "Nhóm nghiêng về các kỹ thuật có số đo rõ. Đã chốt đột biến; đang cân nhắc thêm một hướng thuộc tính để có phần so sánh.",
+      createdBy: { kind: "agent", id: "synth-da" },
+      at: "13:58",
+    },
+  ],
+  adom: [
+    {
+      id: "x4",
+      number: 4,
+      kind: "idea",
+      body: "Đăng ký một ô lỗi tiêm riêng cho tiêu chí 3",
+      status: "proposed",
+      createdBy: { kind: "human", id: "huy" },
+      at: "10:34",
+      refs: [{ module: "adom", kind: "criterion", runId: "main", criterion: 3, label: "tiêu chí 3" }],
+    },
+    {
+      id: "x3",
+      number: 3,
+      kind: "idea",
+      body: "Thêm tác vụ mà hai bản nháp dễ sai giống nhau",
+      status: "discussing",
+      createdBy: { kind: "agent", id: "gen-adom" },
+      at: "10:32",
+      refs: [{ module: "adom", kind: "criterion", runId: "main", criterion: 3, label: "tiêu chí 3" }],
+    },
+    {
+      id: "x1",
+      number: 1,
+      kind: "idea",
+      body: "Không lấp tiêu chí 3 bằng cách gộp lỗi tiêm vào ô chính",
+      status: "decided",
+      reason: "Bài báo cấm gộp; chỉ được báo cáo tách riêng.",
+      createdBy: { kind: "human", id: "lan" },
+      decidedBy: { id: "lan", at: "09:50" },
+      at: "09:40",
+      refs: [{ module: "adom", kind: "criterion", runId: "main", criterion: 3, label: "tiêu chí 3" }],
+    },
+    {
+      id: "x2",
+      number: 2,
+      kind: "idea",
+      body: "Hạ số tác vụ tối thiểu xuống dưới 10",
+      status: "rejected",
+      reason: "Ngưỡng đã đăng ký trước, không sửa sau khi thấy kết quả.",
+      createdBy: { kind: "human", id: "vy" },
+      decidedBy: { id: "lan", at: "09:55" },
+      at: "09:45",
+    },
+  ],
+};
+
+export const joinRequests: JoinRequest[] = [
+  {
+    id: "r1",
+    workspaceId: "adom",
+    userId: "trang",
+    message: "Mình có vài hướng kiểm thử có thể áp dụng cho tiêu chí 3.",
+    status: "pending",
+    at: "2 phút trước",
+    capsule: {
+      itemIds: ["t1", "t2"],
+      summary: "Trang đang tìm hướng kiểm thử có số đo; đã hỏi một agent phát ý, giữ hai hướng, hoãn hướng hợp đồng API.",
+    },
+  },
+  {
+    id: "r2",
+    workspaceId: "adom",
+    userId: "huy",
+    message: "Mình chạy lượt MAIN.",
+    status: "approved",
+    at: "20/11",
+    decidedBy: "lan",
+  },
+  {
+    id: "r3",
+    workspaceId: "adom",
+    userId: "vy",
+    message: "Cho mình xem với.",
+    status: "approved",
+    at: "21/11",
+    decidedBy: "lan",
+    capsule: { itemIds: ["x2"] },
+  },
+  { id: "r4", workspaceId: "adom", userId: "khach", message: "", status: "rejected", at: "22/11", decidedBy: "lan" },
+];
+
+export const runs: Run[] = [
+  {
+    id: "main",
+    workspaceId: "adom",
+    name: "MAIN",
+    variants: ["A3-natural-standard", "A1-natural-standard"],
+    primaryVariant: "A3-natural-standard",
+    dataset: "HumanEval+",
+    tasks: 162,
+    tasksWithSpec: 159,
+    violations: [277, 445],
+    validity: "invalidated",
+    invalidReason:
+      "Engine đọc sai nhãn UniqueOutput nên chốt G4 và G6 không hoạt động trên 111/159 tác vụ. Không dùng các số dưới đây làm kết quả chính thức.",
+    importedBy: "huy",
+    importedAt: "20/11",
+    models: [
+      { role: "Coder", model: "claude-haiku-5.5" },
+      { role: "Spec", model: "glm-5.3-flash" },
+      { role: "Draft 1", model: "qwen-3.8-max" },
+      { role: "Draft 2", model: "gpt-6-luna" },
+      { role: "Judge", model: "deepseek-v4.1-flash" },
+    ],
+  },
+];
+
+export const criteria: Criterion[] = [
+  {
+    number: 1,
+    title: "Tỷ lệ kết luận SPEC_FAULT sai",
+    value: 0,
+    display: "0.000",
+    numerator: 0,
+    denominator: 131,
+    tasks: 10,
+    ciLow: 0,
+    ciHigh: 0.028,
+    threshold: { op: "<=", value: 0.1 },
+    footnote: "ngưỡng ≤ 0.10 · cận trên 0.028",
+    verdict: "PASS",
+  },
+  {
+    number: 2,
+    title: "Bản sửa tổng quát gây hại",
+    value: 0.357,
+    display: "0.357",
+    numerator: 5,
+    denominator: 14,
+    tasks: 8,
+    ciLow: 0,
+    ciHigh: 0.72,
+    footnote: "khoảng [0.00, 0.72]",
+    verdict: "INSUFFICIENT_DATA",
+  },
+  {
+    number: 3,
+    title: "Cổng chặn bản sửa nhầm bên",
+    value: null,
+    display: "n = 0",
+    tasks: 0,
+    footnote: "chưa gặp ca nhầm bên",
+    verdict: "INSUFFICIENT_DATA",
+  },
+  {
+    number: 4,
+    title: "Ứng viên hạng 1 nới quá tay",
+    value: 0.308,
+    display: "0.308",
+    numerator: 8,
+    denominator: 26,
+    tasks: 6,
+    ciLow: 0,
+    ciHigh: 0.82,
+    footnote: "khoảng [0.00, 0.82]",
+    verdict: "INSUFFICIENT_DATA",
+  },
+  {
+    number: 5,
+    title: "Tỷ lệ bản sửa tốt",
+    value: 0.667,
+    display: "0.667",
+    numerator: 18,
+    denominator: 27,
+    tasks: 7,
+    ciLow: 0.17,
+    ciHigh: 0.96,
+    threshold: { op: ">=", value: 0.3 },
+    footnote: "ngưỡng ≥ 0.30 · cận dưới 0.17",
+    verdict: "INSUFFICIENT_DATA",
+  },
+  {
+    number: 6,
+    title: "Ít gây hại hơn hai baseline",
+    value: 0,
+    display: "0.000",
+    tasks: 7,
+    footnote: "27 vi phạm, chưa đủ 10 tác vụ",
+    verdict: "INSUFFICIENT_DATA",
+  },
+];
+
+export const repairRows: RepairRow[] = [
+  { method: "rules (ADOM)", good: 18, wrongSide: 0, overRelax: 8, unmeasured: 104, noCandidate: 1, notRepaired: 0 },
+  { method: "llm_judge", good: 17, wrongSide: 0, overRelax: 8, unmeasured: 104, noCandidate: 1, notRepaired: 1 },
+  { method: "always_spec", good: 18, wrongSide: 0, overRelax: 8, unmeasured: 104, noCandidate: 1, notRepaired: 0 },
+];
+
+export const taskResults: TaskResult[] = [
+  { taskId: "HumanEval/38", violations: 118, share: 42.6, a3State: "AGREE", contributing: true, wallSeconds: 1296 },
+  { taskId: "HumanEval/93", violations: 23, share: 8.3, a3State: "AGREE", contributing: true, wallSeconds: 41 },
+  { taskId: "HumanEval/140", violations: 19, share: 6.9, a3State: "AGREE", contributing: true, wallSeconds: 37 },
+  { taskId: "HumanEval/120", violations: 16, share: 5.8, a3State: "AGREE", contributing: true, wallSeconds: 22 },
+  { taskId: "HumanEval/161", violations: 16, share: 5.8, a3State: "DISAGREE", contributing: false, wallSeconds: 19 },
+  { taskId: "HumanEval/1", violations: 15, share: 5.4, a3State: "AGREE", contributing: true, wallSeconds: 28 },
+  { taskId: "HumanEval/133", violations: 13, share: 4.7, a3State: "AGREE", contributing: true, wallSeconds: 17 },
+  { taskId: "HumanEval/137", violations: 13, share: 4.7, a3State: "SINGLE", contributing: false, wallSeconds: 15 },
+];
+
+export const draftAgreement = [
+  { label: "Đồng thuận", code: "AGREE", value: 157 },
+  { label: "Chỉ một bản qua lọc", code: "SINGLE", value: 3 },
+  { label: "Bất đồng", code: "DISAGREE", value: 2 },
+  { label: "Không có spec dùng được", code: "no_spec", value: 3 },
+];
+
+export const runCost = [
+  { variant: "A1", seconds: 1718, apiCalls: 106, cacheHits: 25 },
+  { variant: "A3", seconds: 523, apiCalls: 0, cacheHits: 131 },
+];
+
+export const criterionAnnotations: Record<number, string[]> = { 3: ["x1"] };

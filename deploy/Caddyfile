@@ -1,0 +1,19 @@
+# HTTPS tự cấp và gia hạn cho {$DOMAIN} (cần cổng 80, 443 và bản ghi DNS A trỏ về VPS).
+{$DOMAIN} {
+	encode zstd gzip
+
+	basic_auth {
+		{$BASIC_USER} {$BASIC_HASH}
+	}
+
+	@backend path /api/* /docs /openapi.json
+	handle @backend {
+		reverse_proxy backend:8000 {
+			flush_interval -1
+		}
+	}
+
+	handle {
+		reverse_proxy web:3000
+	}
+}
