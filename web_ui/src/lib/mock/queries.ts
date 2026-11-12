@@ -1,79 +1,113 @@
 // Các hàm truy vấn dữ liệu cho trang và component.
-import type { Agent, BoardCard, BoardItem, Invite, JoinRelation, Message, Profile, Workspace } from "@/lib/types";
+import type {
+  Agent,
+  AuthProvider,
+  BoardCard,
+  BoardItem,
+  Conversation,
+  Highlight,
+  JoinCode,
+  JoinRelation,
+  JoinRequest,
+  Message,
+  OAuthAccount,
+  Profile,
+  ProviderKey,
+  Workspace,
+} from "@/lib/types";
 import {
-  accounts,
   agents,
-  boards,
   criteria,
   criterionAnnotations,
   draftAgreement,
-  invites,
-  joinRequests,
-  messages,
-  profiles,
   repairRows,
   runCost,
   runs,
   taskResults,
-  workspaces,
+  workspaces as seedWorkspaces,
 } from "./data";
+import { store } from "./store";
 
 export function getWorkspaceIds(): string[] {
-  return Object.keys(workspaces);
+  return Object.keys(seedWorkspaces);
 }
 
 export function getWorkspace(id: string | undefined): Workspace | undefined {
-  return id ? workspaces[id] : undefined;
+  return id ? store().workspaces[id] : undefined;
 }
 
 export function getProfile(id: string | undefined): Profile | undefined {
-  return id ? profiles[id] : undefined;
+  return id ? store().profiles[id] : undefined;
 }
 
-export function findUserByEmail(email: string): Profile | undefined {
-  return getProfile(accounts[email.trim().toLowerCase()]);
+export function getOAuthAccounts(provider: AuthProvider): Array<OAuthAccount & { profile: Profile }> {
+  return store()
+    .oauthAccounts.filter((a) => a.provider === provider)
+    .map((a) => ({ ...a, profile: store().profiles[a.userId] }));
 }
 
-export function isMember(ws: Workspace, userId: string, joined: string[] = []): boolean {
-  return ws.members.some((m) => m.userId === userId) || joined.includes(ws.id);
+// Tài khoản của nhà cung cấp theo tên đăng nhập (email Google hoặc tên GitHub), không phân biệt hoa thường.
+export function findOAuthIdentity(provider: AuthProvider, login: string): OAuthAccount | undefined {
+  const key = login.trim().toLowerCase();
+  return store().oauthAccounts.find((a) => a.provider === provider && a.login.toLowerCase() === key);
+}
+
+export function findOAuthAccount(provider: unknown, userId: unknown): OAuthAccount | undefined {
+  return store().oauthAccounts.find((a) => a.provider === provider && a.userId === userId);
+}
+
+export function isMember(ws: Workspace, userId: string): boolean {
+  return ws.members.some((m) => m.userId === userId);
 }
 
 export function isOwner(ws: Workspace, userId: string): boolean {
   return ws.members.some((m) => m.userId === userId && m.role === "owner");
 }
 
-export function getRail(userId: string, joined: string[] = []): Workspace[] {
-  const mine = Object.values(workspaces).filter((w) => isMember(w, userId, joined));
+export function getRail(userId: string): Workspace[] {
+  const mine = Object.values(store().workspaces).filter((w) => isMember(w, userId));
   return [...mine.filter((w) => w.kind === "personal"), ...mine.filter((w) => w.kind === "shared")];
 }
 
 export function getPersonalWorkspace(userId: string): Workspace | undefined {
-  return Object.values(workspaces).find((w) => w.kind === "personal" && w.ownerId === userId);
+  return Object.values(store().workspaces).find((w) => w.kind === "personal" && w.ownerId === userId);
 }
 
 export function getMembers(ws: Workspace): Profile[] {
-  return ws.members.map((m) => profiles[m.userId]).filter(Boolean);
+  return ws.members.map((m) => store().profiles[m.userId]).filter(Boolean);
 }
 
 export function getDiscoverableWorkspaces(): Workspace[] {
-  const order = ["adom", "on-thi", "do-an"];
-  return Object.values(workspaces)
-    .filter((w) => w.kind === "shared" && w.visibility === "discoverable")
-    .sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
+  return Object.values(store().workspaces).filter((w) => w.kind === "shared" && w.visibility === "discoverable");
 }
 
-export function getJoinRelation(ws: Workspace, userId: string, joined: string[] = []): JoinRelation {
-  if (isMember(ws, userId, joined)) return "member";
-  const pending = joinRequests.some((r) => r.workspaceId === ws.id && r.userId === userId && r.status === "pending");
-  return pending ? "pending" : "none";
+export function getPendingRequest(workspaceId: string, userId: string): JoinRequest | undefined {
+  return store().joinRequests.find((r) => r.workspaceId === workspaceId && r.userId === userId && r.status === "pending");
 }
 
-export function getInvite(code: string): Invite | undefined {
-  return invites.find((i) => i.code === code);
+export function getJoinRelation(ws: Workspace, userId: string): JoinRelation {
+  if (isMember(ws, userId)) return "member";
+  return getPendingRequest(ws.id, userId) ? "pending" : "none";
 }
 
-export function getInvites(workspaceId: string): Invite[] {
-  return invites.filter((i) => i.workspaceId === workspaceId);
+export function getJoinCode(workspaceId: string): JoinCode | undefined {
+  return store().joinCodes.find((c) => c.workspaceId === workspaceId);
+}
+
+export function findWorkspaceByCode(code: string): Workspace | undefined {
+  return getWorkspace(store().joinCodes.find((c) => c.code === code)?.workspaceId);
+}
+
+export function getJoinRequest(id: string): JoinRequest | undefined {
+  return store().joinRequests.find((r) => r.id === id);
+}
+
+// Workspace chung người dùng đang chờ duyệt, hiện mờ trên thanh workspace.
+export function getPendingJoins(userId: string): Array<{ request: JoinRequest; ws: Workspace }> {
+  return store().joinRequests.flatMap((r) => {
+    const ws = r.userId === userId && r.status === "pending" ? getWorkspace(r.workspaceId) : undefined;
+    return ws ? [{ request: r, ws }] : [];
+  });
 }
 
 export function getAgents(ws: Workspace): Agent[] {
@@ -85,46 +119,74 @@ export function getAgent(id: string | undefined): Agent | undefined {
 }
 
 export function getMessages(workspaceId: string, channelId: string): Message[] {
-  return messages[`${workspaceId}/${channelId}`] ?? [];
+  return store().messages[`${workspaceId}/${channelId}`] ?? [];
+}
+
+// Workspace riêng.
+export function getProviderKey(userId: string): ProviderKey | undefined {
+  return store().providerKeys.find((k) => k.userId === userId);
+}
+
+export function getConversations(userId: string): Conversation[] {
+  return store().conversations.filter((c) => c.ownerId === userId);
+}
+
+export function getConversation(id: string, userId: string): Conversation | undefined {
+  return store().conversations.find((c) => c.id === id && c.ownerId === userId);
+}
+
+export function getHighlights(userId: string): Highlight[] {
+  return store()
+    .highlights.filter((h) => h.ownerId === userId)
+    .slice()
+    .reverse();
+}
+
+// Highlight đã được gửi vào một workspace chung thì mọi thành viên của workspace đó đọc được bản chụp,
+// nhưng không ai đọc được hội thoại gốc.
+export function getSharedHighlight(id: string): (Highlight & { ownerName: string }) | undefined {
+  const h = store().highlights.find((x) => x.id === id);
+  return h ? { ...h, ownerName: store().profiles[h.ownerId]?.displayName ?? h.ownerId } : undefined;
+}
+
+export function isHighlightOnBoard(workspaceId: string, highlightId: string): boolean {
+  return (store().boards[workspaceId] ?? []).some((i) => i.fromHighlight?.highlightId === highlightId);
 }
 
 export function authorName(by: BoardItem["createdBy"]): string {
-  return by.kind === "agent" ? (agents[by.id]?.handle ?? by.id) : (profiles[by.id]?.displayName ?? by.id);
+  return by.kind === "agent" ? (agents[by.id]?.handle ?? by.id) : (store().profiles[by.id]?.displayName ?? by.id);
 }
 
 function toCard(item: BoardItem): BoardCard {
   return {
     ...item,
-    authorName: authorName(item.createdBy),
-    deciderName: item.decidedBy ? profiles[item.decidedBy.id]?.displayName : undefined,
+    authorName: item.fromHighlight
+      ? (store().profiles[item.fromHighlight.ownerId]?.displayName ?? item.fromHighlight.ownerId)
+      : authorName(item.createdBy),
+    deciderName: item.decidedBy ? store().profiles[item.decidedBy.id]?.displayName : undefined,
   };
 }
 
 export function getBoard(workspaceId: string): BoardCard[] {
-  return (boards[workspaceId] ?? []).map(toCard);
+  return (store().boards[workspaceId] ?? []).map(toCard);
 }
 
 export function countIdeas(workspaceId: string): number {
-  return (boards[workspaceId] ?? []).filter((i) => i.kind === "idea").length;
-}
-
-export function getCapsuleItems(itemIds: string[]): BoardCard[] {
-  const all = Object.values(boards).flat();
-  return itemIds.flatMap((id) => {
-    const item = all.find((i) => i.id === id);
-    return item ? [toCard(item)] : [];
-  });
+  return (store().boards[workspaceId] ?? []).filter((i) => i.kind === "idea").length;
 }
 
 export function getBriefHeader(ws: Workspace): { title: string; meta: string } {
   return {
     title: ws.id === "do-an" ? "Chọn đề tài đồ án môn Kiểm chứng phần mềm" : ws.name,
-    meta: `27/11/2026 14:20 · ${ws.members.length} thành viên, ${getAgents(ws).length} agent · 46 tin nhắn`,
+    meta: `Dựng lúc 27/11/2026 14:20, từ ${ws.members.length} thành viên và ${getAgents(ws).length} agent`,
   };
 }
 
 export function getJoinRequests(workspaceId: string) {
-  return joinRequests.filter((r) => r.workspaceId === workspaceId);
+  // Mới nhất lên đầu.
+  return store()
+    .joinRequests.filter((r) => r.workspaceId === workspaceId)
+    .reverse();
 }
 
 export function pendingRequests(workspaceId: string) {

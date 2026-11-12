@@ -7,13 +7,13 @@ import { ImportReportForm } from "@/features/runs/import-report-form";
 import { RunTable } from "@/features/runs/run-table";
 import { WhyImportPanel } from "@/features/runs/why-import-panel";
 import { getProfile, getRuns } from "@/lib/mock/queries";
-import { requireWorkspace, workspaceStaticParams } from "@/lib/workspace-route";
+import { requireSharedWorkspace, workspaceStaticParams } from "@/lib/workspace-route";
 
 export const generateStaticParams = workspaceStaticParams;
 export const metadata: Metadata = { title: "Lượt chạy" };
 
 export default async function RunsPage({ params }: PageProps<"/w/[ws]/runs">) {
-  const ws = await requireWorkspace(params);
+  const ws = await requireSharedWorkspace(params);
   if (!ws.modules.includes("adom")) notFound();
   const rows = getRuns(ws.id).map((run) => ({ run, importerName: getProfile(run.importedBy)?.displayName }));
 

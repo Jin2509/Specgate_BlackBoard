@@ -1,7 +1,7 @@
 // Hộp thoại tạo workspace chung (màn 03).
 "use client";
 
-import { Bot, Compass, EyeOff, FlaskConical, Plus } from "lucide-react";
+import { Terminal, Compass, EyeOff, FlaskConical, Plus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -81,7 +81,9 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: { open: boolean; o
               className="grid grid-cols-2 gap-1 p-1"
               itemClassName="flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs"
             />
-            <p className="text-[11px] text-subtle">Liên kết mời nằm ở danh sách chờ; đợt này chỉ vào bằng yêu cầu tham gia.</p>
+            <p className="text-[11px] text-subtle">
+              Người khác vào bằng mã tham gia bạn chia sẻ, hoặc xin từ trang Khám phá; bạn duyệt từng người.
+            </p>
           </div>
 
           <div className="grid gap-1.5">
@@ -89,7 +91,7 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: { open: boolean; o
             <div className="flex flex-wrap items-center gap-1.5">
               {TEMPLATE_ROLES.map((r) => (
                 <ToneBadge key={r} tone="agent">
-                  <Bot /> {agentRoleMeta[r].label}
+                  <Terminal /> {agentRoleMeta[r].label}
                 </ToneBadge>
               ))}
               <span className="text-[11px] text-subtle">Thêm khóa API sau, ở phần cài đặt.</span>

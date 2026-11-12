@@ -1,6 +1,6 @@
 // Danh sách lệnh / của lõi và của mô-đun ADOM.
 import type { LucideIcon } from "lucide-react";
-import { CircleHelp, FileText, FlaskConical, Gavel, Lightbulb, Pin, Play, Sparkles, StickyNote, Table2 } from "lucide-react";
+import { CircleHelp, ListCollapse, FileText, FlaskConical, Gavel, Lightbulb, Pin, Play, StickyNote, Table2 } from "lucide-react";
 
 export interface CommandSpec {
   name: string;
@@ -15,8 +15,8 @@ export const COMMANDS: CommandSpec[] = [
   { name: "/pin", usage: "/pin", description: "Đưa tin nhắn đang trả lời lên bảng", icon: Pin },
   { name: "/note", usage: "/note <nội dung>", description: "Thêm ghi chú", icon: StickyNote },
   { name: "/decide", usage: "/decide #<ý> chốt|loại <lý do>", description: "Chốt hoặc loại một ý, kèm lý do", icon: Gavel },
-  { name: "/summarize", usage: "/summarize", description: "Tóm tắt kênh", icon: Sparkles },
-  { name: "/brief", usage: "/brief", description: "Xuất bản tổng hợp", icon: FileText },
+  { name: "/summarize", usage: "/summarize", description: "Tóm tắt kênh (chủ workspace)", icon: ListCollapse },
+  { name: "/brief", usage: "/brief", description: "Xuất bản tổng hợp (chủ workspace)", icon: FileText },
   { name: "/help", usage: "/help", description: "Danh sách lệnh", icon: CircleHelp },
   {
     name: "/stats",

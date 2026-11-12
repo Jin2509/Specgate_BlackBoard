@@ -1,15 +1,15 @@
 // Thẻ một mục trên bảng ý tưởng.
-import { Bot, FlaskConical, Package, User } from "lucide-react";
-import { ideaStatusMeta, toneClasses } from "@/lib/status";
+import { FlaskConical, Highlighter, Terminal, User } from "lucide-react";
+import { ideaStatusMeta } from "@/lib/status";
 import type { BoardCard, IdeaStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 export function cardFooter(item: BoardCard, compact: boolean): string {
   const status = item.kind === "idea" ? (item.status as IdeaStatus) : undefined;
-  if (item.decidedBy && status) return `${item.deciderName} ${ideaStatusMeta[status].verb} · ${item.decidedBy.at}`;
-  if (item.fromCapsule) return `${item.authorName} · từ gói ngữ cảnh`;
-  if (item.critiques) return `${item.authorName} · ${item.critiques} phản biện`;
-  return compact ? item.authorName : `${item.authorName} · ${item.at}`;
+  if (item.decidedBy && status) return `${item.deciderName} ${ideaStatusMeta[status].verb}, ${item.decidedBy.at}`;
+  if (item.fromHighlight) return `Highlight của ${item.authorName}`;
+  if (item.critiques) return `${item.authorName}, ${item.critiques} phản biện`;
+  return compact ? item.authorName : `${item.authorName}, ${item.at}`;
 }
 
 export function BoardItemCard({
@@ -55,7 +55,7 @@ export function BoardItemCard({
       ) : null}
       {item.reason && status ? (
         <p className={cn("text-xs leading-relaxed text-subtle", compact ? "mt-0.5 line-clamp-1" : "mt-2")}>
-          <span className={cn("font-medium", toneClasses[ideaStatusMeta[status].tone].text)}>Lý do:</span> {item.reason}
+          <span className="font-medium text-muted-foreground">Lý do:</span> {item.reason}
         </p>
       ) : null}
 
@@ -77,6 +77,6 @@ export function BoardItemCard({
 }
 
 function SourceIcon({ item }: { item: BoardCard }) {
-  if (item.fromCapsule) return <Package className="size-3" />;
-  return item.createdBy.kind === "agent" ? <Bot className="size-3" /> : <User className="size-3" />;
+  if (item.fromHighlight) return <Highlighter className="size-3 text-primary" />;
+  return item.createdBy.kind === "agent" ? <Terminal className="size-3" /> : <User className="size-3" />;
 }

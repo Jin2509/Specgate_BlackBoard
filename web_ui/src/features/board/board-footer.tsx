@@ -1,5 +1,5 @@
 // Ba khối dưới bảng: ghi chú, câu hỏi mở, tóm tắt cuộn.
-import { Check, CircleHelp, Sparkles, StickyNote } from "lucide-react";
+import { Check, CircleHelp, ListCollapse, StickyNote } from "lucide-react";
 import { Panel } from "@/components/common/panel";
 import type { BoardCard } from "@/lib/types";
 
@@ -35,7 +35,7 @@ export function BoardFooter({
         )}
       </Panel>
       <Panel
-        icon={<Sparkles />}
+        icon={<ListCollapse />}
         title="Tóm tắt cuộn"
         actions={summary ? <span className="text-[11px] text-subtle">cập nhật {summary.at}</span> : null}
         bodyClassName="text-[13px] leading-relaxed text-muted-foreground"

@@ -1,12 +1,12 @@
-// Khám phá workspace chung: dán liên kết mời, tìm kiếm và xin tham gia.
+// Khám phá workspace chung: nhập mã tham gia, tìm kiếm và xin tham gia.
 "use client";
 
 import { Compass, Search, TriangleAlert } from "lucide-react";
 import { useState } from "react";
 import { PageBody, PageHeader, PageLayout } from "@/components/common/page-header";
 import { useQueryParam } from "@/hooks/use-query-param";
-import type { BoardCard, JoinRelation, Workspace } from "@/lib/types";
-import { InviteCodeForm } from "./invite-code-form";
+import type { JoinRelation, Workspace } from "@/lib/types";
+import { JoinCodeForm } from "@/features/join/join-code-form";
 import { JoinRequestForm } from "./join-request-form";
 import { WorkspaceListItem } from "./workspace-list-item";
 
@@ -18,11 +18,11 @@ export function searchWorkspaces(workspaces: Workspace[], query: string): Worksp
 export function ExploreView({
   workspaces,
   relations,
-  capsuleCandidates,
+  pendingRequestIds,
 }: {
   workspaces: Workspace[];
   relations: Record<string, JoinRelation>;
-  capsuleCandidates: BoardCard[];
+  pendingRequestIds: Record<string, string>;
 }) {
   const blockedId = useQueryParam("ws");
   const [query, setQuery] = useState("");
@@ -34,22 +34,28 @@ export function ExploreView({
 
   return (
     <PageLayout>
-      <PageHeader icon={<Compass />} title="Khám phá" meta={`${workspaces.length} workspace chung cho phép xin vào`} />
+      <PageHeader
+        icon={<Compass />}
+        title="Khám phá"
+        meta={`${workspaces.length} workspace chung đang mở cho người ngoài xin vào`}
+      />
       <PageBody className="grid content-start gap-6 @4xl:grid-cols-[minmax(0,1fr)_380px]">
         <div className="@container flex min-w-0 flex-col gap-4">
           {blocked ? (
             <p role="alert" className="flex items-start gap-2 rounded-lg bg-proposed-soft px-4 py-3 text-sm text-foreground">
               <TriangleAlert className="mt-0.5 size-4 shrink-0 text-proposed" />
-              Bạn chưa là thành viên của “{blocked.name}”. Xin tham gia bên phải, hoặc dán liên kết mời nếu có.
+              Bạn chưa là thành viên của “{blocked.name}”. Nhập mã tham gia nếu có, hoặc gửi yêu cầu bên phải.
             </p>
           ) : null}
           <div>
             <h2 className="text-xl font-bold text-sidebar-accent-foreground">Tìm nhóm cùng nghĩ</h2>
-            <p className="mt-1 text-sm text-subtle">Có liên kết mời thì vào ngay. Không có thì tìm và gửi yêu cầu.</p>
+            <p className="mt-1 text-sm text-subtle">
+              Có mã thì nhập mã. Không có thì tìm và gửi yêu cầu. Cả hai cách đều chờ chủ workspace duyệt.
+            </p>
           </div>
-          <div className="grid gap-2 @xl:grid-cols-2">
-            <InviteCodeForm />
-            <div className="flex items-center gap-2 rounded-md bg-input px-3">
+          <div className="grid items-start gap-2 @xl:grid-cols-2">
+            <JoinCodeForm />
+            <div className="flex items-center gap-2 self-center rounded-md bg-input px-3">
               <Search className="size-4 shrink-0 text-subtle" />
               <input
                 value={query}
@@ -83,7 +89,7 @@ export function ExploreView({
             key={targetWs.id}
             target={targetWs}
             relation={relations[targetWs.id] ?? "none"}
-            capsuleCandidates={capsuleCandidates}
+            pendingRequestId={pendingRequestIds[targetWs.id]}
           />
         ) : null}
       </PageBody>

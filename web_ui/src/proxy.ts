@@ -1,6 +1,5 @@
-// Chặn route khi chưa đăng nhập, điều hướng trang gốc và ghi nhớ workspace vừa mở.
+// Chặn route khi chưa đăng nhập và ghi nhớ workspace vừa mở. Trang gốc "/" do app/page.tsx điều hướng.
 import { NextResponse, type NextRequest } from "next/server";
-import { homePath } from "@/lib/home-path";
 import { getProfile, getWorkspace } from "@/lib/mock/queries";
 import { COOKIE_OPTIONS, SESSION_COOKIES } from "@/lib/session-cookies";
 
@@ -12,8 +11,6 @@ export function proxy(request: NextRequest) {
   if (pathname === "/login") return user ? go("/") : NextResponse.next();
   if (!user) return go(`/login?next=${encodeURIComponent(pathname + search)}`);
 
-  if (pathname === "/") return go(homePath(user.id, request.cookies));
-
   const ws = /^\/w\/([^/]+)/.exec(pathname)?.[1];
   const response = NextResponse.next();
   if (ws && getWorkspace(ws)) response.cookies.set(SESSION_COOKIES.last, ws, COOKIE_OPTIONS);
@@ -24,8 +21,7 @@ export const config = {
   matcher: [
     "/",
     "/login",
-    "/welcome",
-    "/invite/:path*",
+    "/join/:path*",
     {
       source: "/w/:path*",
       missing: [

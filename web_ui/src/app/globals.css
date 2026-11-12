@@ -1,4 +1,4 @@
-/* Token màu, font và style toàn cục của ứng dụng (chủ đề tối kiểu Discord). */
+/* Token màu, font và style toàn cục của ứng dụng (chủ đề sáng trắng và xanh dương). */
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -39,6 +39,7 @@
   --color-rail-foreground: var(--rail-foreground);
   --color-rail-tile: var(--rail-tile);
   --color-rail-active: var(--rail-active);
+  --color-rail-active-foreground: var(--rail-active-foreground);
 
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -71,6 +72,8 @@
   --color-agent: var(--agent);
   --color-agent-soft: var(--agent-soft);
   --color-agent-line: var(--agent-line);
+  --color-mark: var(--mark);
+  --color-mark-line: var(--mark-line);
 
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
@@ -87,81 +90,96 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 
   --shadow-card: none;
-  --shadow-float: 0 8px 24px rgb(0 0 0 / 0.32), 0 0 0 1px rgb(0 0 0 / 0.12);
+  --shadow-float: 0 10px 28px rgb(15 35 80 / 0.14), 0 0 0 1px rgb(15 35 80 / 0.06);
 }
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
   --radius: 0.5rem;
 
-  --canvas: #313338;
-  --background: #313338;
-  --foreground: #dbdee1;
-  --card: #2b2d31;
-  --card-foreground: #dbdee1;
-  --popover: #111214;
-  --popover-foreground: #dbdee1;
-  --muted: #383a40;
-  --muted-foreground: #b5bac1;
-  --subtle: #949ba4;
-  --border: #3f4147;
-  --input: #1e1f22;
-  --hover: #2e3035;
-  --composer: #383a40;
+  /* Trắng dịu và xanh dương: thanh workspace xanh đậm, cột và vùng nội dung trắng ngà xám nhẹ (không dùng trắng tinh
+     cho mảng lớn để đỡ chói), chữ xanh than, một màu nhấn xanh dương. */
+  --canvas: #f3f5f9;
+  --background: #e8ecf3;
+  --foreground: #16223b;
+  --card: #fafbfd;
+  --card-foreground: #16223b;
+  --popover: #fafbfd;
+  --popover-foreground: #16223b;
+  --muted: #e7ebf2;
+  --muted-foreground: #3f4d66;
+  --subtle: #677690;
+  --border: #d8dfeb;
+  --input: #d3dbe8;
+  --hover: #e8ecf4;
+  --composer: #fafbfd;
 
-  --primary: #5865f2;
-  --primary-strong: #c9cdfb;
-  --primary-soft: rgb(88 101 242 / 0.18);
+  --primary: #2563eb;
+  --primary-strong: #1d4ed8;
+  --primary-soft: #e1eafc;
   --primary-foreground: #ffffff;
-  --ring: #5865f2;
-  --secondary: #4e5058;
-  --secondary-foreground: #ffffff;
-  --accent: #404249;
-  --accent-foreground: #f2f3f5;
-  --destructive: #f23f43;
+  --ring: #2563eb;
+  --secondary: #dde3ee;
+  --secondary-foreground: #23324d;
+  --accent: #dde6f6;
+  --accent-foreground: #16223b;
+  --destructive: #dc2626;
 
-  --rail: #1e1f22;
-  --rail-foreground: #dbdee1;
-  --rail-tile: #313338;
-  --rail-active: #5865f2;
+  /* Highlight: vệt bút dạ vàng nhạt dưới chữ, viền xanh của thẻ trích dẫn. */
+  --mark: rgb(250 204 21 / 0.4);
+  --mark-line: #2563eb;
+  --selection: rgb(37 99 235 / 0.18);
 
-  --sidebar: #2b2d31;
-  --sidebar-foreground: #949ba4;
-  --sidebar-accent: #404249;
-  --sidebar-accent-foreground: #f2f3f5;
-  --sidebar-border: #1f2023;
-  --sidebar-primary: #5865f2;
+  --rail: #1d4ed8;
+  --rail-foreground: #ffffff;
+  --rail-tile: rgb(255 255 255 / 0.14);
+  --rail-active: #ffffff;
+  --rail-active-foreground: #1d4ed8;
+
+  --sidebar: #eaeef4;
+  --sidebar-foreground: #3f4d66;
+  --sidebar-accent: #d9e4f7;
+  --sidebar-accent-foreground: #16223b;
+  --sidebar-border: #d8dfeb;
+  --sidebar-primary: #2563eb;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-ring: #5865f2;
-  --sidebar-footer: #232428;
+  --sidebar-ring: #2563eb;
+  --sidebar-footer: #e3e8f0;
 
-  --proposed: #f0b232;
-  --proposed-soft: rgb(240 178 50 / 0.12);
-  --proposed-line: rgb(240 178 50 / 0.35);
-  --discussing: #00a8fc;
-  --discussing-soft: rgb(0 168 252 / 0.12);
-  --discussing-line: rgb(0 168 252 / 0.35);
-  --decided: #23a55a;
-  --decided-soft: rgb(35 165 90 / 0.14);
-  --decided-line: rgb(35 165 90 / 0.4);
-  --rejected: #f23f43;
-  --rejected-soft: rgb(242 63 67 / 0.12);
-  --rejected-line: rgb(242 63 67 / 0.4);
-  --data: #f0883e;
-  --data-soft: rgb(240 136 62 / 0.12);
-  --data-line: rgb(240 136 62 / 0.35);
-  --insufficient: #a48bf5;
-  --insufficient-soft: rgb(164 139 245 / 0.14);
-  --insufficient-line: rgb(164 139 245 / 0.4);
-  --agent: #949cf7;
-  --agent-soft: rgb(88 101 242 / 0.18);
-  --agent-line: rgb(88 101 242 / 0.45);
+  /* Trạng thái chỉ dùng cho số liệu ADOM, trạng thái chờ và lỗi. Bảng ý tưởng không tô màu theo trạng thái. */
+  --proposed: #b45309;
+  --proposed-soft: #fef3e2;
+  --proposed-line: #f6c98a;
+  --discussing: #0369a1;
+  --discussing-soft: #e6f3fb;
+  --discussing-line: #9fd0ee;
+  --decided: #15803d;
+  --decided-soft: #e8f6ee;
+  --decided-line: #9ed7b3;
+  --rejected: #dc2626;
+  --rejected-soft: #fdecec;
+  --rejected-line: #f5b4b4;
+  --data: #c2410c;
+  --data-soft: #fdf0e8;
+  --data-line: #f5c3a5;
+  --insufficient: #7c3aed;
+  --insufficient-soft: #f2ecfe;
+  --insufficient-line: #cdb8f8;
+  --agent: #1e40af;
+  --agent-soft: #e1eafc;
+  --agent-line: #bfd3fb;
 
-  --chart-1: #5865f2;
-  --chart-2: #00a8fc;
-  --chart-3: #f0883e;
-  --chart-4: #23a55a;
-  --chart-5: #a48bf5;
+  --chart-1: #2563eb;
+  --chart-2: #0369a1;
+  --chart-3: #c2410c;
+  --chart-4: #15803d;
+  --chart-5: #7c3aed;
+
+  /* Màu thương hiệu, chỉ dùng cho logo nút đăng nhập Google. */
+  --brand-google-blue: #4285f4;
+  --brand-google-red: #ea4335;
+  --brand-google-yellow: #fbbc05;
+  --brand-google-green: #34a853;
 }
 
 @layer base {
@@ -180,7 +198,7 @@
     cursor: pointer;
   }
   ::selection {
-    background: rgb(88 101 242 / 0.4);
+    background: var(--selection);
   }
 }
 
@@ -191,6 +209,14 @@
   }
   .tabular {
     font-variant-numeric: tabular-nums;
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  /* Đoạn đã highlight: vệt bút dạ dưới chữ, không đổi màu chữ. */
+  .chalk-mark {
+    background: linear-gradient(transparent 58%, var(--mark) 58%);
+    border-radius: 2px;
   }
 }
 
@@ -213,4 +239,10 @@
   border-radius: 2px;
   background: var(--agent);
   animation: caret-blink 1s step-end infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stream-caret {
+    animation: none;
+  }
 }

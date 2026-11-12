@@ -41,7 +41,7 @@ export function TaskTable({
     <section className="min-w-0 rounded-lg bg-card">
       <div className="flex flex-wrap items-center gap-2 px-4 pt-3.5 pb-2 whitespace-nowrap">
         <ChartBar className="size-4 text-subtle" />
-        <h2 className="text-xs font-bold tracking-wide text-subtle uppercase">Vi phạm theo tác vụ</h2>
+        <h2 className="text-[13px] font-semibold text-subtle">Vi phạm theo tác vụ</h2>
         <span className="text-xs text-subtle">
           {totalViolations} vi phạm · {tasks.length} đầu
         </span>

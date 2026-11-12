@@ -32,16 +32,28 @@ pnpm dev            # http://localhost:3000, mở trang đăng nhập
 
 Hiện frontend chạy bằng dữ liệu giả ở `web_ui/src/lib/mock/` (số liệu ADOM là số thật của lượt MAIN). Khi có backend, các hàm trong `mock/queries.ts` được thay bằng client sinh từ OpenAPI (F03).
 
-Đăng nhập cũng là giả lập bằng cookie (`web_ui/src/lib/session*.ts`, `auth-actions.ts`, `proxy.ts`); khi có Supabase Auth chỉ thay phần đọc/ghi phiên. Tài khoản thử: `trang@example.edu` (thành viên Đồ án, đang xin vào ADOM), `lan@example.edu` (chủ Đồ án và ADOM). Liên kết mời thử: `/invite/doan-kc26`, `/invite/adom-main`.
+Đăng nhập cũng là giả lập bằng cookie (`web_ui/src/lib/session*.ts`, `auth-actions.ts`, `proxy.ts`); khi có Supabase Auth chỉ thay phần đọc/ghi phiên. Dữ liệu thay đổi được (thành viên, mã tham gia, yêu cầu tham gia, bảng ý tưởng) nằm trong kho `lib/mock/store.ts` sống trong tiến trình máy chủ: khởi động lại `pnpm dev`/`pnpm start` là về dữ liệu ban đầu.
+
+Tài khoản thử (trang chọn tài khoản giả lập sau khi bấm nút):
+
+| Nhà cung cấp | Tài khoản | Ghi chú |
+|---|---|---|
+| GitHub | Trang, Lan, Huy | Lan là chủ Đồ án và ADOM; Trang đang xin vào ADOM |
+| Google | Lan, Vy, Minh | Minh là tài khoản mới, chưa ở workspace chung nào |
+
+Mã tham gia thử: `KC26DAX` (Đồ án), `ADM7Q3P` (ADOM), `ONT4H8W` (Ôn thi).
 
 ## Luồng đăng nhập và tham gia
 
 1. Mọi trang đều cần đăng nhập; chưa đăng nhập thì `proxy.ts` chuyển về `/login?next=…` và quay lại đúng trang sau khi đăng nhập.
-2. Lần đầu đăng nhập vào `/welcome`: bắt đầu ở workspace riêng, tạo workspace chung, khám phá, hoặc dán liên kết mời. Những lần sau `/` mở workspace dùng gần nhất.
-3. Vào workspace chung theo hai đường:
-   - **Liên kết mời** (`/invite/<mã>`): thành viên lấy liên kết ở menu tên workspace → Mời mọi người; người nhận bấm Chấp nhận là vào thẳng.
-   - **Xin tham gia**: trang Khám phá (la bàn ở thanh trái) → gửi yêu cầu kèm gói ngữ cảnh → chủ workspace duyệt ở Yêu cầu tham gia.
-4. Mở một workspace chưa là thành viên thì bị chuyển sang trang Khám phá, chọn sẵn workspace đó.
+2. Chỉ đăng nhập bằng **Google** hoặc **GitHub** (`/login` → `/login/google|github` chọn tài khoản). Không có mật khẩu, không có email.
+3. Đăng nhập xong vào thẳng **workspace riêng** (tạo sẵn cho mỗi người). Những lần sau `/` mở workspace dùng gần nhất nếu vẫn là thành viên.
+4. Vào workspace chung bằng **mã tham gia** (kiểu mã nhóm của Microsoft Teams):
+   - Thành viên mở menu tên workspace → *Chia sẻ mã tham gia*, chép mã 7 ký tự do hệ thống sinh. Chủ workspace bấm *Đổi mã* để sinh mã mới, mã cũ hết hiệu lực ngay (cũng có ở trang Thành viên và agent).
+   - Người nhận bấm nút chìa khóa ở thanh trái (hoặc ô mã ở trang Khám phá), nhập mã → tạo yêu cầu và chuyển sang trang `/join/<id>` **Đang chờ duyệt**. Workspace đang chờ hiện mờ, viền đứt trên thanh trái.
+   - Chủ workspace thấy yêu cầu ở *Yêu cầu tham gia* (tự làm mới), bấm Duyệt hoặc Từ chối. Duyệt xong, trang chờ của người xin tự chuyển vào workspace.
+5. Không có mã: trang Khám phá (la bàn) → gửi yêu cầu kèm gói ngữ cảnh → chủ duyệt và nhập gói vào bảng ở trạng thái đề xuất.
+6. Mở một workspace chưa là thành viên thì bị chuyển sang trang Khám phá, chọn sẵn workspace đó.
 
 | Lệnh | Việc |
 |---|---|
@@ -57,7 +69,8 @@ Hiện frontend chạy bằng dữ liệu giả ở `web_ui/src/lib/mock/` (số
 app/                 Chỉ có route: lấy dữ liệu qua lib/mock/queries rồi ghép component (layout, page, not-found, icon.svg)
 features/<trang>/    Component riêng của từng trang, test đặt cạnh file
   workspace-shell/   Thanh workspace, cột điều hướng, hộp thoại tạo workspace (03)
-  login/             01 và khung chung AuthScreen · onboarding/ màn chào, thẻ lời mời
+  login/             01, chọn tài khoản Google/GitHub và khung chung AuthScreen
+  join/              Mã tham gia: ô nhập mã, hộp thoại chia sẻ/đổi mã, thẻ trạng thái chờ duyệt
   channel/           02, 04, 05, 15 (composer/ là ô soạn và gợi ý @ /)
   board/             06, 07 · brief/ 08 · explore/ 09 · requests/ 10 · settings/ 11
   runs/              12 · metrics/ 13, 14 và thẻ /stats, /run hiện trong kênh
@@ -65,7 +78,7 @@ components/ui/       shadcn/ui (không sửa tay)
 components/common/   Thành phần dùng chung giữa các trang: PageLayout/PageHeader/PageBody, Panel,
                      SegmentedControl, ToneBadge, LegendSwatch, ActorAvatar, Logo
 lib/                 Kiểu dữ liệu, bảng màu trạng thái, lệnh, bản tổng hợp, helper route
-lib/mock/            Dữ liệu giả; chỉ queries.ts được đọc data.ts
+lib/mock/            Dữ liệu giả: data.ts (hạt giống), store.ts (kho ghi được), queries.ts (đọc), mutations.ts (ghi)
 lib/session*.ts      Phiên đăng nhập giả lập bằng cookie; proxy.ts chặn route và điều hướng trang gốc
 hooks/               useQueryParam (mở sẵn hộp thoại cho ảnh chụp prototype)
 ```
@@ -87,8 +100,9 @@ hooks/               useQueryParam (mở sẵn hộp thoại cho ảnh chụp pr
 | Route | Màn hình prototype |
 |---|---|
 | `/login` (`?next=`) | 01 Đăng nhập |
-| `/welcome` | Màn chào sau lần đăng nhập đầu |
-| `/invite/[code]` | Nhận lời mời vào workspace chung |
+| `/login/google`, `/login/github` | Chọn tài khoản (giả lập trang OAuth) |
+| `/join/[request]` | Đang chờ chủ workspace duyệt (tự chuyển vào khi được duyệt) |
+| `?dialog=join` trên mọi trang workspace | Hộp thoại tham gia bằng mã |
 | `/w/[ws]/c/[channel]` | 02, 04, 05, 15 Kênh chat và bảng ý tưởng ở khung bên |
 | `?dialog=create` trên mọi trang workspace | 03 Tạo workspace chung |
 | `/w/[ws]/board` (`?decide=<id>`) | 06 Bảng ý tưởng, 07 Chốt hoặc loại |

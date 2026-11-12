@@ -41,7 +41,7 @@ describe("bản tổng hợp", () => {
 
   it("chỉ dựng từ thẻ trên bảng, chia đúng nhóm", () => {
     expect(brief.decided.map((i) => i.id)).toEqual(["i3"]);
-    expect(brief.rejected.map((i) => i.id).sort()).toEqual(["i6", "i7"]);
+    expect(brief.rejected.map((i) => i.id)).toEqual(["i4"]);
     expect(brief.openQuestions.map((i) => i.id)).toEqual(["q1"]);
   });
 

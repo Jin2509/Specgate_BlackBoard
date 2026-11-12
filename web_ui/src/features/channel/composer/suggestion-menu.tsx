@@ -3,7 +3,8 @@
 
 import type { ReactNode } from "react";
 import { ActorAvatar, AiTag } from "@/components/common/actor-avatar";
-import { agentRoleMeta } from "@/lib/status";
+import { Highlighter } from "lucide-react";
+import { agentRoleMeta, highlightLabelMeta } from "@/lib/status";
 import { cn } from "@/lib/utils";
 import type { CommandSuggestion, Suggestion } from "./suggestions";
 
@@ -34,11 +35,11 @@ type ListProps = { items: Suggestion[]; activeIndex: number; onPick: (s: Suggest
 function MentionList({ items, activeIndex, onPick }: ListProps) {
   return (
     <>
-      <MenuLabel>Gọi một agent</MenuLabel>
+      {items.some((s) => s.kind === "agent") ? <MenuLabel>Gọi agent</MenuLabel> : null}
       {items.map((s, i) =>
         s.kind === "agent" ? (
           <MenuRow key={s.agent.id} active={i === activeIndex} onPick={() => onPick(s)}>
-            <ActorAvatar kind="agent" size="xs" />
+            <ActorAvatar kind="agent" initial={s.agent.handle} size="xs" />
             <span className="font-medium">@{s.agent.handle}</span>
             <AiTag />
             <span className="text-xs text-subtle">{agentRoleMeta[s.agent.role].label}</span>
@@ -46,12 +47,22 @@ function MentionList({ items, activeIndex, onPick }: ListProps) {
           </MenuRow>
         ) : null,
       )}
-      {items.some((s) => s.kind === "person") ? <MenuLabel>Nhắc một người</MenuLabel> : null}
+      {items.some((s) => s.kind === "person") ? <MenuLabel>Nhắc người</MenuLabel> : null}
       {items.map((s, i) =>
         s.kind === "person" ? (
           <MenuRow key={s.person.id} active={i === activeIndex} onPick={() => onPick(s)}>
             <ActorAvatar kind="human" initial={s.person.initial} size="xs" />
             <span className="font-medium">@{s.person.displayName}</span>
+          </MenuRow>
+        ) : null,
+      )}
+      {items.some((s) => s.kind === "highlight") ? <MenuLabel>Đính kèm highlight của bạn</MenuLabel> : null}
+      {items.map((s, i) =>
+        s.kind === "highlight" ? (
+          <MenuRow key={s.highlight.id} active={i === activeIndex} onPick={() => onPick(s)}>
+            <Highlighter className="size-4 shrink-0 text-primary" />
+            <span className="line-clamp-1 flex-1">{s.highlight.text}</span>
+            <span className="shrink-0 text-xs text-subtle">{highlightLabelMeta[s.highlight.label].label}</span>
           </MenuRow>
         ) : null,
       )}
@@ -71,7 +82,7 @@ function CommandList({ items, activeIndex, onPick }: ListProps) {
     <>
       <MenuLabel>Lệnh</MenuLabel>
       {core.map(row)}
-      {moduleCmds.length > 0 ? <MenuLabel>Dữ kiện ADOM · chỉ có ở workspace đã gắn</MenuLabel> : null}
+      {moduleCmds.length > 0 ? <MenuLabel>Dữ kiện ADOM</MenuLabel> : null}
       {moduleCmds.map(row)}
     </>
   );
@@ -97,7 +108,7 @@ function CommandRow({ s, active, onPick }: { s: CommandSuggestion; active: boole
 }
 
 function MenuLabel({ children }: { children: ReactNode }) {
-  return <p className="px-2 pt-1 pb-1.5 text-xs font-bold tracking-wide text-subtle uppercase">{children}</p>;
+  return <p className="px-2 pt-1 pb-1.5 text-[12.5px] font-semibold text-subtle">{children}</p>;
 }
 
 function MenuRow({ active, onPick, children }: { active: boolean; onPick: () => void; children: ReactNode }) {

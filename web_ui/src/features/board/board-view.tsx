@@ -58,11 +58,11 @@ export function BoardView({
         actions={
           <>
             <Button variant="secondary" size="sm">
-              <Plus /> Thêm ý
+              <Plus /> <span className="max-sm:sr-only">Thêm ý</span>
             </Button>
             <Button size="sm" asChild>
               <Link href={`/w/${workspaceId}/brief`}>
-                <FileText /> Bản tổng hợp
+                <FileText /> <span className="max-sm:sr-only">Bản tổng hợp</span>
               </Link>
             </Button>
           </>

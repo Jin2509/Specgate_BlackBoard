@@ -1,5 +1,5 @@
 // Thẻ một workspace chung trên trang khám phá, kèm trạng thái tham gia.
-import { Bot, FlaskConical, Users } from "lucide-react";
+import { Terminal, FlaskConical, Users } from "lucide-react";
 import { ToneBadge } from "@/components/common/tone-badge";
 import type { JoinRelation, Workspace } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -42,7 +42,7 @@ export function WorkspaceListItem({
             <Users className="size-3.5" /> {ws.members.length} thành viên
           </span>
           <span className="inline-flex items-center gap-1">
-            <Bot className="size-3.5" /> {ws.agentIds.length} agent
+            <Terminal className="size-3.5" /> {ws.agentIds.length} agent
           </span>
           {ws.modules.includes("adom") ? (
             <span className="inline-flex items-center gap-1 text-data">

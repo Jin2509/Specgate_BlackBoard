@@ -1,12 +1,12 @@
-// Ảnh đại diện tròn của người hoặc agent LLM, có chấm trạng thái tùy chọn.
-import { Bot } from "lucide-react";
+// Ảnh đại diện: người là hình tròn có chữ cái đầu; agent là ô vuông bo góc có chữ cái đầu của tên gọi,
+// để phân biệt người và agent bằng hình dạng thay vì biểu tượng robot.
 import { cn } from "@/lib/utils";
 
 const SIZES = {
-  xs: "size-5 text-[10px] [&_svg]:size-3",
-  sm: "size-8 text-xs [&_svg]:size-4",
-  md: "size-10 text-sm [&_svg]:size-5",
-  lg: "size-20 text-2xl [&_svg]:size-9",
+  xs: "size-5 text-[10px]",
+  sm: "size-8 text-xs",
+  md: "size-10 text-sm",
+  lg: "size-20 text-2xl",
 } as const;
 
 export function ActorAvatar({
@@ -22,17 +22,20 @@ export function ActorAvatar({
   online?: boolean;
   className?: string;
 }) {
+  const letter = (initial ?? (kind === "agent" ? "A" : "?")).slice(0, 1).toUpperCase();
   return (
     <span className={cn("relative inline-flex shrink-0", className)}>
       <span
         aria-label={kind === "agent" ? "agent" : undefined}
         className={cn(
-          "inline-flex items-center justify-center rounded-full font-semibold text-primary-foreground",
-          kind === "agent" ? "bg-primary" : "bg-secondary",
+          "inline-flex items-center justify-center font-semibold",
+          kind === "agent"
+            ? "rounded-[30%] border border-agent-line bg-agent-soft text-agent"
+            : "rounded-full bg-secondary text-secondary-foreground",
           SIZES[size],
         )}
       >
-        {kind === "agent" ? <Bot /> : initial}
+        {letter}
       </span>
       {online !== undefined ? (
         <span
@@ -47,15 +50,16 @@ export function ActorAvatar({
   );
 }
 
+// Nhãn nhỏ cạnh tên agent trong tin nhắn và gợi ý.
 export function AiTag({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex h-4 items-center rounded bg-primary px-1 text-[10px] leading-none font-semibold text-primary-foreground",
+        "inline-flex h-4 items-center rounded-sm border border-agent-line px-1 text-[10.5px] leading-none font-medium text-agent",
         className,
       )}
     >
-      AI
+      agent
     </span>
   );
 }

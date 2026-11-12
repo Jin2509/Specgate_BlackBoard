@@ -1,20 +1,30 @@
-// Logo SpecGate Workspace.
-import { Presentation } from "lucide-react";
+// Logo SpecGate: một cái cổng nét liền (hai trụ, xà trên, thanh ngang) màu xanh primary.
 import { cn } from "@/lib/utils";
 
 export function LogoMark({ className }: { className?: string }) {
   return (
-    <span
-      className={cn("inline-flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground", className)}
+    <svg
+      viewBox="0 0 32 32"
+      aria-hidden
+      className={cn("size-8 text-primary", className)}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2.6"
+      strokeLinecap="round"
+      strokeLinejoin="round"
     >
-      <Presentation className="size-[55%]" />
-    </span>
+      <path d="M4 8.5c7.5-1.6 16.5-1.6 24 0" />
+      <path d="M9 9v17" />
+      <path d="M23 9v17" />
+      <path d="M9 15.5h14" />
+      <path d="M13 21.5h6" opacity="0.55" />
+    </svg>
   );
 }
 
 export function Logo({ className }: { className?: string }) {
   return (
-    <span className={cn("inline-flex items-center gap-2 font-bold tracking-tight text-foreground", className)}>
+    <span className={cn("inline-flex items-center gap-2 font-semibold text-foreground", className)}>
       <LogoMark />
       SpecGate
     </span>

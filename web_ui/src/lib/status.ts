@@ -1,5 +1,5 @@
 // Bảng tông màu và nhãn theo trạng thái, phán quyết, vai agent.
-import type { AgentRole, IdeaStatus, Validity, Verdict } from "@/lib/types";
+import type { AgentRole, HighlightLabel, IdeaStatus, Validity, Verdict } from "@/lib/types";
 
 export type Tone = "proposed" | "discussing" | "decided" | "rejected" | "data" | "insufficient" | "agent" | "neutral";
 
@@ -19,11 +19,17 @@ export const toneClasses: Record<Tone, { text: string; soft: string; line: strin
   neutral: { text: "text-muted-foreground", soft: "bg-muted", line: "border-border", bar: "bg-subtle" },
 };
 
+// Script3: trạng thái của ý không tô màu. Phân biệt bằng cột và chữ.
 export const ideaStatusMeta: Record<IdeaStatus, { label: string; tone: Tone; verb: string }> = {
-  proposed: { label: "Đề xuất", tone: "proposed", verb: "nêu" },
-  discussing: { label: "Đang bàn", tone: "discussing", verb: "nêu" },
-  decided: { label: "Đã chốt", tone: "decided", verb: "chốt" },
-  rejected: { label: "Đã loại", tone: "rejected", verb: "loại" },
+  proposed: { label: "Đề xuất", tone: "neutral", verb: "nêu" },
+  discussing: { label: "Đang bàn", tone: "neutral", verb: "nêu" },
+  decided: { label: "Đã chốt", tone: "neutral", verb: "chốt" },
+  rejected: { label: "Đã loại", tone: "neutral", verb: "loại" },
+};
+
+export const highlightLabelMeta: Record<HighlightLabel, { label: string }> = {
+  important: { label: "Quan trọng" },
+  review: { label: "Cần xem xét" },
 };
 
 export const IDEA_COLUMNS: IdeaStatus[] = ["proposed", "discussing", "decided", "rejected"];

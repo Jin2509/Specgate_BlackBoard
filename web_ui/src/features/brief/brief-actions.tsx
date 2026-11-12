@@ -1,11 +1,19 @@
-// Nút dựng lại, sao chép và tải Markdown của bản tổng hợp.
+// Nút dựng lại (chỉ chủ workspace), sao chép và tải Markdown của bản tổng hợp.
 "use client";
 
 import { Check, Copy, Download, RefreshCw } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
-export function BriefActions({ markdown, fileName = "ban-tong-hop.md" }: { markdown: string; fileName?: string }) {
+export function BriefActions({
+  markdown,
+  canRebuild,
+  fileName = "ban-tong-hop.md",
+}: {
+  markdown: string;
+  canRebuild: boolean;
+  fileName?: string;
+}) {
   const [copied, setCopied] = useState(false);
 
   function download() {
@@ -24,14 +32,18 @@ export function BriefActions({ markdown, fileName = "ban-tong-hop.md" }: { markd
 
   return (
     <>
-      <Button variant="secondary" size="sm">
-        <RefreshCw /> Dựng lại
-      </Button>
+      {canRebuild ? (
+        <Button variant="secondary" size="sm">
+          <RefreshCw /> <span className="max-sm:sr-only">Dựng lại</span>
+        </Button>
+      ) : (
+        <span className="mr-1 text-xs text-subtle max-sm:hidden">Chủ workspace dựng bản này</span>
+      )}
       <Button variant="secondary" size="sm" onClick={copy}>
-        {copied ? <Check /> : <Copy />} {copied ? "Đã chép" : "Sao chép"}
+        {copied ? <Check /> : <Copy />} <span className="max-sm:sr-only">{copied ? "Đã chép" : "Sao chép"}</span>
       </Button>
       <Button size="sm" onClick={download}>
-        <Download /> Tải Markdown
+        <Download /> <span className="max-sm:sr-only">Tải Markdown</span>
       </Button>
     </>
   );

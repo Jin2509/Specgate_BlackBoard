@@ -22,7 +22,7 @@ for (const s of SCREENS) {
   process.stdout.write(`  ${s.no} ${s.path} … `);
   await ctx.clearCookies();
   if (s.as) {
-    await ctx.addCookies(["sg_uid", "sg_onboarded"].map((name) => ({ name, value: s.as, url: BASE_URL })));
+    await ctx.addCookies([{ name: "sg_uid", value: s.as, url: BASE_URL }]);
   }
   const res = await page.goto(BASE_URL + s.path, { waitUntil: "networkidle" });
   if (!res || !res.ok()) throw new Error(`${s.path} trả về ${res?.status()}`);
@@ -66,33 +66,34 @@ const { fontFaces, uiFamily, codeFamily } = await page.evaluate(() => {
   };
 });
 
+// Bảng màu lấy đúng token trong web_ui/src/app/globals.css (chủ đề sáng trắng và xanh dương).
 const swatches = [
-  ["Nền", "#313338", "ba tầng xám: thanh workspace, cột kênh, vùng nội dung"],
-  ["Tím xanh", "#5865f2", "màu nhấn duy nhất: hành động chính, agent LLM"],
-  ["Vàng", "#f0b232", "ý mới đề xuất (chỉ ở chấm và nhãn)"],
-  ["Xanh trời", "#00a8fc", "đang bàn"],
-  ["Xanh lục", "#23a55a", "đã chốt · PASS"],
-  ["Đỏ", "#f23f43", "đã loại · cảnh báo · invalidated"],
-  ["Cam", "#f0883e", "dữ kiện của bài báo ADOM"],
-  ["Tím", "#a48bf5", "thiếu dữ liệu, không phải đạt"],
+  ["Trắng", "#ffffff", "cột trái và vùng nội dung; nền trang #f4f7fc"],
+  ["Xanh than", "#0f1b33", "chữ chính"],
+  ["Xanh dương", "#2563eb", "màu nhấn duy nhất: hành động chính, thanh workspace (#1d4ed8)"],
+  ["Vàng nhạt", "#facc15", "vệt highlight dưới chữ"],
+  ["Lục", "#15803d", "PASS, trực tuyến (chỉ số liệu ADOM và trạng thái người)"],
+  ["Đỏ", "#dc2626", "lỗi, invalidated"],
+  ["Cam", "#c2410c", "dữ kiện của bài báo ADOM"],
+  ["Tím", "#7c3aed", "thiếu dữ liệu, không phải đạt"],
 ];
 
 const changes = [
-  "Chủ đề sáng: nền trắng, khối xanh dương ở thanh workspace và nút chính; màu trạng thái giữ nguyên nghĩa của bản v1.",
-  "Font Be Vietnam Pro (web font, đủ dấu tiếng Việt) thay Optima/Avenir vốn chỉ có trên macOS.",
-  "Mỗi trang là ảnh chụp từ route thật trong web_ui/, không còn vẽ tay: prototype và mã không thể lệch nhau.",
-  "/pin ghim tin nhắn đang trả lời, /idea ghi ý do người gõ (v1 dùng /pin như /idea).",
-  'Bỏ lựa chọn "chỉ người được mời" vì liên kết mời nằm ở danh sách chờ; thay bằng "Ẩn".',
-  "Màn 10 đến 15 nhất quán xem dưới tài khoản chủ workspace (Lan); v1 hiện avatar Trang ở màn chỉ chủ mới thấy.",
-  "Bảng tác vụ có lọc, sắp xếp, cột a3_state (PDF 6.2); thẻ agent có cảnh báo trần chi phí.",
+  'Chủ đề tối "bảng đen" thay bộ màu kiểu Discord: nền xám xanh, chữ trắng phấn, một màu nhấn phấn vàng.',
+  "Trạng thái trên bảng ý tưởng không tô màu (Script3): phân biệt bằng cột và chữ.",
+  "Workspace riêng là trang chat với agent bằng API key của người dùng; không còn kênh, bảng, thành viên (Script4).",
+  "Highlight: bôi đen trong workspace riêng, gửi vào kênh chung bằng @; agent đọc kèm nhãn chưa chốt. Chỉ chủ đưa lên bảng.",
+  "Bỏ gói ngữ cảnh khi xin tham gia; tổng hợp (/summarize, /brief) chỉ dành cho chủ workspace.",
+  "Logo mới: cái cổng nét liền. Agent dùng ô vuông có chữ cái đầu thay biểu tượng robot.",
+  "Mỗi trang là ảnh chụp từ route thật trong web_ui/, không vẽ tay: prototype và mã không thể lệch nhau.",
 ];
 
 const cover = `
 <section class="page cover">
-  <div class="brand"><span class="mark"></span>SpecGate Workspace <span class="muted">· Prototype giao diện v2 · ${DATE}</span></div>
+  <div class="brand"><svg class="mark" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M4 8.5c7.5-1.6 16.5-1.6 24 0"/><path d="M9 9v17"/><path d="M23 9v17"/><path d="M9 15.5h14"/></svg>SpecGate Workspace <span class="muted">Prototype giao diện v3, ${DATE}</span></div>
   <h1>Bảng đen chung cho người và LLM</h1>
-  <p class="lead">Mười lăm màn hình cho toàn bộ luồng sử dụng: lên ý tưởng trong workspace riêng và chung, gọi nhiều LLM trong một kênh,
-  xin tham gia, và xem đầu ra của bài báo ADOM. Số liệu ở màn hình 12 đến 15 là số thật của lượt chạy MAIN.</p>
+  <p class="lead">Mười một màn hình cho toàn bộ luồng sử dụng: chat riêng với agent bằng key của mình, highlight đoạn đáng bàn,
+  đưa vào workspace chung để người và nhiều LLM cùng lên ý tưởng. Các màn số liệu của bài báo ADOM do nhóm ADOM làm, không nằm trong tệp này.</p>
   <div class="cols">
     <div>
       <h2>Màn hình và ý của spec</h2>
@@ -101,17 +102,17 @@ const cover = `
       </ol>
       <h2>Luồng chính (PDF đề xuất 5.1)</h2>
       <p class="flow">Đặt đề bài <b>03</b> → Phát ý <b>02 · 04 · 05</b> → Phản biện <b>04</b> → Tổng hợp <b>06</b> → Chốt <b>07</b> → Xuất <b>08</b>
-      <br/>Riêng sang chung: <b>02 → 09 → 10</b> · Mô-đun ADOM: <b>12 → 13 · 14 → 15</b></p>
+      <br/>Riêng sang chung: highlight ở <b>02</b> → gửi vào kênh <b>04</b>; xin vào <b>09 → 10</b>.</p>
     </div>
     <div>
       <h2>Ngôn ngữ màu</h2>
       <ul class="swatches">
         ${swatches.map(([n, c, d]) => `<li><span class="sw" style="background:${c}"></span><span>${n}</span><span class="muted">${d}</span></li>`).join("")}
       </ul>
-      <h2>Thay đổi so với bản v1 (chủ đề tối)</h2>
+      <h2>Thay đổi so với bản v2</h2>
       <ul class="changes">${changes.map((c) => `<li>${esc(c)}</li>`).join("")}</ul>
       <h2>Kỹ thuật</h2>
-      <p class="muted small">Next.js 16 (App Router) · TypeScript strict · Tailwind CSS 4 · shadcn/ui (Radix) · icon Lucide.
+      <p class="muted small">Next.js 16 (App Router), TypeScript strict, Tailwind CSS 4, shadcn/ui (Radix), icon Lucide.
       Màu khai báo bằng token CSS ở <code>web_ui/src/app/globals.css</code>; mã hex bị cấm trong <code>.tsx</code>.
       Xuất lại tệp này: <code>pnpm prototype:pdf</code>.</p>
     </div>
@@ -143,36 +144,36 @@ code { font-family: ${codeFamily}, monospace; font-size: .92em; background: #eaf
 .muted { color: #5a6a85; }
 .small { font-size: 13px; line-height: 1.6; }
 .cover { background: #ffffff; position: relative; padding: 40px 72px; }
-.cover::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 10px; background: #5865f2; }
+.cover::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 10px; background: #2563eb; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 16px; margin-top: 14px; }
-.mark { width: 28px; height: 28px; border-radius: 8px; background: #5865f2; display: inline-block; }
+.mark { width: 30px; height: 30px; color: #2563eb; }
 .cover h1 { font-size: 64px; letter-spacing: -0.02em; margin: 40px 0 16px; font-weight: 600; color: #1d4ed8; }
 .lead { font-size: 19px; line-height: 1.6; max-width: 1080px; color: #23324d; margin: 0 0 30px; }
 .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; }
 .cover h2 { font-size: 17px; margin: 22px 0 10px; color: #1d4ed8; font-weight: 600; }
 .index { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: 1fr 1fr; column-gap: 28px; }
 .index li { display: flex; gap: 10px; align-items: baseline; border-bottom: 1px solid #e1e7f1; padding: 8px 0; font-size: 14px; }
-.index .no { color: #5865f2; font-weight: 600; width: 22px; }
+.index .no { color: #2563eb; font-weight: 600; width: 22px; }
 .index .tag { margin-left: auto; font-size: 11px; color: #8796ad; }
 .flow { font-size: 14px; line-height: 1.9; color: #23324d; margin: 0; }
-.flow b { color: #5865f2; }
+.flow b { color: #2563eb; }
 .swatches { list-style: none; padding: 0; margin: 0; }
 .swatches li { display: grid; grid-template-columns: 42px 130px 1fr; align-items: center; gap: 10px; padding: 5px 0; font-size: 14px; }
-.sw { width: 36px; height: 14px; border-radius: 7px; }
+.sw { width: 36px; height: 14px; border-radius: 7px; box-shadow: inset 0 0 0 1px rgb(15 35 80 / .12); }
 .changes { margin: 0; padding-left: 18px; font-size: 13.5px; line-height: 1.6; color: #23324d; }
 .changes li { margin: 3px 0; }
 .screen header { display: flex; align-items: flex-end; gap: 18px; height: 70px; }
-.big { font-size: 46px; font-weight: 300; color: #5865f2; line-height: 1; }
+.big { font-size: 46px; font-weight: 300; color: #2563eb; line-height: 1; }
 .titles h1 { margin: 0; font-size: 26px; font-weight: 600; letter-spacing: -0.01em; }
 .titles p { margin: 4px 0 0; font-size: 14px; color: #5a6a85; }
 .chips { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; max-width: 560px; }
 .chips span { font-size: 12px; border: 1px solid #c9d7f6; color: #1d4ed8; background: #ffffff; border-radius: 999px; padding: 3px 10px; white-space: nowrap; }
-.chips .sprint { background: #5865f2; color: #ffffff; border-color: #5865f2; }
+.chips .sprint { background: #2563eb; color: #ffffff; border-color: #2563eb; }
 figure { margin: 16px 0 0; position: relative; }
 figure img { display: block; width: 1440px; height: 900px; border-radius: 14px; border: 1px solid #d3dcea; box-shadow: 0 18px 40px -16px rgb(15 35 80 / .28); }
 figcaption { position: absolute; right: 12px; bottom: 10px; font-size: 11px; color: #8796ad; background: #ffffffd9; padding: 2px 8px; border-radius: 6px; font-family: ${codeFamily}, monospace; }
 .screen footer { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 16px; }
-.screen footer p { margin: 0; font-size: 13px; line-height: 1.55; color: #3d4c66; border-left: 3px solid #5865f2; padding-left: 12px; }
+.screen footer p { margin: 0; font-size: 13px; line-height: 1.55; color: #3d4c66; border-left: 3px solid #2563eb; padding-left: 12px; }
 .screen footer b { color: #0f1b33; }
 </style></head><body>${cover}${pages}</body></html>`;
 

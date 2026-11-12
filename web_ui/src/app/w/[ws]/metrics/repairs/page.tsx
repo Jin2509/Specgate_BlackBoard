@@ -6,13 +6,13 @@ import { RepairMatrix } from "@/features/metrics/repair-matrix";
 import { DraftAgreementPanel, RunCostPanel } from "@/features/metrics/run-side-panels";
 import { TaskTable } from "@/features/metrics/task-table";
 import { getDraftAgreement, getRepairRows, getRunCost, getRuns, getTaskResults } from "@/lib/mock/queries";
-import { requireWorkspace, workspaceStaticParams } from "@/lib/workspace-route";
+import { requireSharedWorkspace, workspaceStaticParams } from "@/lib/workspace-route";
 
 export const generateStaticParams = workspaceStaticParams;
 export const metadata: Metadata = { title: "Sửa và tác vụ" };
 
 export default async function RepairsPage({ params }: PageProps<"/w/[ws]/metrics/repairs">) {
-  const ws = await requireWorkspace(params);
+  const ws = await requireSharedWorkspace(params);
   const run = getRuns(ws.id)[0];
   if (!run) notFound();
 

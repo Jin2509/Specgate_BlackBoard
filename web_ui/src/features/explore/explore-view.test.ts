@@ -11,7 +11,8 @@ describe("searchWorkspaces", () => {
   });
 
   it("tìm theo tên hoặc đề bài, không phân biệt hoa thường", () => {
-    expect(searchWorkspaces(all, "ADOM").map((w) => w.id)).toContain("adom");
+    expect(searchWorkspaces(all, "ĐỒ ÁN").map((w) => w.id)).toEqual(["do-an"]);
+    expect(searchWorkspaces(all, "đo đếm").map((w) => w.id)).toEqual(["do-an"]);
     expect(searchWorkspaces(all, "   ")).toHaveLength(all.length);
     expect(searchWorkspaces(all, "không-có-gì-khớp")).toHaveLength(0);
   });

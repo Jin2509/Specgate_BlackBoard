@@ -9,6 +9,14 @@ export interface Profile {
   initial: string;
 }
 
+export type AuthProvider = "github" | "google";
+
+export interface OAuthAccount {
+  provider: AuthProvider;
+  userId: string;
+  login: string;
+}
+
 export interface Workspace {
   id: string;
   name: string;
@@ -59,6 +67,7 @@ export type Segment =
 
 export type Attachment =
   | { type: "stats"; runId: string }
+  | { type: "highlight"; highlightId: string }
   | { type: "run-progress"; tasks: string[]; seconds: number; violations: number }
   | { type: "board-receipt"; text: string; status: IdeaStatus };
 
@@ -91,7 +100,7 @@ export interface BoardItem {
   at: string;
   critiques?: number;
   latestCritique?: string;
-  fromCapsule?: boolean;
+  fromHighlight?: { highlightId: string; ownerId: string };
   refs?: RefTarget[];
 }
 
@@ -104,12 +113,11 @@ export type JoinStatus = "pending" | "approved" | "rejected" | "cancelled";
 
 export type JoinRelation = "none" | "pending" | "member";
 
-export interface Invite {
+export interface JoinCode {
   code: string;
   workspaceId: string;
   createdBy: string;
-  uses: number;
-  expiresAt: string;
+  createdAt: string;
 }
 
 export interface JoinRequest {
@@ -118,9 +126,51 @@ export interface JoinRequest {
   userId: string;
   message: string;
   status: JoinStatus;
+  via: "code" | "explore";
+  code?: string;
   at: string;
   decidedBy?: string;
-  capsule?: { itemIds: string[]; summary?: string };
+}
+
+// Workspace riêng: khóa của nhà cung cấp, hội thoại nhiều lượt và highlight.
+export type ProviderKind = "anthropic" | "openai-compatible";
+
+export interface ProviderKey {
+  userId: string;
+  provider: ProviderKind;
+  baseUrl?: string;
+  keyLast4: string;
+  model: string;
+  models: string[];
+  savedAt: string;
+}
+
+export interface Turn {
+  id: string;
+  role: "user" | "assistant";
+  text: string;
+  at: string;
+  model?: string;
+}
+
+export interface Conversation {
+  id: string;
+  ownerId: string;
+  title: string;
+  updatedAt: string;
+  turns: Turn[];
+}
+
+export type HighlightLabel = "important" | "review";
+
+export interface Highlight {
+  id: string;
+  ownerId: string;
+  conversationId: string;
+  turnId: string;
+  text: string;
+  label: HighlightLabel;
+  at: string;
 }
 
 export type Validity = "valid" | "invalidated" | "pilot";

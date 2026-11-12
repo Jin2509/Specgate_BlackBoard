@@ -6,7 +6,19 @@ import type { BoardCard } from "@/lib/types";
 import { BriefActions } from "./brief-actions";
 import { BriefRow, BriefSection } from "./brief-section";
 
-export function BriefView({ title, brief, items, meta }: { title: string; brief: string; items: BoardCard[]; meta: string }) {
+export function BriefView({
+  title,
+  brief,
+  items,
+  meta,
+  canRebuild,
+}: {
+  title: string;
+  brief: string;
+  items: BoardCard[];
+  meta: string;
+  canRebuild: boolean;
+}) {
   const model = buildBrief(title, items);
 
   return (
@@ -15,11 +27,11 @@ export function BriefView({ title, brief, items, meta }: { title: string; brief:
         icon={<FileText />}
         title="Bản tổng hợp"
         meta="dựng từ bảng ý tưởng"
-        actions={<BriefActions markdown={briefToMarkdown(model, brief)} />}
+        actions={<BriefActions markdown={briefToMarkdown(model, brief)} canRebuild={canRebuild} />}
       />
       <PageBody>
         <article className="mx-auto max-w-4xl rounded-lg bg-card px-6 py-6 md:px-10 md:py-8">
-          <p className="text-xs font-bold tracking-wide text-subtle uppercase">Bản tổng hợp</p>
+          <p className="text-[13px] font-semibold text-subtle">Bản tổng hợp</p>
           <h2 className="mt-1 text-2xl font-bold text-sidebar-accent-foreground">{model.title}</h2>
           <p className="mt-1 text-xs text-subtle">{meta}</p>
 

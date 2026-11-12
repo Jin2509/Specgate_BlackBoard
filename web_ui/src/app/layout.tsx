@@ -25,7 +25,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="vi" className={`dark ${uiFont.variable} ${codeFont.variable} h-full antialiased`}>
+    <html lang="vi" className={`${uiFont.variable} ${codeFont.variable} h-full antialiased`}>
       <body className="min-h-full">
         <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
       </body>

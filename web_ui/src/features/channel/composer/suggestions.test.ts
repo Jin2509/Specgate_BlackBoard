@@ -36,3 +36,27 @@ describe("danh sách gợi ý", () => {
     expect(applySuggestion("Lan ơi /de", decide)).toBe("Lan ơi /decide ");
   });
 });
+
+describe("gợi ý highlight", () => {
+  const h = {
+    id: "h1",
+    ownerId: "trang",
+    conversationId: "c1",
+    turnId: "c1-4",
+    text: "Rủi ro chính: đặc tả thường lệch với hành vi thật",
+    label: "review" as const,
+    at: "12/11 09:17",
+  };
+
+  it("@ liệt kê highlight sau agent và người, lọc theo nội dung", () => {
+    const ws = getWorkspace("do-an")!;
+    const all = mentionSuggestions(getAgents(ws), getMembers(ws), "", [h]);
+    expect(all.at(-1)?.kind).toBe("highlight");
+    expect(mentionSuggestions([], [], "đặc tả", [h])).toHaveLength(1);
+    expect(mentionSuggestions([], [], "coq", [h])).toHaveLength(0);
+  });
+
+  it("chọn highlight chỉ xóa từ @ đang gõ, không chèn chữ", () => {
+    expect(applySuggestion("xem đoạn này @đặc", { kind: "highlight", highlight: h })).toBe("xem đoạn này ");
+  });
+});

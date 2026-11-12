@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Database, FileText, FlaskConical, Hash, KanbanSquare, Plus, Settings, UserPlus } from "lucide-react";
 import type { ReactNode } from "react";
 import { ActorAvatar } from "@/components/common/actor-avatar";
-import type { Agent, Invite, Workspace } from "@/lib/types";
+import type { Agent, JoinCode, Workspace } from "@/lib/types";
 import { NavGroup, NavItem } from "./sidebar-nav";
 import { WorkspaceMenu } from "./workspace-menu";
 
@@ -20,7 +20,7 @@ export function WorkspaceSidebar({
   agents,
   counts,
   viewerIsOwner,
-  invite,
+  joinCode,
   explorePath,
   footer,
 }: {
@@ -28,7 +28,7 @@ export function WorkspaceSidebar({
   agents: Agent[];
   counts: SidebarCounts;
   viewerIsOwner: boolean;
-  invite: Invite | undefined;
+  joinCode: JoinCode | undefined;
   explorePath: string;
   footer: ReactNode;
 }) {
@@ -38,10 +38,10 @@ export function WorkspaceSidebar({
   const enabledAgents = agents.filter((a) => a.enabled);
 
   return (
-    <aside className="flex w-60 shrink-0 flex-col bg-sidebar">
+    <aside className="flex w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
       <WorkspaceMenu
         ws={ws}
-        invite={invite}
+        joinCode={joinCode}
         isOwner={viewerIsOwner}
         pendingRequests={counts.pendingRequests}
         explorePath={explorePath}
@@ -49,7 +49,7 @@ export function WorkspaceSidebar({
 
       <div className="flex-1 scrollbar-thin overflow-y-auto px-2 pb-3">
         <div className="px-2 pt-4">
-          <p className="text-xs font-bold tracking-wide text-subtle uppercase">Đề bài</p>
+          <p className="text-[13px] font-semibold text-subtle">Đề bài</p>
           <p className="mt-1 text-[13px] leading-snug text-muted-foreground">{ws.brief}</p>
         </div>
 
@@ -105,10 +105,10 @@ export function WorkspaceSidebar({
           ) : null}
         </NavGroup>
 
-        <NavGroup label={`Agent — ${enabledAgents.length}`}>
+        <NavGroup label={`Agent (${enabledAgents.length})`}>
           {enabledAgents.map((a) => (
             <div key={a.id} className="flex h-10 items-center gap-2.5 rounded px-2 hover:bg-hover">
-              <ActorAvatar kind="agent" size="sm" />
+              <ActorAvatar kind="agent" initial={a.handle} size="sm" />
               <div className="min-w-0 leading-tight">
                 <p className="truncate text-[15px] font-medium text-muted-foreground">{a.handle}</p>
                 <p className="truncate font-mono text-[11px] text-subtle">{a.model}</p>

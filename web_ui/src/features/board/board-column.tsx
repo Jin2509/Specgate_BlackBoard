@@ -1,6 +1,5 @@
 // Một cột trạng thái của bảng ý tưởng.
 import { SectionLabel } from "@/components/common/panel";
-import { ToneDot } from "@/components/common/tone-badge";
 import { ideaStatusMeta } from "@/lib/status";
 import type { BoardCard, IdeaStatus } from "@/lib/types";
 import { BoardItemCard } from "./board-item-card";
@@ -20,8 +19,7 @@ export function BoardColumn({
   return (
     <section className="flex min-w-0 flex-col gap-2">
       <SectionLabel className="px-1">
-        <ToneDot tone={meta.tone} />
-        {meta.label} — {items.length}
+        {meta.label} ({items.length})
       </SectionLabel>
       {items.map((i) => (
         <BoardItemCard key={i.id} item={i} onClick={canDecide ? () => onSelect(i.id) : undefined} />

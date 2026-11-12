@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "web", "url": "http://localhost:3000", "port": 3000 },
+    {
+      "name": "web-build",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["--dir", "web_ui", "exec", "next", "start", "-p", "3001"],
+      "port": 3001
+    }
+  ]
+}

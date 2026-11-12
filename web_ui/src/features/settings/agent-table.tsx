@@ -1,7 +1,7 @@
 // Bảng agent: vai, mô hình, khóa API, chi phí, bật/tắt.
 "use client";
 
-import { Bot, KeyRound, Pencil, Plus } from "lucide-react";
+import { Terminal, KeyRound, Pencil, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { ToneBadge } from "@/components/common/tone-badge";
@@ -24,7 +24,7 @@ export function AgentTable({
   return (
     <section className="min-w-0 overflow-x-auto rounded-lg bg-card">
       <div className="flex items-center gap-2 px-4 pt-3.5 pb-2">
-        <Bot className="size-4 text-primary" />
+        <Terminal className="size-4 text-primary" />
         <h2 className="text-sm font-semibold">Agent</h2>
         <Button variant="secondary" size="sm" className="ml-auto">
           <Plus /> Thêm agent
@@ -47,7 +47,7 @@ export function AgentTable({
             <tr key={a.id} className={cn("border-b last:border-0", editingId === a.id && "bg-accent/50")}>
               <td className="px-4 py-2.5">
                 <span className="flex items-center gap-1.5 font-medium">
-                  <Bot className="size-4 text-agent" />@{a.handle}
+                  <Terminal className="size-4 text-agent" />@{a.handle}
                 </span>
               </td>
               <td className="py-2.5">

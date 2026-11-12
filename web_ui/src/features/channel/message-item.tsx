@@ -1,5 +1,5 @@
-// Hiển thị một tin nhắn của người hoặc agent.
-import { CornerUpRight } from "lucide-react";
+// Hiển thị một tin nhắn của người, agent hoặc hệ thống.
+import { CornerUpRight, Info } from "lucide-react";
 import { ActorAvatar, AiTag } from "@/components/common/actor-avatar";
 import { getAgent, getProfile } from "@/lib/mock/queries";
 import { agentRoleMeta } from "@/lib/status";
@@ -7,7 +7,28 @@ import type { Message } from "@/lib/types";
 import { MessageAttachment } from "./message-attachment";
 import { MessageSegment } from "./message-segment";
 
-export function MessageItem({ message, workspaceId }: { message: Message; workspaceId: string }) {
+export function MessageItem({
+  message,
+  workspaceId,
+  viewerIsOwner = false,
+}: {
+  message: Message;
+  workspaceId: string;
+  viewerIsOwner?: boolean;
+}) {
+  if (message.senderKind === "system") {
+    return (
+      <p className="mt-3 flex items-start gap-2 py-0.5 pr-12 pl-18 text-[13.5px] text-muted-foreground">
+        <Info className="mt-0.5 size-4 shrink-0 text-subtle" />
+        <span>
+          {message.body.map((seg, i) => (
+            <MessageSegment key={i} seg={seg} />
+          ))}
+        </span>
+      </p>
+    );
+  }
+
   const isAgent = message.senderKind === "agent";
   const agent = isAgent ? getAgent(message.senderId) : undefined;
   const person = !isAgent ? getProfile(message.senderId) : undefined;
@@ -21,7 +42,11 @@ export function MessageItem({ message, workspaceId }: { message: Message; worksp
           <span className="truncate">{message.replyTo.excerpt}</span>
         </p>
       ) : null}
-      <ActorAvatar kind={isAgent ? "agent" : "human"} initial={person?.initial} className="absolute left-4 mt-0.5" />
+      <ActorAvatar
+        kind={isAgent ? "agent" : "human"}
+        initial={agent?.handle ?? person?.initial}
+        className="absolute left-4 mt-0.5"
+      />
       <header className="flex flex-wrap items-center gap-x-1.5 leading-5.5">
         <span className={isAgent ? "font-medium text-agent" : "font-medium text-sidebar-accent-foreground"}>
           {agent ? agent.handle : person?.displayName}
@@ -30,7 +55,7 @@ export function MessageItem({ message, workspaceId }: { message: Message; worksp
           <>
             <AiTag />
             <span className="text-xs text-subtle">
-              {agentRoleMeta[agent.role].label} · <span className="font-mono">{agent.model}</span>
+              {agentRoleMeta[agent.role].label}, <span className="font-mono">{agent.model}</span>
             </span>
           </>
         ) : null}
@@ -54,7 +79,9 @@ export function MessageItem({ message, workspaceId }: { message: Message; worksp
         </ol>
       ) : null}
 
-      {message.attachment ? <MessageAttachment attachment={message.attachment} workspaceId={workspaceId} /> : null}
+      {message.attachment ? (
+        <MessageAttachment attachment={message.attachment} workspaceId={workspaceId} viewerIsOwner={viewerIsOwner} />
+      ) : null}
     </article>
   );
 }

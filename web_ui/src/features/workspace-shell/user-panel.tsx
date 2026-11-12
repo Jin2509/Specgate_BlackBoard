@@ -5,15 +5,23 @@ import { IconButton } from "@/components/common/icon-button";
 import { signOut } from "@/lib/auth-actions";
 import type { Profile } from "@/lib/types";
 
-export function UserPanel({ user, settingsHref }: { user: Profile; settingsHref: string }) {
+export function UserPanel({
+  user,
+  settingsHref,
+  settingsLabel = "Cài đặt",
+}: {
+  user: Profile;
+  settingsHref: string;
+  settingsLabel?: string;
+}) {
   return (
-    <div className="flex h-13 shrink-0 items-center gap-2 bg-sidebar-footer px-2">
+    <div className="flex h-13 shrink-0 items-center gap-2 border-t border-sidebar-border bg-sidebar-footer px-2">
       <ActorAvatar kind="human" initial={user.initial} size="sm" online />
       <div className="min-w-0 flex-1 leading-tight">
         <p className="truncate text-sm font-semibold text-sidebar-accent-foreground">{user.displayName}</p>
-        <p className="truncate text-xs text-subtle">Trực tuyến</p>
+        <p className="truncate text-xs text-subtle">Đang trực tuyến</p>
       </div>
-      <IconButton label="Thành viên và agent" href={settingsHref}>
+      <IconButton label={settingsLabel} href={settingsHref}>
         <Settings />
       </IconButton>
       <form action={signOut}>

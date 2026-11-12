@@ -5,13 +5,13 @@ import { CriteriaLegend } from "@/features/metrics/criteria-legend";
 import { CriterionCard } from "@/features/metrics/criterion-card";
 import { MetricsShell } from "@/features/metrics/metrics-shell";
 import { countCriterionIdeas, getCriteria, getRuns } from "@/lib/mock/queries";
-import { requireWorkspace, workspaceStaticParams } from "@/lib/workspace-route";
+import { requireSharedWorkspace, workspaceStaticParams } from "@/lib/workspace-route";
 
 export const generateStaticParams = workspaceStaticParams;
 export const metadata: Metadata = { title: "Bảng số liệu" };
 
 export default async function MetricsPage({ params }: PageProps<"/w/[ws]/metrics">) {
-  const ws = await requireWorkspace(params);
+  const ws = await requireSharedWorkspace(params);
   const run = getRuns(ws.id)[0];
   if (!run) notFound();
 
