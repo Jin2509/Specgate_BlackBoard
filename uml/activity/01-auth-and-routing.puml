@@ -1,0 +1,46 @@
+@startuml 01-auth-and-routing
+!include ../_style.iuml
+title Hoạt động 01: Đăng nhập và điều hướng vào workspace
+
+start
+:Mở một URL bất kỳ;
+if (Đã có phiên?) then (không)
+  :Chuyển tới /login?next=URL;
+  :Chọn Google hoặc GitHub;
+  :Xác thực OAuth;
+  if (OAuthAccount đã tồn tại?) then (có)
+    :Dùng hồ sơ cũ (không tạo trùng);
+  else (không)
+    :Nhập tên hiển thị;
+    if (login & tên hợp lệ?) then (không)
+      :Báo lỗi trên form;
+      stop
+    endif
+    :Tạo Profile + OAuthAccount;
+    :Tạo workspace riêng;
+    :Mở màn nhập API key;
+    stop
+  endif
+  :Ghi cookie phiên;
+endif
+
+if (URL là /w/{ws}?) then (có)
+  if (ws tồn tại?) then (không)
+    :Trang 404;
+    stop
+  elseif (Là thành viên?) then (có)
+    :Mở workspace;
+  elseif (Đang có yêu cầu chờ?) then (có)
+    :Mở /join/{request} (Đang chờ duyệt);
+  else (không)
+    :Chuyển tới Khám phá, chọn sẵn ws;
+  endif
+else (không, ví dụ "/")
+  if (Workspace dùng gần nhất còn là thành viên?) then (có)
+    :Mở workspace đó;
+  else (không)
+    :Mở workspace riêng;
+  endif
+endif
+stop
+@enduml

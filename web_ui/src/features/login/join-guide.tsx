@@ -6,7 +6,7 @@ const STEPS: { icon: ReactNode; title: string; body: string }[] = [
   {
     icon: <Lock />,
     title: "Bắt đầu ở workspace riêng",
-    body: "Nhập API key và chat với agent, chỉ mình bạn thấy. Đoạn nào đáng bàn thì highlight.",
+    body: "Nhập API key, chat với agent riêng của bạn, chỉ mình bạn thấy. Câu trả lời gửi thẳng vào kênh nhóm được.",
   },
   {
     icon: <KeyRound />,

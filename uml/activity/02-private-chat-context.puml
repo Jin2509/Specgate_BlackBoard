@@ -1,0 +1,53 @@
+@startuml 02-private-chat-context
+!include ../_style.iuml
+title Hoạt động 02: Workspace riêng: key → chat có ngữ cảnh nhóm → gửi vào kênh
+
+|Người dùng|
+start
+:Mở workspace riêng;
+|Hệ thống|
+if (Đã có ProviderKey?) then (không)
+  |Người dùng|
+  repeat
+    :Chọn nhà cung cấp (Anthropic / OpenAI-compat);
+    :Dán API key (+ baseUrl nếu cần);
+    |Hệ thống|
+    :Gọi liệt kê mô hình qua backend;
+  repeat while (Key hợp lệ?) is (không) not (có)
+  :Lưu key vào Vault (chỉ ghi);
+  :Lưu keyLast4 + danh sách mô hình;
+endif
+|Người dùng|
+:Chọn mô hình (= agent riêng);
+:Mở hoặc tạo hội thoại;
+if (Gắn workspace chung làm ngữ cảnh nhóm?) then (có)
+  :Chọn workspace ở ô "Ngữ cảnh nhóm";
+  |Hệ thống|
+  :Lưu Conversation.workspaceId;
+  :Hiện khung "Agent đang đọc"\n(vai, đội, ý chốt/loại, tin của mình, highlight);
+  |Người dùng|
+endif
+repeat
+  :Gửi câu hỏi;
+  |Hệ thống|
+  :Lưu lượt user;
+  if (Hội thoại gắn workspace chung?) then (có)
+    :Dựng ngữ cảnh nhóm: đề bài, đội và vai,\ný đã chốt/loại, tin của mình,\nhighlight của mình kèm người nói;
+  endif
+  :Gọi mô hình bằng key của người dùng;
+  :Stream câu trả lời, lưu lượt assistant;
+  |Người dùng|
+  if (Câu trả lời cần đưa cho nhóm?) then (có)
+    if (Hội thoại gắn workspace chung?) then (có)
+      :Bấm "Gửi vào kênh" hoặc bôi đen một đoạn;
+      :Sửa (lọc bớt), chọn kênh;
+      |Hệ thống|
+      :Đăng tin dưới tên agent của người gửi\n(vd. "claude-sonnet-5-5 của Lan", Tuần tự 05);
+      |Người dùng|
+    else (không)
+      :Gắn workspace chung trước;
+    endif
+  endif
+repeat while (Hỏi tiếp?) is (có) not (không)
+stop
+@enduml

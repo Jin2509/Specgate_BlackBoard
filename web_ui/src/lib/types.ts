@@ -26,9 +26,16 @@ export interface Workspace {
   ownerId: string;
   brief: string;
   modules: Array<"adom">;
-  members: Array<{ userId: string; role: MemberRole }>;
+  members: Member[];
   channels: Channel[];
-  agentIds: string[];
+}
+
+// teamRole: vai trong nhóm do chính thành viên tự mô tả (ví dụ "Dựng khung", "Runner").
+// Agent riêng của mọi thành viên đọc được vai này để biết trong nhóm còn ai, ai làm gì.
+export interface Member {
+  userId: string;
+  role: MemberRole;
+  teamRole?: string;
 }
 
 export interface Channel {
@@ -36,19 +43,13 @@ export interface Channel {
   name: string;
 }
 
-export type AgentRole = "generator" | "critic" | "synthesizer" | "custom";
-
-export interface Agent {
-  id: string;
-  handle: string;
-  role: AgentRole;
-  provider: string;
+// Agent riêng của một người: chính là mô hình người đó chọn ở workspace riêng, chạy bằng key của người đó.
+// Agent xuất hiện trong kênh chung chỉ khi chủ của nó gửi một câu trả lời từ workspace riêng vào kênh.
+export interface PersonalAgent {
+  ownerId: string;
+  ownerName: string;
+  provider: ProviderKind;
   model: string;
-  systemPrompt: string;
-  keyLast4: string;
-  budgetUsd: number;
-  spentUsd: number;
-  enabled: boolean;
 }
 
 export type SenderKind = "human" | "agent" | "system";
@@ -67,19 +68,20 @@ export type Segment =
 
 export type Attachment =
   | { type: "stats"; runId: string }
-  | { type: "highlight"; highlightId: string }
   | { type: "run-progress"; tasks: string[]; seconds: number; violations: number }
   | { type: "board-receipt"; text: string; status: IdeaStatus };
 
+// Tin của agent (senderKind "agent"): senderId là id của người chủ agent, agentModel là mô hình lúc gửi.
+// Người chủ gửi câu trả lời từ hội thoại riêng vào kênh; hội thoại gốc không đi theo.
 export interface Message {
   id: string;
   channelId: string;
   senderKind: SenderKind;
   senderId: string;
+  agentModel?: string;
   at: string;
   body: Segment[];
   list?: string[];
-  replyTo?: { senderId: string; excerpt: string };
   attachment?: Attachment;
   streaming?: boolean;
 }
@@ -95,12 +97,12 @@ export interface BoardItem {
   body: string;
   status?: IdeaStatus | QuestionStatus;
   reason?: string;
+  // kind "agent": id là người chủ của agent.
   createdBy: { kind: "human" | "agent"; id: string };
   decidedBy?: { id: string; at: string };
   at: string;
   critiques?: number;
   latestCritique?: string;
-  fromHighlight?: { highlightId: string; ownerId: string };
   refs?: RefTarget[];
 }
 
@@ -153,21 +155,28 @@ export interface Turn {
   model?: string;
 }
 
+// workspaceId: workspace chung mà hội thoại lấy ngữ cảnh. Khi có, mỗi lời gọi mô hình gửi kèm ngữ cảnh nhóm
+// (xem getAgentContext) và câu trả lời gửi được vào kênh của workspace đó.
 export interface Conversation {
   id: string;
   ownerId: string;
   title: string;
   updatedAt: string;
   turns: Turn[];
+  workspaceId?: string;
 }
 
 export type HighlightLabel = "important" | "review";
 
+// Highlight: một đoạn người dùng bôi đen trong tin nhắn của người khác ở kênh chung, để nạp vào agent riêng của mình.
+// Lưu bản chụp văn bản và người nói (người hoặc agent của ai), không lưu vị trí ký tự.
 export interface Highlight {
   id: string;
   ownerId: string;
-  conversationId: string;
-  turnId: string;
+  workspaceId: string;
+  channelId: string;
+  messageId: string;
+  author: { kind: "human" | "agent"; userId: string; model?: string };
   text: string;
   label: HighlightLabel;
   at: string;

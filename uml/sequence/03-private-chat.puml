@@ -1,0 +1,60 @@
+@startuml 03-private-chat
+!include ../_style.iuml
+title Tuần tự 03: Chat nhiều lượt có stream ở workspace riêng, kèm ngữ cảnh nhóm
+autonumber
+
+actor "Người dùng" as U
+participant "ChatScreen" as C
+participant "PrivateActions" as N
+participant "FastAPI\n/private/chat" as API
+participant "ContextBuilder" as CB
+database "Postgres" as DB
+database "Vault" as V
+participant "LLM Gateway" as G
+participant "Nhà cung cấp" as LLM
+
+U -> C : gõ câu hỏi, Enter
+C -> N : askAgent(conversationId?, text, workspaceId?)
+N -> API : POST /private/chat (SSE)
+API -> DB : lấy ProviderKey(userId)
+alt chưa có key
+  API --> N : 409 no-key
+  N --> C : chuyển tới màn nhập key
+else có key
+  opt conversationId rỗng
+    API -> DB : INSERT Conversation(ownerId, workspaceId nếu là thành viên)
+  end
+  API -> DB : INSERT Turn(role=user)
+  opt Conversation.workspaceId có giá trị
+    API -> CB : build(user, ws)
+    CB -> DB : đề bài, đội (vai trong nhóm, mô hình agent)
+    CB -> DB : ý đã chốt / đã loại kèm lý do
+    CB -> DB : mọi tin của user và agent của user trong các kênh
+    CB -> DB : highlight của user trong ws, kèm người nói
+    CB --> API : ngữ cảnh nhóm (highlight gắn "chưa chốt";\ncắt tin cũ trước nếu quá giới hạn)
+  end
+  API -> V : đọc key của user (phía server)
+  API -> G : stream(model, ngữ cảnh nhóm + lịch sử lượt)
+  G -> LLM : request stream
+  loop từng đoạn token
+    LLM --> G : delta
+    G --> API : delta
+    API --> C : SSE delta
+    C --> U : chữ hiện dần
+  end
+  alt lỗi hạn mức / mạng
+    LLM --> G : 429 / lỗi
+    API --> C : SSE error (quota)
+  else xong
+    API -> DB : INSERT Turn(role=assistant, model)
+    API -> DB : UPDATE Conversation.updatedAt, title
+    API --> C : SSE done
+  end
+end
+note over C, LLM
+  Key không bao giờ xuống trình duyệt: mọi lời gọi
+  mô hình đi qua backend nên không lộ ở tab Network.
+  Ngữ cảnh nhóm không chứa tin nào của người khác
+  trừ những đoạn chính user đã highlight.
+end note
+@enduml

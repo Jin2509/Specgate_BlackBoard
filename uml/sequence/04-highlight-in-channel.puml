@@ -1,0 +1,43 @@
+@startuml 04-highlight-in-channel
+!include ../_style.iuml
+title Tuần tự 04: Highlight tin của người khác trong kênh → agent riêng đọc kèm người nói
+autonumber
+
+actor "Lan" as A
+participant "HighlightableList\n(kênh chung)" as CH
+participant "ChatScreen\n(workspace riêng của Lan)" as PC
+participant "Next.js\nServer Actions" as N
+participant "FastAPI" as API
+database "Postgres" as DB
+
+== Highlight trong kênh ==
+A -> CH : bôi đen một đoạn trong tin của Long\nhoặc của "deepseek-v4 của Long"
+alt tin của Lan hoặc agent của Lan
+  CH --> A : nhắc "đã tự vào ngữ cảnh agent của bạn"
+else tin của người khác
+  CH --> A : nút "Highlight cho agent của tôi"
+  A -> CH : sửa đoạn, chọn nhãn Quan trọng | Cần xem xét
+  CH -> N : saveHighlight(ws, channel, messageId, text, label)
+  N -> API : POST /highlights
+  API -> API : require_member(ws)
+  API -> DB : đọc Message(messageId)
+  alt Message.senderId = Lan
+    API --> N : 409 own-message
+  else
+    API -> DB : INSERT Highlight(ownerId=Lan, text = bản chụp,\nauthor = {human | agent, userId, model})
+    API --> CH : đã lưu
+    CH --> A : vệt phấn trên đoạn (chỉ Lan thấy)
+  end
+end
+
+== Agent riêng đọc ở lượt hỏi kế tiếp ==
+A -> PC : hỏi trong hội thoại gắn workspace chung
+PC -> N : askAgent(...)
+ref over N, API, DB : Tuần tự 03: dựng ngữ cảnh nhóm, gọi mô hình bằng key của Lan
+PC --> A : "Long nói 60 giây là đo trên máy của Long…\nLong nói đúng nếu…"
+note right of PC
+  Agent biết người nói của từng đoạn:
+  "Long nói", "deepseek-v4 của Long nói".
+  Người khác không thấy highlight của Lan.
+end note
+@enduml

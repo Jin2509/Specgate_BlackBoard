@@ -1,0 +1,124 @@
+@startuml architecture
+!include ../_style.iuml
+title SpecGate: sơ đồ lớp tầng ứng dụng (frontend → backend)
+hide empty fields
+
+package "web_ui (Next.js 16)" {
+  class "proxy.ts" as Proxy <<middleware>> {
+    + chặn trang khi chưa đăng nhập
+    + redirect /login?next=…
+  }
+  class Session <<lib/session.ts>> {
+    + currentUser(): Profile
+  }
+  class AuthActions <<server action>> {
+    + signIn(form)
+    + signUp(prev, form)
+    + signOut()
+  }
+  class PrivateActions <<server action>> {
+    + saveKey(prev, form)
+    + pickModel(form)
+    + forgetKey()
+    + askAgent(prev, form)
+    + removeConversation(form)
+    + linkWorkspace(form)
+    + sendReplyToChannel(input)
+    + deleteHighlight(form)
+  }
+  class JoinActions <<server action>> {
+    + joinWithCode(prev, form)
+    + sendJoinRequest(form)
+    + decideRequest(form)
+    + cancelRequest(form)
+    + regenerateJoinCode(form)
+  }
+  class ChannelActions <<server action>> {
+    + postMessage(prev, form)
+    + saveHighlight(input)
+    + updateTeamRole(form)
+  }
+  class Queries <<lib/mock/queries.ts>> {
+    + getWorkspace(id)
+    + isMember(ws, uid) / isOwner(ws, uid)
+    + getBoard(wsId) / getMessages(wsId, ch)
+    + getHighlights(uid, wsId?) / getConversations(uid)
+    + getPersonalAgent(uid) / getTeam(ws)
+    + getAgentContext(uid, wsId)
+    + getPendingJoins(uid) / getJoinRequests(wsId)
+  }
+  class Mutations <<lib/mock/mutations.ts>> {
+    + registerAccount(input)
+    + rotateJoinCode(wsId, uid)
+    + submitJoinRequest(input)
+    + decideJoinRequest(id, uid, approve)
+    + cancelJoinRequest(id, uid)
+    + saveProviderKey(input) / chooseModel / removeProviderKey
+    + startConversation / sendTurn / deleteConversation
+    + linkConversation(uid, convId, wsId?)
+    + postAgentReply(input)
+    + addHighlight / removeHighlight
+    + setTeamRole(uid, wsId, role)
+    + postChannelMessage(input)
+  }
+  class Store <<lib/mock/store.ts>> {
+    profiles, workspaces, joinCodes,
+    joinRequests, messages, boards,
+    providerKeys, conversations, highlights
+  }
+}
+
+package "backend (FastAPI, theo kế hoạch)" {
+  class ApiRouters <<FastAPI>> {
+    /auth  /workspaces  /join
+    /channels  /board  /brief
+    /private/keys  /private/chat
+    /private/conversations/{id}/link
+    /private/conversations/{id}/post
+    /highlights  /members/me/team-role
+  }
+  class Authz <<dependency>> {
+    + require_member(ws)
+    + require_owner(ws)
+    + require_conversation_owner(conv)
+  }
+  class ContextBuilder {
+    + build(user, ws): đề bài + đội và vai
+      + ý chốt/loại + tin của user
+      + highlight của user kèm người nói
+    + trim(limit): cắt tin cũ trước, giữ highlight
+  }
+  class LlmGateway <<LiteLLM>> {
+    + list_models(key)
+    + stream(model, messages)
+    + cost(tokens)
+  }
+}
+
+package "Supabase" {
+  class Auth <<Google/GitHub>>
+  class Postgres <<RLS>>
+  class Realtime
+  class Vault <<chỉ ghi>>
+}
+
+Proxy ..> Session
+AuthActions --> Mutations
+PrivateActions --> Mutations
+JoinActions --> Mutations
+ChannelActions --> Mutations
+Mutations --> Queries
+Mutations --> Store
+Queries --> Store
+
+Mutations ..> ApiRouters : thay dần khi\ncó endpoint
+ApiRouters --> Authz
+ApiRouters --> ContextBuilder
+ApiRouters --> LlmGateway : key của chủ agent
+ContextBuilder --> Postgres
+ApiRouters --> Postgres
+ApiRouters --> Realtime
+ApiRouters --> Vault
+Session ..> Auth
+LlmGateway ..> Vault : đọc key phía server
+@enduml

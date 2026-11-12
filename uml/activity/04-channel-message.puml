@@ -1,0 +1,55 @@
+@startuml 04-channel-message
+!include ../_style.iuml
+title Hoạt động 04: Xử lý một tin trong kênh chung và highlight
+
+start
+split
+  :Nhận tin của người (text);
+  if (Người gửi là thành viên?) then (không)
+    :403 forbidden;
+    stop
+  endif
+  if (Text rỗng?) then (có)
+    :Báo "empty";
+    stop
+  endif
+  :Lưu tin (senderKind = human);
+  :Phát qua Realtime;
+  if (Có lệnh /summarize hoặc /brief?) then (có)
+    if (Người gửi là chủ?) then (có)
+      :Chạy lệnh tổng hợp\n(/summarize dùng agent và key của chủ);
+    else (không)
+      :Tin hệ thống: "Chỉ chủ workspace dùng được…";
+    endif
+  elseif (Có lệnh /idea, /note, /pin, /decide?) then (có)
+    :Ghi lên bảng ý tưởng\n(xem Hoạt động 05);
+  endif
+  note right
+    Kênh không có agent tự trả lời:
+    nhắc tên người hay agent đều không
+    gọi mô hình.
+  end note
+split again
+  :Nhận tin của agent riêng\n(gửi từ workspace riêng, Tuần tự 05);
+  :Lưu tin (senderKind = agent,\nsenderId = chủ agent, agentModel);
+  :Phát qua Realtime;
+  note right
+    Lệnh trong tin của agent không thực thi.
+  end note
+end split
+:Tin vào ngữ cảnh agent riêng của người gửi\n(tin của mình, tự đọc);
+
+partition "Một thành viên khác đọc tin" {
+  if (Đoạn này cần agent của mình đọc?) then (có)
+    :Bôi đen đoạn trong tin;
+    if (Tin của mình hoặc agent mình?) then (có)
+      :Chỉ nhắc "đã tự vào ngữ cảnh";
+    else (không)
+      :Highlight, chọn nhãn;
+      :Lưu bản chụp + người nói\n(chỉ người highlight thấy);
+      :Đoạn vào ngữ cảnh agent riêng\ncủa người highlight;
+    endif
+  endif
+}
+stop
+@enduml

@@ -6,11 +6,11 @@ import { ChannelFrame } from "@/features/channel/channel-frame";
 import { Composer } from "@/features/channel/composer/composer";
 import { MessageList } from "@/features/channel/message-list";
 import {
-  getAgents,
   getBoard,
   getHighlights,
   getMembers,
   getMessages,
+  getTeamAgents,
   getWorkspace,
   getWorkspaceIds,
   isOwner,
@@ -33,13 +33,18 @@ export default async function ChannelPage({ params }: PageProps<"/w/[ws]/c/[chan
   const { user } = await requireSession();
   const owner = isOwner(ws, user.id);
   const people = getMembers(ws);
-  const agents = getAgents(ws).filter((a) => a.enabled);
+  const agents = getTeamAgents(ws);
+  // Vệt phấn chỉ hiện ở những đoạn chính người xem đã highlight.
+  const marks: Record<string, string[]> = {};
+  for (const h of getHighlights(user.id, ws.id).filter((x) => x.channelId === channel.id)) {
+    (marks[h.messageId] ??= []).push(h.text);
+  }
 
   return (
     <ChannelFrame
       workspaceId={ws.id}
       channelName={channel.name}
-      topic={`${people.length} người, ${agents.length} agent`}
+      topic={`${people.length} người, ${agents.length} agent riêng`}
       hasAdom={ws.modules.includes("adom")}
       viewerIsOwner={owner}
       panel={<BoardPanel workspaceId={ws.id} items={getBoard(ws.id)} />}
@@ -49,14 +54,13 @@ export default async function ChannelPage({ params }: PageProps<"/w/[ws]/c/[chan
         messages={getMessages(ws.id, channel.id)}
         workspaceId={ws.id}
         channelName={channel.name}
-        viewerIsOwner={owner}
+        viewerId={user.id}
+        marks={marks}
       />
       <Composer
         workspaceId={ws.id}
         channelId={channel.id}
-        agents={agents}
         people={people.filter((p) => p.id !== user.id)}
-        highlights={getHighlights(user.id)}
         modules={ws.modules}
         channelName={channel.name}
       />

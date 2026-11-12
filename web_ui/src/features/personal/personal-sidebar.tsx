@@ -1,9 +1,9 @@
-// Cột trái của workspace riêng: mô hình đang dùng, hội thoại, highlight của tôi, key và mô hình.
+// Cột trái của workspace riêng: agent của bạn (mô hình đang dùng), hội thoại, highlight của tôi, key và mô hình.
 "use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Highlighter, KeyRound, MessageSquare, SquarePen } from "lucide-react";
+import { Highlighter, KeyRound, MessageSquare, SquarePen, Users } from "lucide-react";
 import type { ReactNode } from "react";
 import type { Conversation, ProviderKey } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -48,7 +48,7 @@ export function PersonalSidebar({
         >
           {providerKey ? (
             <>
-              <span className="block text-xs text-subtle">Đang chat với</span>
+              <span className="block text-xs text-subtle">Agent của bạn</span>
               <span className="block truncate font-mono text-[13px] text-foreground">{providerKey.model}</span>
             </>
           ) : (
@@ -61,14 +61,19 @@ export function PersonalSidebar({
 
         <NavGroup label="Hội thoại">
           {conversations.map((c) => (
-            <NavItem key={c.id} href={`${home}/${c.id}`} active={pathname === `${home}/${c.id}`} icon={<MessageSquare />}>
+            <NavItem
+              key={c.id}
+              href={`${home}/${c.id}`}
+              active={pathname === `${home}/${c.id}`}
+              icon={c.workspaceId ? <Users /> : <MessageSquare />}
+            >
               {c.title}
             </NavItem>
           ))}
           {conversations.length === 0 ? <p className="px-2 py-1 text-xs text-subtle">Chưa có hội thoại nào.</p> : null}
         </NavGroup>
 
-        <NavGroup label="Đưa ra nhóm">
+        <NavGroup label="Ngữ cảnh nhóm">
           <NavItem
             href={`${home}/highlights`}
             active={pathname === `${home}/highlights`}

@@ -1,0 +1,53 @@
+@startuml 03-join-workspace
+!include ../_style.iuml
+title Hoạt động 03: Xin vào workspace chung
+
+|Người xin|
+start
+if (Có mã tham gia?) then (có)
+  :Nhập mã 7 ký tự;
+  |Hệ thống|
+  if (Mã khớp workspace?) then (không)
+    :Báo mã sai hoặc đã đổi;
+    stop
+  endif
+else (không)
+  |Người xin|
+  :Mở Khám phá;
+  :Chọn workspace (discoverable);
+  :Viết lời nhắn, gửi yêu cầu;
+endif
+|Hệ thống|
+if (Đã là thành viên?) then (có)
+  :Mở thẳng workspace;
+  stop
+endif
+if (Đã có yêu cầu pending?) then (có)
+  :Cập nhật lời nhắn / mã của yêu cầu cũ;
+else (không)
+  :Tạo JoinRequest(pending);
+endif
+:Thông báo cho chủ workspace;
+|Người xin|
+:Chờ ở trang "Đang chờ duyệt";
+if (Hủy trước khi chủ quyết định?) then (có)
+  |Hệ thống|
+  :status = cancelled;
+  stop
+endif
+|Chủ workspace|
+:Xem "Yêu cầu tham gia";
+if (Duyệt?) then (có)
+  |Hệ thống|
+  :status = approved;
+  :Thêm Membership(role=member);
+  |Người xin|
+  :Trang chờ tự chuyển vào workspace;
+else (từ chối)
+  |Hệ thống|
+  :status = rejected;
+  |Người xin|
+  :Thấy thông báo, có thể xin mã mới và gửi lại;
+endif
+stop
+@enduml

@@ -1,10 +1,12 @@
-// Dữ liệu giả của bản giao diện, giữ ở mức tối thiểu cho buổi demo:
-// - Lan: chủ workspace chung "Đồ án Kiểm chứng" (đăng nhập bằng GitHub). Workspace riêng chưa có key.
-// - Trang: tài khoản mới (đăng nhập bằng Google), chỉ có workspace riêng với một hội thoại và một highlight;
-//   chưa vào workspace chung nào, để demo tham gia bằng mã KC26DAX rồi Lan duyệt.
+// Dữ liệu giả của bản giao diện, dựng theo kịch bản của trưởng nhóm:
+// - Lan (GitHub): chủ workspace chung "Đồ án Kiểm chứng", vai "Dựng khung", agent riêng là Claude.
+// - Long (GitHub): thành viên, vai "Runner", agent riêng là DeepSeek.
+//   Agent của Lan đã gửi các điểm cần thống nhất vào #chung, agent của Long trả lời, Long nhắn thêm một ý.
+//   Lan highlight hai đoạn của Long; hội thoại riêng của Lan (gắn với workspace chung) đọc được hai đoạn đó.
+// - Trang (Google): tài khoản mới, có key và một hội thoại riêng, chưa vào workspace chung nào,
+//   để demo tham gia bằng mã KC26DAX rồi Lan duyệt.
 // Số liệu ADOM ở giữa tệp là số thật của lượt MAIN, dùng cho các màn số liệu cho tới khi nhóm ADOM giao dữ liệu.
 import type {
-  Agent,
   BoardItem,
   Conversation,
   Criterion,
@@ -23,64 +25,15 @@ import type {
 
 export const profiles: Record<string, Profile> = {
   lan: { id: "lan", displayName: "Lan", initial: "L" },
+  long: { id: "long", displayName: "Long", initial: "L" },
   trang: { id: "trang", displayName: "Trang", initial: "T" },
 };
 
 export const oauthAccounts: OAuthAccount[] = [
   { provider: "github", userId: "lan", login: "lan-pham" },
+  { provider: "github", userId: "long", login: "long-tran" },
   { provider: "google", userId: "trang", login: "trang@example.edu" },
 ];
-
-function agent(
-  id: string,
-  handle: string,
-  role: Agent["role"],
-  model: string,
-  systemPrompt: string,
-  over: Partial<Agent> = {},
-): Agent {
-  return {
-    id,
-    handle,
-    role,
-    provider: role === "generator" ? "Anthropic" : "OpenAI-compatible",
-    model,
-    systemPrompt,
-    keyLast4: "k3f9",
-    budgetUsd: 5,
-    spentUsd: 0,
-    enabled: true,
-    ...over,
-  };
-}
-
-// Ba agent của workspace chung, dùng key của chủ workspace (Lan).
-export const agents: Record<string, Agent> = {
-  "gen-da": agent(
-    "gen-da",
-    "generator",
-    "generator",
-    "claude-sonnet-5-5",
-    "Đề xuất ý mới bám theo đề bài và ràng buộc. Mỗi ý một câu. Không đề xuất lại ý đã loại.",
-    { spentUsd: 0.64 },
-  ),
-  "critic-da": agent(
-    "critic-da",
-    "critic",
-    "critic",
-    "gpt-6-luna",
-    "Tìm điểm yếu của ý đang bàn theo ràng buộc trong đề bài. Nêu tối đa ba điểm, mỗi điểm một câu. Không đề xuất ý mới.",
-    { spentUsd: 4.86 },
-  ),
-  "synth-da": agent(
-    "synth-da",
-    "synth",
-    "synthesizer",
-    "qwen-3.8-max",
-    "Tóm tắt phần đã bàn: ý nào đã chốt, đã loại, còn mở. Không thêm ý của riêng mình.",
-    { spentUsd: 0.12, budgetUsd: 2 },
-  ),
-};
 
 function personal(userId: string, name: string): Workspace {
   return {
@@ -94,12 +47,12 @@ function personal(userId: string, name: string): Workspace {
     modules: [],
     members: [{ userId, role: "owner" }],
     channels: [],
-    agentIds: [],
   };
 }
 
 export const workspaces: Record<string, Workspace> = {
   "rieng-lan": personal("lan", "Lan"),
+  "rieng-long": personal("long", "Long"),
   "rieng-trang": personal("trang", "Trang"),
   "do-an": {
     id: "do-an",
@@ -110,12 +63,14 @@ export const workspaces: Record<string, Workspace> = {
     ownerId: "lan",
     brief: "Chọn đề tài đồ án môn Kiểm chứng phần mềm. Làm được trong 3 tuần, 2 người, có phần kiểm thử đo đếm được.",
     modules: [],
-    members: [{ userId: "lan", role: "owner" }],
+    members: [
+      { userId: "lan", role: "owner", teamRole: "Dựng khung" },
+      { userId: "long", role: "member", teamRole: "Runner" },
+    ],
     channels: [
       { id: "chung", name: "chung" },
       { id: "phan-bien", name: "phan-bien" },
     ],
-    agentIds: ["gen-da", "critic-da", "synth-da"],
   },
 };
 
@@ -123,6 +78,18 @@ export const workspaces: Record<string, Workspace> = {
 export const joinCodes: JoinCode[] = [{ code: "KC26DAX", workspaceId: "do-an", createdBy: "lan", createdAt: "12/11 08:30" }];
 
 export const joinRequests: JoinRequest[] = [];
+
+const LAN_QUESTIONS = [
+  "Công cụ sinh đột biến: dùng thư viện có sẵn (mutmut) hay tự viết?",
+  "Mỗi lượt chạy đột biến tối đa bao lâu? 60 giây một tệp có đủ không?",
+  "Kết quả ghi theo từng đột biến hay gộp theo tệp?",
+];
+
+const LONG_ANSWERS = [
+  "Dùng mutmut, tự viết không kịp 3 tuần.",
+  "60 giây đủ cho phần lớn tệp; tệp quá giờ ghi là timeout, không chạy lại.",
+  "Ghi theo từng đột biến, gộp sau bằng script.",
+];
 
 export const messages: Record<string, Message[]> = {
   "do-an/chung": [
@@ -133,44 +100,41 @@ export const messages: Record<string, Message[]> = {
       senderId: "lan",
       at: "14:00",
       body: [
-        { t: "mention", v: "generator" },
-        { t: "text", v: " gợi ý hai hướng đề tài có số đo rõ, mỗi hướng một câu." },
+        { t: "text", v: "Đã chốt kiểm thử đột biến. Mình dựng khung, " },
+        { t: "mention", v: "Long" },
+        { t: "text", v: " chạy. Agent của mình có mấy điểm cần runner trả lời, mình gửi vào đây." },
       ],
     },
     {
       id: "d2",
       channelId: "chung",
       senderKind: "agent",
-      senderId: "gen-da",
-      at: "14:00",
-      body: [],
-      list: [
-        "Công cụ so sánh độ phủ giữa test do người viết và test do LLM sinh.",
-        "Kiểm thử dựa trên thuộc tính cho bộ phân tích biểu thức cron.",
-      ],
+      senderId: "lan",
+      agentModel: "claude-sonnet-5-5",
+      at: "14:01",
+      body: [{ t: "text", v: "Điểm cần thống nhất với runner:" }],
+      list: [...LAN_QUESTIONS, "Kết thúc các câu hỏi."],
     },
     {
       id: "d3",
       channelId: "chung",
-      senderKind: "human",
-      senderId: "lan",
-      at: "14:02",
-      body: [
-        { t: "text", v: "Hướng 2 nghe hợp. " },
-        { t: "mention", v: "critic" },
-        { t: "text", v: " phản biện giúp, bám theo ràng buộc trong đề bài." },
-      ],
+      senderKind: "agent",
+      senderId: "long",
+      agentModel: "deepseek-v4",
+      at: "14:06",
+      body: [{ t: "text", v: "Các điểm cần thống nhất, khuyến nghị từ phía runner:" }],
+      list: LONG_ANSWERS,
     },
     {
       id: "d4",
       channelId: "chung",
-      senderKind: "agent",
-      senderId: "critic-da",
-      at: "14:02",
+      senderKind: "human",
+      senderId: "long",
+      at: "14:07",
       body: [
         {
           t: "text",
-          v: "Hai điểm yếu. Một: cần chốt trước số đo là số bất biến hay số phản ví dụ. Hai: dự án cron nhỏ có thể quá ít lỗi để so sánh. Điểm mạnh: dùng chung công cụ với ý đã chốt, tiết kiệm công dựng.",
+          v: "Bổ sung câu 2: 60 giây là mình đo trên máy mình, máy chấm của thầy chậm hơn khoảng gấp đôi.",
         },
       ],
     },
@@ -185,7 +149,7 @@ export const boards: Record<string, BoardItem[]> = {
       kind: "idea",
       body: "Công cụ so sánh độ phủ giữa test do người viết và test do LLM sinh",
       status: "proposed",
-      createdBy: { kind: "agent", id: "gen-da" },
+      createdBy: { kind: "agent", id: "lan" },
       at: "14:00",
     },
     {
@@ -194,7 +158,7 @@ export const boards: Record<string, BoardItem[]> = {
       kind: "idea",
       body: "Kiểm thử dựa trên thuộc tính cho bộ phân tích biểu thức cron",
       status: "discussing",
-      createdBy: { kind: "agent", id: "gen-da" },
+      createdBy: { kind: "agent", id: "lan" },
       at: "14:00",
       critiques: 1,
       latestCritique: "cần chốt trước số đo là số bất biến hay số phản ví dụ.",
@@ -217,7 +181,7 @@ export const boards: Record<string, BoardItem[]> = {
       body: "Chứng minh hình thức một thuật toán sắp xếp bằng Coq",
       status: "rejected",
       reason: "Không ai trong nhóm biết Coq, không kịp.",
-      createdBy: { kind: "agent", id: "gen-da" },
+      createdBy: { kind: "agent", id: "lan" },
       decidedBy: { id: "lan", at: "13:22" },
       at: "13:05",
     },
@@ -243,7 +207,7 @@ export const boards: Record<string, BoardItem[]> = {
       number: 7,
       kind: "summary",
       body: "Đã chốt kiểm thử đột biến; đang cân nhắc thêm hướng thuộc tính để có phần so sánh. Đã loại Coq vì không kịp.",
-      createdBy: { kind: "agent", id: "synth-da" },
+      createdBy: { kind: "agent", id: "lan" },
       at: "14:03",
     },
   ],
@@ -381,8 +345,26 @@ export const runCost = [
 
 export const criterionAnnotations: Record<number, string[]> = {};
 
-// Workspace riêng: chỉ Trang có key, một hội thoại và một highlight. Lan chưa nhập key để demo màn nhập key.
+// Workspace riêng: Lan và Long có key, mỗi người một agent. Trang có key và một hội thoại chưa gắn workspace chung.
+// Tài khoản đăng ký mới chưa có key, dùng để demo màn nhập key.
 export const providerKeys: ProviderKey[] = [
+  {
+    userId: "lan",
+    provider: "anthropic",
+    keyLast4: "k3f9",
+    model: "claude-sonnet-5-5",
+    models: ["claude-sonnet-5-5", "claude-haiku-5-5", "claude-opus-5-5"],
+    savedAt: "10/11 20:05",
+  },
+  {
+    userId: "long",
+    provider: "openai-compatible",
+    baseUrl: "https://api.deepseek.com/v1",
+    keyLast4: "d7e2",
+    model: "deepseek-v4",
+    models: ["gpt-6-luna", "qwen-3.8-max", "deepseek-v4"],
+    savedAt: "11/11 08:12",
+  },
   {
     userId: "trang",
     provider: "anthropic",
@@ -393,7 +375,44 @@ export const providerKeys: ProviderKey[] = [
   },
 ];
 
+const numbered = (items: string[]) => items.map((q, i) => `${i + 1}. ${q}`).join("\n");
+
 export const conversations: Conversation[] = [
+  {
+    id: "c-lan",
+    ownerId: "lan",
+    workspaceId: "do-an",
+    title: "Thống nhất với runner",
+    updatedAt: "12/11 14:12",
+    turns: [
+      {
+        id: "c-lan-1",
+        role: "user",
+        at: "13:58",
+        text: "Mình dựng khung cho đồ án kiểm thử đột biến, Long là runner chạy thí nghiệm. Liệt kê các điểm mình cần thống nhất với runner trước khi chạy.",
+      },
+      {
+        id: "c-lan-2",
+        role: "assistant",
+        model: "claude-sonnet-5-5",
+        at: "13:59",
+        text: `Điểm cần thống nhất với runner:\n\n${numbered(LAN_QUESTIONS)}\n\nKết thúc các câu hỏi.`,
+      },
+      {
+        id: "c-lan-3",
+        role: "user",
+        at: "14:11",
+        text: "Runner đã trả lời, mình highlight hai đoạn trong kênh. Phản biện giúp.",
+      },
+      {
+        id: "c-lan-4",
+        role: "assistant",
+        model: "claude-sonnet-5-5",
+        at: "14:12",
+        text: "Mình đọc hai đoạn bạn highlight ở #chung:\n\n1. DeepSeek của Long khuyên dùng mutmut vì tự viết không kịp 3 tuần. Đồng ý. Cần hỏi thầy trước, vì trên bảng vẫn còn câu hỏi mở về việc dùng thư viện ngoài.\n2. Long nói 60 giây là đo trên máy của Long, còn máy chấm chậm hơn khoảng gấp đôi. Long nói đúng nếu kết quả chính thức chạy trên máy chấm. Nên đặt 120 giây, hoặc đo lại một tệp trên máy chấm rồi mới chốt.\n\nCâu 3 runner đã trả lời đúng ý khung, không cần bàn thêm.",
+      },
+    ],
+  },
   {
     id: "c1",
     ownerId: "trang",
@@ -413,31 +432,32 @@ export const conversations: Conversation[] = [
         at: "09:12",
         text: "Ba hướng vừa sức 3 tuần:\n\n1. Kiểm thử đột biến: đo chất lượng bộ test có sẵn bằng tỷ lệ đột biến bị bắt.\n2. Kiểm thử dựa trên thuộc tính: phát biểu bất biến, để công cụ tự sinh đầu vào và tìm phản ví dụ.\n3. Kiểm thử hợp đồng API: sinh ca thử từ đặc tả OpenAPI của một dịch vụ mã nguồn mở.\n\nHướng 1 có số đo rõ nhất. Hướng 3 dễ mất thời gian dọn đặc tả trước khi kiểm thử được.",
       },
-      {
-        id: "c1-3",
-        role: "user",
-        at: "09:15",
-        text: "Hướng 3 nếu làm thì cần chuẩn bị gì?",
-      },
-      {
-        id: "c1-4",
-        role: "assistant",
-        model: "claude-sonnet-5-5",
-        at: "09:16",
-        text: "Cần một dịch vụ có đặc tả OpenAPI đầy đủ và chạy được trên máy. Rủi ro chính: đặc tả thường lệch với hành vi thật, nên một phần lỗi tìm được là lỗi của đặc tả chứ không phải của dịch vụ. Nên quyết định trước sẽ đếm hai loại này riêng hay chung.",
-      },
     ],
   },
 ];
 
+// Highlight của Lan trong #chung: một đoạn của agent của Long, một đoạn Long tự nhắn.
 export const highlights: Highlight[] = [
   {
     id: "h1",
-    ownerId: "trang",
-    conversationId: "c1",
-    turnId: "c1-4",
-    text: "Rủi ro chính: đặc tả thường lệch với hành vi thật, nên một phần lỗi tìm được là lỗi của đặc tả chứ không phải của dịch vụ.",
+    ownerId: "lan",
+    workspaceId: "do-an",
+    channelId: "chung",
+    messageId: "d3",
+    author: { kind: "agent", userId: "long", model: "deepseek-v4" },
+    text: LONG_ANSWERS[0],
+    label: "important",
+    at: "12/11 14:09",
+  },
+  {
+    id: "h2",
+    ownerId: "lan",
+    workspaceId: "do-an",
+    channelId: "chung",
+    messageId: "d4",
+    author: { kind: "human", userId: "long" },
+    text: "60 giây là mình đo trên máy mình, máy chấm của thầy chậm hơn khoảng gấp đôi.",
     label: "review",
-    at: "12/11 09:17",
+    at: "12/11 14:10",
   },
 ];

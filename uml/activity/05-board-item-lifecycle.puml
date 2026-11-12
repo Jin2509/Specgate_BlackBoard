@@ -1,0 +1,30 @@
+@startuml 05-board-item-lifecycle
+!include ../_style.iuml
+title Hoạt động 05: Vòng đời một ý trên bảng
+
+start
+split
+  :Thành viên /idea <nội dung>;
+split again
+  :Thành viên /pin khi trả lời một tin\n(kể cả tin của agent riêng);
+end split
+:Tạo BoardItem, cột **Đề xuất**\n(createdBy: người, hoặc agent của ai);
+:Thảo luận trong kênh: các thành viên hỏi agent riêng,\ngửi phản biện vào kênh (critiques tăng);
+:Chuyển sang cột **Đang bàn**;
+:Người (không phải agent) ra quyết định;
+repeat
+  :Nhập lý do;
+repeat while (Lý do rỗng?) is (có) not (không)
+if (Quyết định?) then (chốt)
+  :Cột **Đã chốt**, ghi decidedBy;
+else (loại)
+  :Cột **Đã loại**, ghi decidedBy;
+endif
+note right
+  Trạng thái cuối, không quay ngược.
+  Phân biệt bằng cột và chữ, không tô màu.
+  Ý đã chốt/loại vào ngữ cảnh nhóm của mọi agent riêng.
+end note
+:Xuất hiện trong bản tổng hợp (Markdown);
+stop
+@enduml

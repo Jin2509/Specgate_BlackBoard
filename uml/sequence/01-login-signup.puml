@@ -1,0 +1,47 @@
+@startuml 01-login-signup
+!include ../_style.iuml
+title Tuần tự 01: Đăng nhập / đăng ký bằng Google hoặc GitHub
+autonumber
+
+actor "Người dùng" as U
+participant "Trình duyệt" as B
+participant "proxy.ts" as P
+participant "Next.js\n(AuthActions)" as N
+participant "Supabase Auth" as SA
+participant "FastAPI" as API
+database "Postgres" as DB
+
+U -> B : mở /w/rieng-…
+B -> P : GET trang
+P -> P : đọc cookie phiên
+alt chưa đăng nhập
+  P --> B : 302 /login?next=/w/rieng-…
+  U -> B : chọn Google hoặc GitHub
+  B -> SA : OAuth redirect
+  SA --> B : callback (mã ủy quyền)
+  B -> N : signIn / signUp
+  N -> SA : đổi mã lấy phiên
+  SA --> N : user (provider, login)
+  N -> API : POST /auth/register(provider, login, displayName)
+  API -> DB : tìm OAuthAccount(provider, login)
+  alt tài khoản đã có
+    DB --> API : userId
+    API --> N : {userId, created: false}
+    N --> B : set cookie, 302 về `next`\nhoặc workspace dùng gần nhất
+  else lần đầu
+    API -> API : validateSignUp()
+    alt dữ liệu sai
+      API --> N : invalid-login | invalid-name
+      N --> B : hiện lỗi trên form
+    else hợp lệ
+      API -> DB : INSERT Profile, OAuthAccount
+      API -> DB : INSERT Workspace(kind=personal, owner)
+      API --> N : {userId, created: true}
+      N --> B : set cookie, 302 /w/rieng-…/chat/key
+      B --> U : màn nhập API key
+    end
+  end
+else đã đăng nhập
+  P --> B : cho qua
+end
+@enduml

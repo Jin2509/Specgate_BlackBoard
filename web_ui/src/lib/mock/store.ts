@@ -55,7 +55,7 @@ function seed(): MockStore {
   };
 }
 
-const KEY = "__specgateMockStore_v3";
+const KEY = "__specgateMockStore_v4";
 const g = globalThis as typeof globalThis & { [KEY]?: MockStore };
 
 export function store(): MockStore {

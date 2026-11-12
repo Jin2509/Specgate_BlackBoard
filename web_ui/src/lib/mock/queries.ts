@@ -1,6 +1,5 @@
 // Các hàm truy vấn dữ liệu cho trang và component.
 import type {
-  Agent,
   AuthProvider,
   BoardCard,
   BoardItem,
@@ -10,13 +9,14 @@ import type {
   JoinRelation,
   JoinRequest,
   Message,
+  MemberRole,
   OAuthAccount,
+  PersonalAgent,
   Profile,
   ProviderKey,
   Workspace,
 } from "@/lib/types";
 import {
-  agents,
   criteria,
   criterionAnnotations,
   draftAgreement,
@@ -110,19 +110,62 @@ export function getPendingJoins(userId: string): Array<{ request: JoinRequest; w
   });
 }
 
-export function getAgents(ws: Workspace): Agent[] {
-  return ws.agentIds.map((id) => agents[id]).filter(Boolean);
-}
-
-export function getAgent(id: string | undefined): Agent | undefined {
-  return id ? agents[id] : undefined;
-}
-
 export function getMessages(workspaceId: string, channelId: string): Message[] {
   return store().messages[`${workspaceId}/${channelId}`] ?? [];
 }
 
-// Workspace riêng.
+export function getMessage(workspaceId: string, channelId: string, messageId: string): Message | undefined {
+  return getMessages(workspaceId, channelId).find((m) => m.id === messageId);
+}
+
+function nameOf(userId: string): string {
+  return store().profiles[userId]?.displayName ?? userId;
+}
+
+// ---------- Agent riêng và đội ----------
+
+// Agent riêng của một người là mô hình người đó đang chọn ở workspace riêng. Chưa có key thì chưa có agent.
+export function getPersonalAgent(userId: string): PersonalAgent | undefined {
+  const key = getProviderKey(userId);
+  return key ? { ownerId: userId, ownerName: nameOf(userId), provider: key.provider, model: key.model } : undefined;
+}
+
+// Cách gọi tên agent ở mọi nơi: mô hình kèm tên chủ, ví dụ "claude-sonnet-5-5 của Lan".
+export function agentLabel(ownerId: string, model?: string): string {
+  return `${model ?? "agent"} của ${nameOf(ownerId)}`;
+}
+
+export interface TeamMember {
+  profile: Profile;
+  role: MemberRole;
+  teamRole?: string;
+  agent?: PersonalAgent;
+}
+
+export function getTeam(ws: Workspace): TeamMember[] {
+  return ws.members.flatMap((m) => {
+    const profile = store().profiles[m.userId];
+    return profile ? [{ profile, role: m.role, teamRole: m.teamRole, agent: getPersonalAgent(m.userId) }] : [];
+  });
+}
+
+export function getTeamAgents(ws: Workspace): PersonalAgent[] {
+  return getTeam(ws).flatMap((m) => (m.agent ? [m.agent] : []));
+}
+
+// Tên người nói của một tin: người, hoặc agent của ai.
+export function speakerLabel(m: Pick<Message, "senderKind" | "senderId" | "agentModel">): string {
+  if (m.senderKind === "agent") return agentLabel(m.senderId, m.agentModel);
+  if (m.senderKind === "system") return "Hệ thống";
+  return nameOf(m.senderId);
+}
+
+export function highlightAuthorLabel(h: Highlight): string {
+  return h.author.kind === "agent" ? agentLabel(h.author.userId, h.author.model) : nameOf(h.author.userId);
+}
+
+// ---------- Workspace riêng ----------
+
 export function getProviderKey(userId: string): ProviderKey | undefined {
   return store().providerKeys.find((k) => k.userId === userId);
 }
@@ -135,34 +178,80 @@ export function getConversation(id: string, userId: string): Conversation | unde
   return store().conversations.find((c) => c.id === id && c.ownerId === userId);
 }
 
-export function getHighlights(userId: string): Highlight[] {
+// Highlight của một người, mới nhất lên đầu. Chỉ người tạo thấy highlight của mình.
+export function getHighlights(userId: string, workspaceId?: string): Highlight[] {
   return store()
-    .highlights.filter((h) => h.ownerId === userId)
+    .highlights.filter((h) => h.ownerId === userId && (!workspaceId || h.workspaceId === workspaceId))
     .slice()
     .reverse();
 }
 
-// Highlight đã được gửi vào một workspace chung thì mọi thành viên của workspace đó đọc được bản chụp,
-// nhưng không ai đọc được hội thoại gốc.
-export function getSharedHighlight(id: string): (Highlight & { ownerName: string }) | undefined {
-  const h = store().highlights.find((x) => x.id === id);
-  return h ? { ...h, ownerName: store().profiles[h.ownerId]?.displayName ?? h.ownerId } : undefined;
+// Tin "của mình" trong kênh chung: tin mình nhắn và tin agent của mình gửi. Những tin này tự vào ngữ cảnh
+// của agent riêng, không cần highlight.
+export function isOwnMessage(m: Message, userId: string): boolean {
+  return m.senderKind !== "system" && m.senderId === userId;
 }
 
-export function isHighlightOnBoard(workspaceId: string, highlightId: string): boolean {
-  return (store().boards[workspaceId] ?? []).some((i) => i.fromHighlight?.highlightId === highlightId);
+export interface ContextMessage {
+  channelName: string;
+  speaker: string;
+  text: string;
+  at: string;
+}
+
+export interface ContextHighlight extends Highlight {
+  channelName: string;
+  speaker: string;
+}
+
+// Ngữ cảnh nhóm gửi kèm mỗi lời gọi mô hình của một hội thoại riêng đã gắn workspace chung:
+// đề bài, đội (vai trong nhóm và agent của từng người), ý đã chốt và đã loại, mọi tin của chính mình
+// trong các kênh, và các đoạn mình đã highlight kèm người nói. Không có tin nào khác của người khác.
+export interface AgentContext {
+  ws: Workspace;
+  team: TeamMember[];
+  decided: BoardCard[];
+  rejected: BoardCard[];
+  ownMessages: ContextMessage[];
+  highlights: ContextHighlight[];
+}
+
+export function messageText(m: Message): string {
+  const body = m.body.map((seg) => (seg.t === "mention" ? `@${seg.v}` : "v" in seg ? seg.v : seg.ref.label)).join("");
+  return [body, ...(m.list ?? []).map((li, i) => `${i + 1}. ${li}`)].filter(Boolean).join("\n");
+}
+
+export function getAgentContext(userId: string, workspaceId: string): AgentContext | undefined {
+  const ws = getWorkspace(workspaceId);
+  if (!ws || ws.kind !== "shared" || !isMember(ws, userId)) return undefined;
+  const board = getBoard(ws.id).filter((i) => i.kind === "idea");
+  const channelName = (id: string) => ws.channels.find((c) => c.id === id)?.name ?? id;
+  const ownMessages = ws.channels.flatMap((c) =>
+    getMessages(ws.id, c.id)
+      .filter((m) => isOwnMessage(m, userId))
+      .map((m) => ({ channelName: c.name, speaker: speakerLabel(m), text: messageText(m), at: m.at })),
+  );
+  return {
+    ws,
+    team: getTeam(ws),
+    decided: board.filter((i) => i.status === "decided"),
+    rejected: board.filter((i) => i.status === "rejected"),
+    ownMessages,
+    highlights: getHighlights(userId, ws.id)
+      .slice()
+      .reverse()
+      .map((h) => ({ ...h, channelName: channelName(h.channelId), speaker: highlightAuthorLabel(h) })),
+  };
 }
 
 export function authorName(by: BoardItem["createdBy"]): string {
-  return by.kind === "agent" ? (agents[by.id]?.handle ?? by.id) : (store().profiles[by.id]?.displayName ?? by.id);
+  return by.kind === "agent" ? `Agent của ${nameOf(by.id)}` : nameOf(by.id);
 }
 
 function toCard(item: BoardItem): BoardCard {
   return {
     ...item,
-    authorName: item.fromHighlight
-      ? (store().profiles[item.fromHighlight.ownerId]?.displayName ?? item.fromHighlight.ownerId)
-      : authorName(item.createdBy),
+    authorName: authorName(item.createdBy),
     deciderName: item.decidedBy ? store().profiles[item.decidedBy.id]?.displayName : undefined,
   };
 }
@@ -178,7 +267,7 @@ export function countIdeas(workspaceId: string): number {
 export function getBriefHeader(ws: Workspace): { title: string; meta: string } {
   return {
     title: ws.id === "do-an" ? "Chọn đề tài đồ án môn Kiểm chứng phần mềm" : ws.name,
-    meta: `Dựng lúc 27/11/2026 14:20, từ ${ws.members.length} thành viên và ${getAgents(ws).length} agent`,
+    meta: `Dựng lúc 27/11/2026 14:20, từ ${ws.members.length} thành viên và agent riêng của họ`,
   };
 }
 

@@ -1,0 +1,37 @@
+' Kiểu dùng chung cho mọi sơ đồ SpecGate. Gộp vào bằng !include _style.iuml (hoặc ../_style.iuml).
+skinparam defaultFontName "Be Vietnam Pro"
+skinparam defaultFontSize 13
+skinparam shadowing false
+skinparam roundCorner 8
+skinparam backgroundColor #FFFFFF
+skinparam ArrowColor #3B5BDB
+skinparam ArrowFontColor #343A40
+skinparam NoteBackgroundColor #F1F3F5
+skinparam NoteBorderColor #ADB5BD
+
+skinparam sequence {
+  ParticipantBackgroundColor #EDF2FF
+  ParticipantBorderColor #3B5BDB
+  ActorBackgroundColor #EDF2FF
+  ActorBorderColor #3B5BDB
+  LifeLineBorderColor #ADB5BD
+  GroupBorderColor #868E96
+  GroupBackgroundColor #F8F9FA
+  BoxBorderColor #CED4DA
+}
+
+skinparam class {
+  BackgroundColor #F8F9FF
+  BorderColor #3B5BDB
+  HeaderBackgroundColor #EDF2FF
+}
+
+skinparam activity {
+  BackgroundColor #F8F9FF
+  BorderColor #3B5BDB
+  DiamondBackgroundColor #FFF9DB
+  DiamondBorderColor #F08C00
+}
+skinparam partition {
+  BorderColor #868E96
+}

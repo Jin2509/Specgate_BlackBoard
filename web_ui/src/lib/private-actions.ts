@@ -1,19 +1,20 @@
-// Server action của workspace riêng: lưu key, chọn mô hình, hội thoại và highlight.
+// Server action của workspace riêng: lưu key, chọn mô hình, hội thoại, gắn ngữ cảnh nhóm, gửi câu trả lời vào kênh.
 "use server";
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import {
-  addHighlight,
   chooseModel,
   deleteConversation,
+  linkConversation,
+  postAgentReply,
   removeHighlight,
   removeProviderKey,
   saveProviderKey,
   sendTurn,
 } from "@/lib/mock/mutations";
 import { getPersonalWorkspace } from "@/lib/mock/queries";
-import type { HighlightLabel, ProviderKind } from "@/lib/types";
+import type { ProviderKind } from "@/lib/types";
 import { personalHome } from "./paths";
 import { requireSession } from "./session";
 
@@ -65,7 +66,8 @@ export interface TurnFormState {
 export async function askAgent(_prev: TurnFormState, formData: FormData): Promise<TurnFormState> {
   const { user, home } = await base();
   const conversationId = String(formData.get("conversationId") ?? "") || undefined;
-  const result = sendTurn(user.id, conversationId, String(formData.get("text") ?? ""));
+  const workspaceId = String(formData.get("workspaceId") ?? "") || undefined;
+  const result = sendTurn(user.id, conversationId, String(formData.get("text") ?? ""), workspaceId);
   if (!result.ok) {
     if (result.error === "no-key") redirect(`${home}/key`);
     if (result.error === "empty") return {};
@@ -83,16 +85,29 @@ export async function removeConversation(formData: FormData) {
   redirect(home);
 }
 
-export async function saveHighlight(input: {
+// Gắn hội thoại với một workspace chung, hoặc bỏ gắn khi chọn "Không".
+export async function linkWorkspace(formData: FormData) {
+  const { user } = await base();
+  linkConversation(user.id, String(formData.get("conversationId") ?? ""), String(formData.get("workspaceId") ?? "") || undefined);
+  revalidatePath("/", "layout");
+}
+
+const POST_ERRORS: Record<string, string> = {
+  empty: "Đoạn gửi đang trống.",
+  "not-linked": "Hội thoại chưa gắn workspace chung nào.",
+  forbidden: "Bạn không còn là thành viên của workspace chung này.",
+};
+
+export async function sendReplyToChannel(input: {
   conversationId: string;
   turnId: string;
+  channelId: string;
   text: string;
-  label: HighlightLabel;
-}): Promise<{ ok: boolean }> {
+}): Promise<{ ok: true } | { ok: false; error: string }> {
   const { user } = await base();
-  const result = addHighlight({ ...input, userId: user.id });
+  const result = postAgentReply({ ...input, userId: user.id });
   revalidatePath("/", "layout");
-  return { ok: result.ok };
+  return result.ok ? { ok: true } : { ok: false, error: POST_ERRORS[result.error] ?? "Không gửi được vào kênh, thử lại sau." };
 }
 
 export async function deleteHighlight(formData: FormData) {

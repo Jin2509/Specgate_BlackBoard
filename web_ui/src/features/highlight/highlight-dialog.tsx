@@ -1,4 +1,4 @@
-// Hộp thoại lưu highlight: xem và sửa đoạn đã chọn, chọn nhãn, lưu vào "Highlight của tôi".
+// Hộp thoại lưu highlight trong kênh chung: xem và sửa đoạn đã chọn, chọn nhãn. Đoạn vào ngữ cảnh của agent riêng.
 "use client";
 
 import { LoaderCircle } from "lucide-react";
@@ -8,13 +8,15 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { SegmentedControl } from "@/components/common/segmented-control";
-import { saveHighlight } from "@/lib/private-actions";
+import { saveHighlight } from "@/lib/channel-actions";
 import { highlightLabelMeta } from "@/lib/status";
 import type { HighlightLabel } from "@/lib/types";
 
 export interface HighlightDraft {
-  conversationId: string;
-  turnId: string;
+  workspaceId: string;
+  channelId: string;
+  messageId: string;
+  speaker: string;
   text: string;
 }
 
@@ -32,7 +34,7 @@ export function HighlightDialog({
   return (
     <Dialog open={draft !== null} onOpenChange={(open) => (open ? null : onClose())}>
       <DialogContent className="sm:max-w-lg">
-        {draft ? <DraftForm key={`${draft.turnId}:${draft.text}`} draft={draft} onClose={onClose} onSaved={onSaved} /> : null}
+        {draft ? <DraftForm key={`${draft.messageId}:${draft.text}`} draft={draft} onClose={onClose} onSaved={onSaved} /> : null}
       </DialogContent>
     </Dialog>
   );
@@ -46,18 +48,20 @@ function DraftForm({ draft, onClose, onSaved }: { draft: HighlightDraft; onClose
 
   function save() {
     start(async () => {
-      const result = await saveHighlight({ ...draft, text, label });
+      const { workspaceId, channelId, messageId } = draft;
+      const result = await saveHighlight({ workspaceId, channelId, messageId, text, label });
       if (result.ok) onSaved();
-      else setError("Không lưu được highlight. Đoạn trống hoặc hội thoại đã bị xóa.");
+      else setError(result.error);
     });
   }
 
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Lưu highlight</DialogTitle>
+        <DialogTitle>Highlight cho agent của bạn</DialogTitle>
         <DialogDescription>
-          Highlight chỉ đánh dấu đoạn này là đáng bàn, chưa phải ý đã chốt. Bạn gửi nó vào workspace chung bằng @ trong kênh.
+          Agent ở workspace riêng của bạn sẽ đọc đoạn này và biết người nói là{" "}
+          <span className="font-medium text-foreground">{draft.speaker}</span>. Highlight chỉ để bạn đọc, chưa phải ý đã chốt.
         </DialogDescription>
       </DialogHeader>
       <div className="grid gap-1.5">

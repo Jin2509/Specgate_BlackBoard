@@ -1,10 +1,9 @@
 // Các thao tác ghi lên kho dữ liệu giả: mã tham gia, yêu cầu tham gia, duyệt; workspace riêng (key, hội thoại,
-// highlight); tin nhắn kênh chung và đưa highlight lên bảng.
+// gắn ngữ cảnh nhóm, gửi câu trả lời vào kênh); kênh chung (tin nhắn, highlight, vai trong nhóm).
 // Khi có backend, mỗi hàm ở đây ứng với một endpoint FastAPI ghi vào Supabase.
 import { generateJoinCode } from "@/lib/join-code";
 import type {
   AuthProvider,
-  BoardItem,
   Conversation,
   Highlight,
   HighlightLabel,
@@ -16,11 +15,31 @@ import type {
   Segment,
   Turn,
 } from "@/lib/types";
-import { getAgents, getMembers, getPendingRequest, getWorkspace, isMember, isOwner } from "./queries";
+import {
+  agentLabel,
+  getAgentContext,
+  getMembers,
+  getMessage,
+  getPendingRequest,
+  getWorkspace,
+  isMember,
+  isOwnMessage,
+  isOwner,
+  type AgentContext,
+} from "./queries";
 import { clockLabel, nextId, nowLabel, store } from "./store";
 
 export type MutationError =
-  "not-found" | "forbidden" | "already-member" | "not-pending" | "invalid-key" | "quota" | "no-key" | "empty";
+  | "not-found"
+  | "forbidden"
+  | "already-member"
+  | "not-pending"
+  | "invalid-key"
+  | "quota"
+  | "no-key"
+  | "empty"
+  | "own-message"
+  | "not-linked";
 export type Result<T> = { ok: true; value: T } | { ok: false; error: MutationError };
 
 const fail = (error: MutationError): { ok: false; error: MutationError } => ({ ok: false, error });
@@ -157,14 +176,28 @@ function titleFrom(text: string): string {
 }
 
 // Câu trả lời giả lập của agent. Khi có backend, đây là câu trả lời stream từ mô hình đã chọn,
-// gửi kèm toàn bộ các lượt trước của hội thoại.
-function fakeAnswer(conv: Conversation, model: string, question: string): string {
+// gửi kèm toàn bộ các lượt trước của hội thoại và, nếu hội thoại gắn workspace chung, ngữ cảnh nhóm.
+function fakeAnswer(conv: Conversation, model: string, question: string, ctx: AgentContext | undefined): string {
   const earlier = conv.turns.filter((t) => t.role === "user").length;
-  const context =
+  const history =
     earlier > 0
       ? `Mình vẫn giữ ${earlier} câu hỏi trước của bạn trong hội thoại này, nên trả lời tiếp từ đó.`
       : "Đây là câu hỏi đầu tiên của hội thoại.";
-  return `${context}\n\nVề "${titleFrom(question)}": đây là câu trả lời mẫu của bản giao diện. Khi nối backend, ${model} trả lời thật bằng key của bạn và chữ hiện dần trong lúc mô hình viết.`;
+  const parts = [history];
+  if (ctx) {
+    const others = ctx.team.filter((m) => m.profile.id !== conv.ownerId);
+    const team = others.map((m) => `${m.profile.displayName}${m.teamRole ? ` (${m.teamRole})` : ""}`).join(", ");
+    parts.push(
+      `Ngữ cảnh nhóm "${ctx.ws.name}": trong nhóm còn ${team || "chưa có ai khác"}. Mình đọc ${ctx.ownMessages.length} tin của bạn trong kênh và ${ctx.highlights.length} đoạn bạn highlight.`,
+    );
+    if (ctx.highlights.length > 0) {
+      parts.push(ctx.highlights.map((h, i) => `${i + 1}. ${h.speaker} nói: "${h.text}"`).join("\n"));
+    }
+  }
+  parts.push(
+    `Về "${titleFrom(question)}": đây là câu trả lời mẫu của bản giao diện. Khi nối backend, ${model} trả lời thật bằng key của bạn và chữ hiện dần trong lúc mô hình viết.`,
+  );
+  return parts.join("\n\n");
 }
 
 export function startConversation(userId: string): Result<Conversation> {
@@ -173,7 +206,12 @@ export function startConversation(userId: string): Result<Conversation> {
   return { ok: true, value: conv };
 }
 
-export function sendTurn(userId: string, conversationId: string | undefined, text: string): Result<Conversation> {
+export function sendTurn(
+  userId: string,
+  conversationId: string | undefined,
+  text: string,
+  workspaceId?: string,
+): Result<Conversation> {
   const question = text.trim();
   if (!question) return fail("empty");
   const s = store();
@@ -183,12 +221,22 @@ export function sendTurn(userId: string, conversationId: string | undefined, tex
   let conv = conversationId ? s.conversations.find((c) => c.id === conversationId) : undefined;
   if (conversationId && (!conv || conv.ownerId !== userId)) return fail("not-found");
   if (!conv) {
-    conv = { id: nextId("c"), ownerId: userId, title: titleFrom(question), updatedAt: nowLabel(), turns: [] };
+    const ws = getWorkspace(workspaceId);
+    const linked = ws && ws.kind === "shared" && isMember(ws, userId) ? ws.id : undefined;
+    conv = {
+      id: nextId("c"),
+      ownerId: userId,
+      title: titleFrom(question),
+      updatedAt: nowLabel(),
+      turns: [],
+      workspaceId: linked,
+    };
     s.conversations.unshift(conv);
   }
   if (conv.turns.length === 0) conv.title = titleFrom(question);
 
-  const answer = fakeAnswer(conv, key.model, question);
+  const ctx = conv.workspaceId ? getAgentContext(userId, conv.workspaceId) : undefined;
+  const answer = fakeAnswer(conv, key.model, question, ctx);
   const at = clockLabel();
   const turns: Turn[] = [
     { id: nextId("u"), role: "user", text: question, at },
@@ -210,26 +258,103 @@ export function deleteConversation(userId: string, conversationId: string): Resu
   return { ok: true, value: null };
 }
 
-// ---------- Highlight ----------
+// ---------- Ngữ cảnh nhóm của hội thoại riêng ----------
 
-export interface HighlightInput {
+// Gắn hội thoại riêng với một workspace chung (hoặc bỏ gắn khi workspaceId rỗng). Chỉ gắn được workspace mình là thành viên.
+export function linkConversation(userId: string, conversationId: string, workspaceId: string | undefined): Result<Conversation> {
+  const conv = store().conversations.find((c) => c.id === conversationId);
+  if (!conv || conv.ownerId !== userId) return fail("not-found");
+  if (!workspaceId) {
+    conv.workspaceId = undefined;
+    return { ok: true, value: conv };
+  }
+  const ws = getWorkspace(workspaceId);
+  if (!ws || ws.kind !== "shared") return fail("not-found");
+  if (!isMember(ws, userId)) return fail("forbidden");
+  conv.workspaceId = ws.id;
+  return { ok: true, value: conv };
+}
+
+// Mỗi thành viên tự mô tả vai của mình trong nhóm; agent riêng của mọi thành viên đọc được.
+export function setTeamRole(userId: string, workspaceId: string, teamRole: string): Result<null> {
+  const ws = getWorkspace(workspaceId);
+  const member = ws?.members.find((m) => m.userId === userId);
+  if (!ws || ws.kind !== "shared") return fail("not-found");
+  if (!member) return fail("forbidden");
+  const value = teamRole.replace(/\s+/g, " ").trim().slice(0, 40);
+  member.teamRole = value || undefined;
+  return { ok: true, value: null };
+}
+
+export interface AgentPostInput {
   userId: string;
   conversationId: string;
   turnId: string;
+  channelId: string;
+  text: string;
+}
+
+// Gửi một câu trả lời (cả lượt hoặc đoạn đã chọn, đã sửa) từ hội thoại riêng vào kênh của workspace chung
+// đã gắn. Tin hiện dưới tên agent của người gửi, ví dụ "claude-sonnet-5-5 của Lan". Hội thoại gốc không đi theo.
+export function postAgentReply(input: AgentPostInput): Result<Message> {
+  const text = input.text.trim();
+  if (!text) return fail("empty");
+  const s = store();
+  const conv = s.conversations.find((c) => c.id === input.conversationId);
+  if (!conv || conv.ownerId !== input.userId) return fail("not-found");
+  const turn = conv.turns.find((t) => t.id === input.turnId);
+  if (!turn || turn.role !== "assistant") return fail("not-found");
+  if (!conv.workspaceId) return fail("not-linked");
+  const ws = getWorkspace(conv.workspaceId);
+  if (!ws || !ws.channels.some((c) => c.id === input.channelId)) return fail("not-found");
+  if (!isMember(ws, input.userId)) return fail("forbidden");
+
+  const message: Message = {
+    id: nextId("m"),
+    channelId: input.channelId,
+    senderKind: "agent",
+    senderId: input.userId,
+    agentModel: turn.model,
+    at: clockLabel(),
+    body: [{ t: "text", v: text }],
+  };
+  const key = `${ws.id}/${input.channelId}`;
+  s.messages[key] = [...(s.messages[key] ?? []), message];
+  return { ok: true, value: message };
+}
+
+// ---------- Highlight trong kênh chung ----------
+
+export interface HighlightInput {
+  userId: string;
+  workspaceId: string;
+  channelId: string;
+  messageId: string;
   text: string;
   label: HighlightLabel;
 }
 
+// Highlight một đoạn trong tin của người khác (hoặc agent của người khác). Tin của chính mình và của agent mình
+// đã tự vào ngữ cảnh nên không highlight. Highlight lưu bản chụp và người nói.
 export function addHighlight(input: HighlightInput): Result<Highlight> {
   const text = input.text.replace(/\s+/g, " ").trim();
   if (!text) return fail("empty");
-  const conv = store().conversations.find((c) => c.id === input.conversationId);
-  if (!conv || conv.ownerId !== input.userId || !conv.turns.some((t) => t.id === input.turnId)) return fail("not-found");
+  const ws = getWorkspace(input.workspaceId);
+  if (!ws || ws.kind !== "shared") return fail("not-found");
+  if (!isMember(ws, input.userId)) return fail("forbidden");
+  const message = getMessage(ws.id, input.channelId, input.messageId);
+  if (!message || message.senderKind === "system") return fail("not-found");
+  if (isOwnMessage(message, input.userId)) return fail("own-message");
   const h: Highlight = {
     id: nextId("h"),
     ownerId: input.userId,
-    conversationId: input.conversationId,
-    turnId: input.turnId,
+    workspaceId: ws.id,
+    channelId: input.channelId,
+    messageId: message.id,
+    author:
+      message.senderKind === "agent"
+        ? { kind: "agent", userId: message.senderId, model: message.agentModel }
+        : { kind: "human", userId: message.senderId },
     text,
     label: input.label,
     at: nowLabel(),
@@ -250,7 +375,7 @@ export function removeHighlight(userId: string, highlightId: string): Result<nul
 
 const OWNER_COMMANDS = new Set(["/summarize", "/brief"]);
 
-// Tách chữ thành các đoạn: nhắc tên (@agent, @người), lệnh (/lệnh ở đầu từ) và chữ thường.
+// Tách chữ thành các đoạn: nhắc tên (@người), lệnh (/lệnh ở đầu từ) và chữ thường.
 export function toSegments(text: string, names: string[]): Segment[] {
   const segments: Segment[] = [];
   const re = /(^|\s)(@[^\s@/]+|\/[a-z]+)/g;
@@ -274,34 +399,29 @@ export interface ChannelPostInput {
   channelId: string;
   userId: string;
   text: string;
-  highlightIds: string[];
 }
 
-// Gửi tin vào kênh chung. Mỗi highlight đính kèm thành một tin riêng có thẻ trích dẫn.
-// Nếu tin gọi tên một agent đang bật, agent (giả lập) trả lời và nêu các highlight nó đã đọc, kèm nhãn "chưa chốt".
+// Người gửi tin vào kênh chung. Kênh không có agent tự trả lời: agent của mỗi người làm việc ở workspace riêng
+// của người đó, và câu trả lời vào kênh qua postAgentReply.
 export function postChannelMessage(input: ChannelPostInput): Result<Message[]> {
   const ws = getWorkspace(input.workspaceId);
   if (!ws || ws.kind !== "shared" || !ws.channels.some((c) => c.id === input.channelId)) return fail("not-found");
   if (!isMember(ws, input.userId)) return fail("forbidden");
   const text = input.text.trim();
-  const own = store().highlights.filter((h) => h.ownerId === input.userId && input.highlightIds.includes(h.id));
-  if (!text && own.length === 0) return fail("empty");
+  if (!text) return fail("empty");
 
-  const agents = getAgents(ws).filter((a) => a.enabled);
-  const names = [...agents.map((a) => a.handle), ...getMembers(ws).map((p) => p.displayName.toLowerCase())];
+  const names = getMembers(ws).map((p) => p.displayName.toLowerCase());
   const at = clockLabel();
-  const base = { channelId: input.channelId, senderKind: "human" as const, senderId: input.userId, at };
-  const posted: Message[] = [];
-
-  own.forEach((h, i) => {
-    posted.push({
-      ...base,
+  const posted: Message[] = [
+    {
       id: nextId("m"),
-      body: i === 0 && text ? toSegments(text, names) : [],
-      attachment: { type: "highlight", highlightId: h.id },
-    });
-  });
-  if (own.length === 0) posted.push({ ...base, id: nextId("m"), body: toSegments(text, names) });
+      channelId: input.channelId,
+      senderKind: "human",
+      senderId: input.userId,
+      at,
+      body: toSegments(text, names),
+    },
+  ];
 
   const command = /(?:^|\s)(\/[a-z]+)/.exec(text)?.[1];
   if (command && OWNER_COMMANDS.has(command) && !isOwner(ws, input.userId)) {
@@ -313,28 +433,17 @@ export function postChannelMessage(input: ChannelPostInput): Result<Message[]> {
       at,
       body: [{ t: "text", v: `Chỉ chủ workspace dùng được ${command}. Việc tổng hợp do chủ workspace thực hiện.` }],
     });
-  }
-
-  const called = agents.find((a) => posted[0].body.some((seg) => seg.t === "mention" && seg.v === a.handle));
-  if (called) {
-    const key = `${ws.id}/${input.channelId}`;
-    const thread = [...(store().messages[key] ?? []), ...posted];
-    const seen = thread.flatMap((m) => (m.attachment?.type === "highlight" ? [m.attachment.highlightId] : []));
-    const read = store().highlights.filter((h) => seen.includes(h.id));
-    const note =
-      read.length > 0
-        ? `Tôi đã đọc ${read.length} đoạn highlight trong kênh và coi chúng là ý chưa chốt, không phải kết luận. `
-        : "";
+  } else if (command === "/summarize") {
     posted.push({
       id: nextId("m"),
       channelId: input.channelId,
-      senderKind: "agent",
-      senderId: called.id,
+      senderKind: "system",
+      senderId: "system",
       at,
       body: [
         {
           t: "text",
-          v: `${note}Đây là câu trả lời mẫu của bản giao diện; khi nối backend, ${called.handle} trả lời bằng ${called.model} với ngữ cảnh gồm đề bài, bảng ý tưởng, tin gần đây và các highlight ở trên.`,
+          v: `Bản giao diện chưa tóm tắt thật. Khi nối backend, ${agentLabel(input.userId)} tóm tắt kênh bằng key của chủ workspace.`,
         },
       ],
     });
@@ -343,36 +452,6 @@ export function postChannelMessage(input: ChannelPostInput): Result<Message[]> {
   const key = `${ws.id}/${input.channelId}`;
   store().messages[key] = [...(store().messages[key] ?? []), ...posted];
   return { ok: true, value: posted };
-}
-
-// Chủ workspace đưa một highlight đã gửi vào kênh lên bảng ý tưởng, ở cột đề xuất, giữ nguồn.
-export function promoteHighlight(workspaceId: string, highlightId: string, userId: string): Result<BoardItem> {
-  const ws = getWorkspace(workspaceId);
-  if (!ws) return fail("not-found");
-  if (!isOwner(ws, userId)) return fail("forbidden");
-  const s = store();
-  const h = s.highlights.find((x) => x.id === highlightId);
-  const sharedHere = Object.entries(s.messages).some(
-    ([k, list]) =>
-      k.startsWith(`${workspaceId}/`) &&
-      list.some((m) => m.attachment?.type === "highlight" && m.attachment.highlightId === highlightId),
-  );
-  if (!h || !sharedHere) return fail("not-found");
-  const board = (s.boards[workspaceId] ??= []);
-  const existing = board.find((i) => i.fromHighlight?.highlightId === highlightId);
-  if (existing) return { ok: true, value: existing };
-  const item: BoardItem = {
-    id: nextId("b"),
-    number: board.reduce((max, i) => Math.max(max, i.number), 0) + 1,
-    kind: "idea",
-    body: h.text,
-    status: "proposed",
-    createdBy: { kind: "human", id: userId },
-    at: nowLabel(),
-    fromHighlight: { highlightId, ownerId: h.ownerId },
-  };
-  board.push(item);
-  return { ok: true, value: item };
 }
 
 // ---------- Đăng ký tài khoản (lần đầu đăng nhập bằng Google hoặc GitHub) ----------
@@ -425,7 +504,6 @@ export function registerAccount(
     modules: [],
     members: [{ userId, role: "owner" }],
     channels: [],
-    agentIds: [],
   };
   return { ok: true, value: { userId, created: true } };
 }

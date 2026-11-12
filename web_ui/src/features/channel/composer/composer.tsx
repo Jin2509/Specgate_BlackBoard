@@ -1,12 +1,11 @@
-// Ô soạn tin của kênh chung: gợi ý @ (agent, người, highlight) và / (lệnh), đính kèm highlight, gửi tin.
+// Ô soạn tin của kênh chung: gợi ý @ (người) và / (lệnh), gửi tin.
 "use client";
 
-import { AtSign, Highlighter, LoaderCircle, SendHorizontal, SquareSlash, X } from "lucide-react";
+import { AtSign, LoaderCircle, SendHorizontal, SquareSlash } from "lucide-react";
 import { useActionState, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { useQueryParam } from "@/hooks/use-query-param";
 import { postMessage, type PostState } from "@/lib/channel-actions";
-import { highlightLabelMeta } from "@/lib/status";
-import type { Agent, Highlight, Profile } from "@/lib/types";
+import type { Profile } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { SuggestionMenu } from "./suggestion-menu";
 import { applySuggestion, commandSuggestions, mentionSuggestions, trailingTrigger, type Suggestion } from "./suggestions";
@@ -14,24 +13,19 @@ import { applySuggestion, commandSuggestions, mentionSuggestions, trailingTrigge
 export function Composer({
   workspaceId,
   channelId,
-  agents,
   people,
-  highlights,
   modules,
   channelName,
 }: {
   workspaceId: string;
   channelId: string;
-  agents: Agent[];
   people: Profile[];
-  highlights: Highlight[];
   modules: string[];
   channelName: string;
 }) {
   const demoText = useQueryParam("composer");
   const demoMenus = useQueryParam("menus") === "both";
   const [text, setText] = useState<string | null>(null);
-  const [attached, setAttached] = useState<Highlight[]>([]);
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
@@ -39,24 +33,21 @@ export function Composer({
   const value = text ?? demoText ?? "";
   const trigger = trailingTrigger(value);
 
-  // Gửi xong thì xóa ô soạn và thẻ đính kèm (cập nhật ngay trong lúc render, không qua effect).
+  // Gửi xong thì xóa ô soạn (cập nhật ngay trong lúc render, không qua effect).
   const [handledSentAt, setHandledSentAt] = useState<number | undefined>(undefined);
   if (state.sentAt && state.sentAt !== handledSentAt) {
     setHandledSentAt(state.sentAt);
     setText("");
-    setAttached([]);
   }
 
-  const available = highlights.filter((h) => !attached.some((a) => a.id === h.id));
-  const mentionItems = mentionSuggestions(agents, people, trigger?.mode === "@" ? trigger.query : "", available);
+  const mentionItems = mentionSuggestions(people, trigger?.mode === "@" ? trigger.query : "");
   const commandItems = commandSuggestions(modules, trigger?.mode === "/" ? trigger.query : "");
   const showMentions = demoMenus || trigger?.mode === "@";
   const showCommands = demoMenus || trigger?.mode === "/";
   const items = trigger?.mode === "/" ? commandItems : mentionItems;
-  const canSend = Boolean(value.trim()) || attached.length > 0;
+  const canSend = Boolean(value.trim());
 
   function insert(s: Suggestion) {
-    if (s.kind === "highlight") setAttached((prev) => [...prev, s.highlight]);
     setText(applySuggestion(value, s));
     setActive(0);
     inputRef.current?.focus();
@@ -89,16 +80,12 @@ export function Composer({
         return;
       }
     }
-    if (e.key === "Backspace" && !value && attached.length > 0) setAttached((prev) => prev.slice(0, -1));
   }
 
   return (
     <form ref={formRef} action={action} className="relative px-4 pb-2">
       <input type="hidden" name="workspaceId" value={workspaceId} />
       <input type="hidden" name="channelId" value={channelId} />
-      {attached.map((h) => (
-        <input key={h.id} type="hidden" name="highlightId" value={h.id} />
-      ))}
 
       {showMentions && mentionItems.length > 0 ? (
         <SuggestionMenu
@@ -118,29 +105,6 @@ export function Composer({
       ) : null}
 
       <div className="rounded-lg border border-border bg-composer focus-within:border-primary/50">
-        {attached.length > 0 ? (
-          <ul aria-label="Highlight đính kèm" className="flex flex-col gap-1.5 px-3 pt-3">
-            {attached.map((h) => (
-              <li
-                key={h.id}
-                className="flex items-start gap-2 rounded-md border-l-[3px] border-mark-line bg-card py-1.5 pr-1.5 pl-2.5"
-              >
-                <p className="line-clamp-2 flex-1 text-[13.5px] leading-snug">
-                  <span className="mr-1.5 text-xs font-medium text-primary-strong">{highlightLabelMeta[h.label].label}</span>
-                  {h.text}
-                </p>
-                <button
-                  type="button"
-                  aria-label="Bỏ highlight này"
-                  onClick={() => setAttached((prev) => prev.filter((x) => x.id !== h.id))}
-                  className="rounded p-0.5 text-subtle hover:bg-hover hover:text-foreground"
-                >
-                  <X className="size-4" />
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : null}
         <div className="flex items-center gap-1 pr-2 pl-3">
           <input
             ref={inputRef}
@@ -151,17 +115,12 @@ export function Composer({
               setActive(0);
             }}
             onKeyDown={onKeyDown}
-            placeholder={attached.length > 0 ? "Thêm lời nhắn (không bắt buộc)" : `Nhắn #${channelName}`}
+            placeholder={`Nhắn #${channelName}`}
             className="h-11 min-w-0 flex-1 bg-transparent text-[15px] text-foreground outline-none placeholder:text-subtle"
             aria-label="Nội dung tin nhắn"
             autoComplete="off"
           />
-          {highlights.length > 0 ? (
-            <ComposerButton label="Đính kèm highlight" onClick={() => appendTrigger("@")}>
-              <Highlighter className="size-5" />
-            </ComposerButton>
-          ) : null}
-          <ComposerButton label="Gọi agent hoặc nhắc người" onClick={() => appendTrigger("@")}>
+          <ComposerButton label="Nhắc người" onClick={() => appendTrigger("@")}>
             <AtSign className="size-5" />
           </ComposerButton>
           <ComposerButton label="Dùng lệnh" onClick={() => appendTrigger("/")}>
@@ -178,7 +137,7 @@ export function Composer({
         </div>
       </div>
       <p className="mt-1 px-1 text-[11.5px] text-subtle" role={state.error ? "alert" : undefined}>
-        {state.error ?? "Enter để gửi. Agent chỉ trả lời khi được gọi tên."}
+        {state.error ?? "Enter để gửi. Muốn agent của bạn trả lời, hỏi nó ở workspace riêng rồi gửi câu trả lời vào đây."}
       </p>
     </form>
   );

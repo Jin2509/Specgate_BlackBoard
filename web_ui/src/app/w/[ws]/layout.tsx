@@ -9,7 +9,6 @@ import { WorkspaceRail } from "@/features/workspace-shell/workspace-rail";
 import { WorkspaceSidebar } from "@/features/workspace-shell/workspace-sidebar";
 import {
   countIdeas,
-  getAgents,
   getConversations,
   getHighlights,
   getJoinCode,
@@ -18,6 +17,7 @@ import {
   getProviderKey,
   getRail,
   getRuns,
+  getTeamAgents,
   isMember,
   isOwner,
   pendingRequests,
@@ -61,7 +61,7 @@ async function WorkspaceShell({ params, children }: { params: Promise<{ ws: stri
         ) : (
           <WorkspaceSidebar
             ws={ws}
-            agents={getAgents(ws)}
+            agents={getTeamAgents(ws)}
             viewerIsOwner={isOwner(ws, user.id)}
             joinCode={getJoinCode(ws.id)}
             explorePath={explorePath}

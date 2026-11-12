@@ -1,0 +1,43 @@
+@startuml 02-save-key
+!include ../_style.iuml
+title Tuần tự 02: Nhập và kiểm API key ở workspace riêng
+autonumber
+
+actor "Người dùng" as U
+participant "KeyForm" as F
+participant "PrivateActions" as N
+participant "FastAPI\n/private/keys" as API
+participant "LLM Gateway\n(LiteLLM)" as G
+participant "Nhà cung cấp\n(Anthropic / OpenAI-compat)" as LLM
+database "Supabase Vault" as V
+database "Postgres" as DB
+
+U -> F : chọn nhà cung cấp, (baseUrl), dán key
+F -> N : saveKey(form)
+N -> API : PUT /private/keys
+API -> API : require_user()
+API -> G : list_models(provider, baseUrl, key)
+G -> LLM : GET /models
+alt key sai / hết hạn
+  LLM --> G : 401
+  G --> API : invalid-key
+  API --> N : 400 invalid-key
+  N --> F : "Key không hợp lệ.\nGói Plus/Pro không phải API key."
+else key đúng
+  LLM --> G : danh sách mô hình
+  G --> API : models[]
+  API -> V : ghi key (mã hóa, chỉ ghi)
+  API -> DB : UPSERT ProviderKey(keyLast4, models, model mặc định)
+  API --> N : ProviderKey (không có key gốc)
+  N --> F : hiện ••••abcd + bộ chọn mô hình
+end
+
+== Đổi mô hình / xóa key ==
+U -> N : pickModel(model)
+N -> API : PATCH /private/keys {model}
+API -> DB : UPDATE ProviderKey.model
+U -> N : forgetKey()
+N -> API : DELETE /private/keys
+API -> V : xóa secret
+API -> DB : DELETE ProviderKey
+@enduml

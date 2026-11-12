@@ -19,8 +19,7 @@ describe("BoardItemCard", () => {
     expect(screen.getByRole("button")).toBeInTheDocument();
   });
 
-  it("thẻ từ highlight ghi rõ người highlight", () => {
-    const fromHighlight = { ...byId("i1"), fromHighlight: { highlightId: "h1", ownerId: "trang" }, authorName: "Trang" };
-    expect(cardFooter(fromHighlight, true)).toBe("Highlight của Trang");
+  it("ý do agent nêu ghi rõ agent của ai", () => {
+    expect(cardFooter(byId("i1"), true)).toBe("Agent của Lan");
   });
 });

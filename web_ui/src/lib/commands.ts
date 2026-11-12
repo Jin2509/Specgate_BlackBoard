@@ -15,7 +15,7 @@ export const COMMANDS: CommandSpec[] = [
   { name: "/pin", usage: "/pin", description: "Đưa tin nhắn đang trả lời lên bảng", icon: Pin },
   { name: "/note", usage: "/note <nội dung>", description: "Thêm ghi chú", icon: StickyNote },
   { name: "/decide", usage: "/decide #<ý> chốt|loại <lý do>", description: "Chốt hoặc loại một ý, kèm lý do", icon: Gavel },
-  { name: "/summarize", usage: "/summarize", description: "Tóm tắt kênh (chủ workspace)", icon: ListCollapse },
+  { name: "/summarize", usage: "/summarize", description: "Tóm tắt kênh bằng agent của chủ (chủ workspace)", icon: ListCollapse },
   { name: "/brief", usage: "/brief", description: "Xuất bản tổng hợp (chủ workspace)", icon: FileText },
   { name: "/help", usage: "/help", description: "Danh sách lệnh", icon: CircleHelp },
   {

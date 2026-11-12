@@ -1,5 +1,5 @@
 // Thẻ một mục trên bảng ý tưởng.
-import { FlaskConical, Highlighter, Terminal, User } from "lucide-react";
+import { FlaskConical, Terminal, User } from "lucide-react";
 import { ideaStatusMeta } from "@/lib/status";
 import type { BoardCard, IdeaStatus } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 export function cardFooter(item: BoardCard, compact: boolean): string {
   const status = item.kind === "idea" ? (item.status as IdeaStatus) : undefined;
   if (item.decidedBy && status) return `${item.deciderName} ${ideaStatusMeta[status].verb}, ${item.decidedBy.at}`;
-  if (item.fromHighlight) return `Highlight của ${item.authorName}`;
   if (item.critiques) return `${item.authorName}, ${item.critiques} phản biện`;
   return compact ? item.authorName : `${item.authorName}, ${item.at}`;
 }
@@ -50,7 +49,7 @@ export function BoardItemCard({
 
       {item.latestCritique && !compact ? (
         <p className="mt-2 text-xs leading-relaxed text-subtle">
-          <span className="font-medium text-agent">@critic</span> {item.latestCritique}
+          <span className="font-medium text-muted-foreground">Phản biện:</span> {item.latestCritique}
         </p>
       ) : null}
       {item.reason && status ? (
@@ -77,6 +76,5 @@ export function BoardItemCard({
 }
 
 function SourceIcon({ item }: { item: BoardCard }) {
-  if (item.fromHighlight) return <Highlighter className="size-3 text-primary" />;
   return item.createdBy.kind === "agent" ? <Terminal className="size-3" /> : <User className="size-3" />;
 }

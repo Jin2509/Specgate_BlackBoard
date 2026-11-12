@@ -1,0 +1,54 @@
+@startuml 07-board-and-brief
+!include ../_style.iuml
+title Tuần tự 07: Bảng ý tưởng: thêm ý, chốt/loại, tóm tắt và bản tổng hợp
+autonumber
+
+actor "Thành viên" as M
+actor "Chủ workspace" as O
+participant "Web" as N
+participant "FastAPI\n/board, /brief" as API
+database "Postgres" as DB
+participant "Realtime" as RT
+
+== Thêm ý ==
+M -> N : "/idea <nội dung>" hoặc "/pin" khi trả lời một tin\n(kể cả tin của agent riêng)
+N -> API : POST /board/items
+API -> API : require_member(ws)
+API -> DB : INSERT BoardItem(kind=idea, status=proposed,\ncreatedBy = người | agent của ai)
+API -> RT : phát board-receipt
+
+== Chốt / loại ==
+M -> N : DecideDialog hoặc "/decide #7 chốt <lý do>"
+N -> API : POST /board/items/7/decision {decision, reason}
+API -> API : require_member(ws), người gửi là human
+alt thiếu lý do
+  API --> N : 422 cần lý do
+else item đã decided/rejected
+  API --> N : 409 không quay ngược được
+else lệnh nằm trong tin của agent
+  API --> N : 403 agent không chốt được
+else hợp lệ
+  API -> DB : UPDATE status, reason, decidedBy{id, at}
+  API -> RT : phát thay đổi cột
+end
+
+== Tóm tắt kênh (chỉ chủ) ==
+O -> N : "/summarize"
+N -> API : POST /channels/{id}/summarize
+API -> API : require_owner(ws)
+API -> API : gọi agent riêng của chủ, bằng key của chủ
+API -> DB : INSERT Message(agent, senderId = chủ)
+API -> RT : phát bản tóm tắt
+note right of API
+  Thành viên thường gõ /summarize hoặc /brief
+  thì nhận tin hệ thống từ chối kèm lý do.
+end note
+
+== Bản tổng hợp ==
+O -> N : "/brief" hoặc nút Dựng lại
+N -> API : POST /brief/rebuild
+API -> API : require_owner(ws)
+API -> DB : đọc bảng theo cột
+API --> N : Markdown
+M -> N : Tải .md (mọi thành viên)
+@enduml

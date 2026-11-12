@@ -1,7 +1,7 @@
 // Hộp thoại tạo workspace chung (màn 03).
 "use client";
 
-import { Terminal, Compass, EyeOff, FlaskConical, Plus } from "lucide-react";
+import { Compass, EyeOff, FlaskConical, Plus } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -10,9 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { SegmentedControl, type SegmentOption } from "@/components/common/segmented-control";
-import { ToneBadge } from "@/components/common/tone-badge";
-import { agentRoleMeta } from "@/lib/status";
-import type { AgentRole, Visibility } from "@/lib/types";
+import type { Visibility } from "@/lib/types";
 import { cn } from "@/lib/utils";
 
 const VISIBILITY_OPTIONS: SegmentOption<Visibility>[] = [
@@ -34,8 +32,6 @@ const VISIBILITY_OPTIONS: SegmentOption<Visibility>[] = [
   },
 ];
 
-const TEMPLATE_ROLES: AgentRole[] = ["generator", "critic", "synthesizer"];
-
 export function CreateWorkspaceDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const [name, setName] = useState("Nghiên cứu ADOM");
   const [brief, setBrief] = useState(
@@ -56,7 +52,9 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: { open: boolean; o
       >
         <DialogHeader>
           <DialogTitle>Tạo workspace chung</DialogTitle>
-          <DialogDescription>Nơi cả nhóm và các agent cùng làm việc trên một đề bài.</DialogDescription>
+          <DialogDescription>
+            Nơi cả nhóm cùng làm việc trên một đề bài, mỗi người mang theo agent riêng của mình.
+          </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4">
@@ -66,7 +64,7 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: { open: boolean; o
           </div>
           <div className="grid gap-1.5">
             <Label htmlFor="ws-brief">
-              Đề bài <span className="font-normal text-muted-foreground">· bắt buộc, mọi agent đọc phần này trước tiên</span>
+              Đề bài <span className="font-normal text-muted-foreground">· bắt buộc, agent của mọi thành viên đọc phần này</span>
             </Label>
             <Textarea id="ws-brief" rows={3} value={brief} onChange={(e) => setBrief(e.target.value)} />
           </div>
@@ -86,17 +84,10 @@ export function CreateWorkspaceDialog({ open, onOpenChange }: { open: boolean; o
             </p>
           </div>
 
-          <div className="grid gap-1.5">
-            <Label>Agent có sẵn</Label>
-            <div className="flex flex-wrap items-center gap-1.5">
-              {TEMPLATE_ROLES.map((r) => (
-                <ToneBadge key={r} tone="agent">
-                  <Terminal /> {agentRoleMeta[r].label}
-                </ToneBadge>
-              ))}
-              <span className="text-[11px] text-subtle">Thêm khóa API sau, ở phần cài đặt.</span>
-            </div>
-          </div>
+          <p className="rounded-lg bg-input px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
+            Workspace chung không có agent riêng. Mỗi thành viên dùng agent ở workspace riêng của mình, bằng key của mình, rồi gửi
+            câu trả lời vào kênh.
+          </p>
 
           <AdomToggle checked={adom} onCheckedChange={setAdom} />
         </div>

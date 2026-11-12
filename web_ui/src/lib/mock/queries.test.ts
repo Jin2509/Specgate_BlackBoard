@@ -28,6 +28,7 @@ describe("tham gia workspace", () => {
 
   it("workspace riêng luôn đứng đầu thanh workspace", () => {
     expect(getRail("lan").map((w) => w.id)).toEqual(["rieng-lan", "do-an"]);
+    expect(getRail("long").map((w) => w.id)).toEqual(["rieng-long", "do-an"]);
   });
 
   it("tài khoản mới chỉ có workspace riêng", () => {

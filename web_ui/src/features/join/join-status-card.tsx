@@ -1,6 +1,6 @@
 // Thẻ trạng thái yêu cầu tham gia: đang chờ (tự làm mới), bị từ chối hoặc đã hủy.
 import Link from "next/link";
-import { Terminal, Clock, KeyRound, Users, XCircle } from "lucide-react";
+import { Clock, KeyRound, Users, XCircle } from "lucide-react";
 import type { ReactNode } from "react";
 import { AutoRefresh } from "@/components/common/auto-refresh";
 import { Button } from "@/components/ui/button";
@@ -66,9 +66,6 @@ export function JoinStatusCard({
           <span className="inline-flex items-center gap-3">
             <span className="inline-flex items-center gap-1.5">
               <Users className="size-3.5" /> {ws.members.length} thành viên
-            </span>
-            <span className="inline-flex items-center gap-1.5">
-              <Terminal className="size-3.5" /> {ws.agentIds.length} agent
             </span>
           </span>
         </Row>

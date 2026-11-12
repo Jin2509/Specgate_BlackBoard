@@ -1,4 +1,5 @@
-// Test luồng Script2: chia sẻ mã, nhập mã chờ duyệt, chủ duyệt hoặc từ chối, đổi mã.
+// Test luồng Script2 (mã tham gia, duyệt), workspace riêng (key, hội thoại) và mô hình ngữ cảnh của trưởng nhóm
+// (agent riêng gửi vào kênh, highlight trong kênh, agent đọc tin của chủ và đoạn đã highlight).
 import { beforeEach, describe, expect, it } from "vitest";
 import {
   addHighlight,
@@ -6,16 +7,19 @@ import {
   chooseModel,
   decideJoinRequest,
   deleteConversation,
+  linkConversation,
+  postAgentReply,
   postChannelMessage,
-  promoteHighlight,
   registerAccount,
   rotateJoinCode,
   saveProviderKey,
   sendTurn,
+  setTeamRole,
   submitJoinRequest,
 } from "./mutations";
 import {
   findOAuthIdentity,
+  getAgentContext,
   findWorkspaceByCode,
   getConversation,
   getConversations,
@@ -26,9 +30,10 @@ import {
   getPersonalWorkspace,
   getProfile,
   getProviderKey,
+  getMessages,
   getRail,
   getWorkspace,
-  isHighlightOnBoard,
+  speakerLabel,
 } from "./queries";
 import { resetStore } from "./store";
 
@@ -133,8 +138,9 @@ describe("workspace riêng: key", () => {
 });
 
 describe("workspace riêng: hội thoại", () => {
-  it("chưa có key (Lan) thì không chat được", () => {
-    expect(sendTurn("lan", undefined, "Xin chào")).toEqual({ ok: false, error: "no-key" });
+  it("chưa có key thì không chat được", () => {
+    const r = registerAccount({ provider: "google", login: "moi@example.edu", displayName: "Mới" });
+    expect(sendTurn(r.ok ? r.value.userId : "", undefined, "Xin chào")).toEqual({ ok: false, error: "no-key" });
   });
 
   it("câu hỏi đầu tạo hội thoại mới, đặt tên theo câu hỏi", () => {
@@ -146,80 +152,121 @@ describe("workspace riêng: hội thoại", () => {
 
   it("hỏi tiếp thì nối vào cùng hội thoại", () => {
     const r = sendTurn("trang", "c1", "Còn hướng 2?");
-    expect(r.ok && r.value.turns).toHaveLength(6);
+    expect(r.ok && r.value.turns).toHaveLength(4);
   });
 
   it("không ghi được vào hội thoại của người khác", () => {
-    saveProviderKey({ userId: "lan", provider: "anthropic", apiKey: "sk-ant-abcdefghijklmn7x2q" });
     expect(sendTurn("lan", "c1", "xem trộm")).toEqual({ ok: false, error: "not-found" });
     expect(getConversation("c1", "lan")).toBeUndefined();
   });
 });
 
-describe("highlight", () => {
-  // Trang vào workspace chung bằng mã rồi Lan duyệt, như kịch bản demo.
-  const joinTrang = () => decideJoinRequest(joinByCode("trang", getJoinCode("do-an")!.code).id, "lan", true);
-  const post = (userId: string, text: string, highlightIds: string[] = []) =>
-    postChannelMessage({ workspaceId: "do-an", channelId: "chung", userId, text, highlightIds });
-
-  it("chỉ highlight được trong hội thoại của mình; xóa hội thoại thì highlight vẫn còn", () => {
-    expect(addHighlight({ userId: "lan", conversationId: "c1", turnId: "c1-2", text: "x", label: "important" }).ok).toBe(false);
-    const h = addHighlight({
-      userId: "trang",
-      conversationId: "c1",
-      turnId: "c1-2",
-      text: "  Hướng 1  có số đo ",
-      label: "important",
+describe("agent riêng gửi vào kênh chung", () => {
+  it("câu trả lời hiện trong kênh dưới tên agent của người gửi", () => {
+    const r = postAgentReply({
+      userId: "lan",
+      conversationId: "c-lan",
+      turnId: "c-lan-4",
+      channelId: "chung",
+      text: "Nên đặt 120 giây.",
     });
-    expect(h.ok && h.value.text).toBe("Hướng 1 có số đo");
-    deleteConversation("trang", "c1");
-    expect(getHighlights("trang").some((x) => h.ok && x.id === h.value.id)).toBe(true);
+    expect(r.ok && r.value).toMatchObject({ senderKind: "agent", senderId: "lan", agentModel: "claude-sonnet-5-5" });
+    expect(speakerLabel(getMessages("do-an", "chung").at(-1)!)).toBe("claude-sonnet-5-5 của Lan");
   });
 
-  it("chưa là thành viên thì không gửi được vào kênh chung", () => {
-    expect(post("trang", "", ["h1"])).toEqual({ ok: false, error: "forbidden" });
+  it("chỉ gửi được câu trả lời của agent, trong hội thoại của mình, đã gắn workspace chung", () => {
+    const base = { conversationId: "c-lan", channelId: "chung", text: "x" };
+    expect(postAgentReply({ ...base, userId: "lan", turnId: "c-lan-1" })).toEqual({ ok: false, error: "not-found" });
+    expect(postAgentReply({ ...base, userId: "long", turnId: "c-lan-4" })).toEqual({ ok: false, error: "not-found" });
+    expect(postAgentReply({ userId: "trang", conversationId: "c1", turnId: "c1-2", channelId: "chung", text: "x" })).toEqual({
+      ok: false,
+      error: "not-linked",
+    });
   });
 
-  it("vào rồi thì gửi highlight thành thẻ trích dẫn", () => {
-    joinTrang();
-    const r = post("trang", "", ["h1"]);
-    expect(r.ok && r.value[0].attachment).toEqual({ type: "highlight", highlightId: "h1" });
+  it("chỉ gắn được hội thoại với workspace mình là thành viên", () => {
+    expect(linkConversation("trang", "c1", "do-an")).toEqual({ ok: false, error: "forbidden" });
+    expect(linkConversation("lan", "c-lan", undefined).ok).toBe(true);
+    expect(getConversation("c-lan", "lan")?.workspaceId).toBeUndefined();
   });
 
-  it("không gửi được highlight của người khác", () => {
-    expect(post("lan", "", ["h1"])).toEqual({ ok: false, error: "empty" });
-  });
-
-  it("agent được gọi nhắc rằng highlight là ý chưa chốt", () => {
-    joinTrang();
-    post("trang", "", ["h1"]);
-    const r = post("lan", "@critic xem đoạn Trang gửi");
-    const reply = r.ok ? r.value.find((m) => m.senderKind === "agent") : undefined;
-    expect(reply?.body.map((b) => (b.t === "text" ? b.v : "")).join("")).toContain("chưa chốt");
+  it("kênh không có agent tự trả lời khi được nhắc tên", () => {
+    const r = postChannelMessage({ workspaceId: "do-an", channelId: "chung", userId: "lan", text: "@Long xem giúp" });
+    expect(r.ok && r.value.map((m) => m.senderKind)).toEqual(["human"]);
   });
 
   it("lệnh tổng hợp chỉ dành cho chủ workspace", () => {
-    joinTrang();
-    const r = post("trang", "/brief");
+    const post = (userId: string) => postChannelMessage({ workspaceId: "do-an", channelId: "chung", userId, text: "/brief" });
+    const r = post("long");
     expect(r.ok && r.value.some((m) => m.senderKind === "system")).toBe(true);
-    const own = post("lan", "/brief");
+    const own = post("lan");
     expect(own.ok && own.value.some((m) => m.senderKind === "system")).toBe(false);
   });
+});
 
-  it("không đưa lên bảng highlight chưa được gửi vào workspace đó", () => {
-    expect(promoteHighlight("do-an", "h1", "lan")).toEqual({ ok: false, error: "not-found" });
+describe("highlight trong kênh chung", () => {
+  const hl = (userId: string, messageId: string, text = "mutmut") =>
+    addHighlight({ userId, workspaceId: "do-an", channelId: "chung", messageId, text, label: "important" });
+
+  it("highlight tin của người khác lưu bản chụp và người nói", () => {
+    const r = hl("long", "d2", "  Công cụ   sinh đột biến ");
+    expect(r.ok && r.value.text).toBe("Công cụ sinh đột biến");
+    expect(r.ok && r.value.author).toEqual({ kind: "agent", userId: "lan", model: "claude-sonnet-5-5" });
+    expect(getHighlights("long", "do-an")).toHaveLength(1);
+    expect(getHighlights("lan", "do-an").some((h) => r.ok && h.id === r.value.id)).toBe(false);
   });
 
-  it("chỉ chủ đưa highlight lên bảng, ở cột đề xuất, giữ nguồn, không trùng", () => {
-    joinTrang();
-    post("trang", "", ["h1"]);
-    expect(promoteHighlight("do-an", "h1", "trang")).toEqual({ ok: false, error: "forbidden" });
-    const r = promoteHighlight("do-an", "h1", "lan");
-    expect(r.ok && r.value.status).toBe("proposed");
-    expect(r.ok && r.value.fromHighlight?.ownerId).toBe("trang");
-    const again = promoteHighlight("do-an", "h1", "lan");
-    expect(again.ok && r.ok && again.value.id).toBe(r.ok ? r.value.id : "");
-    expect(isHighlightOnBoard("do-an", "h1")).toBe(true);
+  it("không highlight tin của mình hoặc của agent mình: những tin đó đã tự vào ngữ cảnh", () => {
+    expect(hl("lan", "d1")).toEqual({ ok: false, error: "own-message" });
+    expect(hl("lan", "d2")).toEqual({ ok: false, error: "own-message" });
+  });
+
+  it("chưa là thành viên thì không highlight được", () => {
+    expect(hl("trang", "d3")).toEqual({ ok: false, error: "forbidden" });
+  });
+});
+
+describe("ngữ cảnh agent riêng", () => {
+  it("gồm đội kèm vai và agent, tin của chính mình, và đoạn đã highlight kèm người nói", () => {
+    const ctx = getAgentContext("lan", "do-an")!;
+    expect(ctx.team.map((m) => [m.profile.displayName, m.teamRole, m.agent?.model])).toEqual([
+      ["Lan", "Dựng khung", "claude-sonnet-5-5"],
+      ["Long", "Runner", "deepseek-v4"],
+    ]);
+    expect(ctx.ownMessages.map((m) => m.speaker)).toEqual(["Lan", "claude-sonnet-5-5 của Lan"]);
+    expect(ctx.highlights.map((h) => h.speaker)).toEqual(["deepseek-v4 của Long", "Long"]);
+    expect(ctx.decided.length).toBeGreaterThan(0);
+  });
+
+  it("không có tin của người khác trừ khi đã highlight", () => {
+    const ctx = getAgentContext("long", "do-an")!;
+    expect(ctx.ownMessages.every((m) => m.speaker.includes("Long"))).toBe(true);
+    expect(ctx.highlights).toEqual([]);
+  });
+
+  it("agent trả lời nêu được ai đã nói đoạn đã highlight", () => {
+    const r = sendTurn("lan", "c-lan", "Tóm lại giúp");
+    const answer = r.ok ? r.value.turns.at(-1)!.text : "";
+    expect(answer).toContain("Long (Runner)");
+    expect(answer).toContain('Long nói: "60 giây');
+    expect(answer).toContain("deepseek-v4 của Long nói");
+  });
+
+  it("xóa hội thoại riêng không làm mất highlight", () => {
+    deleteConversation("lan", "c-lan");
+    expect(getHighlights("lan")).toHaveLength(2);
+  });
+
+  it("mỗi người tự đặt vai của mình trong nhóm; người ngoài không đặt được", () => {
+    expect(setTeamRole("long", "do-an", "  Runner   chính ").ok).toBe(true);
+    expect(getWorkspace("do-an")!.members.find((m) => m.userId === "long")?.teamRole).toBe("Runner chính");
+    expect(setTeamRole("trang", "do-an", "x")).toEqual({ ok: false, error: "forbidden" });
+  });
+
+  it("thành viên mới vào bằng mã thì gắn hội thoại được", () => {
+    decideJoinRequest(joinByCode("trang", getJoinCode("do-an")!.code).id, "lan", true);
+    expect(linkConversation("trang", "c1", "do-an").ok).toBe(true);
+    expect(getAgentContext("trang", "do-an")?.team).toHaveLength(3);
   });
 });
 

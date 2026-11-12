@@ -1,5 +1,5 @@
-// Bảng tông màu và nhãn theo trạng thái, phán quyết, vai agent.
-import type { AgentRole, HighlightLabel, IdeaStatus, Validity, Verdict } from "@/lib/types";
+// Bảng tông màu và nhãn theo trạng thái, phán quyết, nhãn highlight.
+import type { HighlightLabel, IdeaStatus, Validity, Verdict } from "@/lib/types";
 
 export type Tone = "proposed" | "discussing" | "decided" | "rejected" | "data" | "insufficient" | "agent" | "neutral";
 
@@ -45,11 +45,4 @@ export const validityMeta: Record<Validity, { label: string; tone: Tone }> = {
   valid: { label: "valid", tone: "decided" },
   invalidated: { label: "invalidated", tone: "rejected" },
   pilot: { label: "pilot", tone: "neutral" },
-};
-
-export const agentRoleMeta: Record<AgentRole, { label: string }> = {
-  generator: { label: "Phát ý" },
-  critic: { label: "Phản biện" },
-  synthesizer: { label: "Tổng hợp" },
-  custom: { label: "Tự viết" },
 };

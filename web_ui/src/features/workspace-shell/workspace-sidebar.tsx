@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { Database, FileText, FlaskConical, Hash, KanbanSquare, Plus, Settings, UserPlus } from "lucide-react";
 import type { ReactNode } from "react";
 import { ActorAvatar } from "@/components/common/actor-avatar";
-import type { Agent, JoinCode, Workspace } from "@/lib/types";
+import type { JoinCode, PersonalAgent, Workspace } from "@/lib/types";
 import { NavGroup, NavItem } from "./sidebar-nav";
 import { WorkspaceMenu } from "./workspace-menu";
 
@@ -25,7 +25,7 @@ export function WorkspaceSidebar({
   footer,
 }: {
   ws: Workspace;
-  agents: Agent[];
+  agents: PersonalAgent[];
   counts: SidebarCounts;
   viewerIsOwner: boolean;
   joinCode: JoinCode | undefined;
@@ -35,7 +35,6 @@ export function WorkspaceSidebar({
   const pathname = usePathname();
   const base = `/w/${ws.id}`;
   const at = (path: string) => pathname === `${base}${path}`;
-  const enabledAgents = agents.filter((a) => a.enabled);
 
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
@@ -105,17 +104,17 @@ export function WorkspaceSidebar({
           ) : null}
         </NavGroup>
 
-        <NavGroup label={`Agent (${enabledAgents.length})`}>
-          {enabledAgents.map((a) => (
-            <div key={a.id} className="flex h-10 items-center gap-2.5 rounded px-2 hover:bg-hover">
-              <ActorAvatar kind="agent" initial={a.handle} size="sm" />
+        <NavGroup label={`Agent của thành viên (${agents.length})`}>
+          {agents.map((a) => (
+            <div key={a.ownerId} className="flex h-10 items-center gap-2.5 rounded px-2 hover:bg-hover">
+              <ActorAvatar kind="agent" initial={a.model} size="sm" />
               <div className="min-w-0 leading-tight">
-                <p className="truncate text-[15px] font-medium text-muted-foreground">{a.handle}</p>
-                <p className="truncate font-mono text-[11px] text-subtle">{a.model}</p>
+                <p className="truncate font-mono text-[13px] font-medium text-muted-foreground">{a.model}</p>
+                <p className="truncate text-[11px] text-subtle">của {a.ownerName}</p>
               </div>
             </div>
           ))}
-          {enabledAgents.length === 0 ? <p className="px-2 text-xs text-subtle">Chưa có agent.</p> : null}
+          {agents.length === 0 ? <p className="px-2 text-xs text-subtle">Chưa ai nhập key.</p> : null}
         </NavGroup>
       </div>
 

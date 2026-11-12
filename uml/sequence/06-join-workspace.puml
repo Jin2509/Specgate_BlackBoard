@@ -1,0 +1,69 @@
+@startuml 06-join-workspace
+!include ../_style.iuml
+title Tuần tự 06: Vào workspace chung bằng mã tham gia hoặc trang Khám phá
+autonumber
+
+actor "Người xin\n(Trang)" as R
+participant "Web\n(JoinActions)" as N
+participant "FastAPI\n/join" as API
+database "Postgres" as DB
+participant "Realtime" as RT
+actor "Chủ workspace\n(Lan)" as O
+
+== Chủ chia sẻ / đổi mã ==
+O -> N : menu workspace → Chia sẻ mã
+N --> O : KC26DAX
+opt mã bị lộ
+  O -> N : regenerateJoinCode(ws)
+  N -> API : POST /workspaces/{id}/join-code
+  API -> API : require_owner(ws)
+  API -> DB : thay JoinCode (mã cũ hết hiệu lực ngay)
+end
+
+== Cách 1: nhập mã ==
+R -> N : joinWithCode("KC26DAX")
+N -> API : POST /join {code}
+API -> DB : findWorkspaceByCode(code)
+alt mã không tồn tại
+  API --> N : 404 not-found
+  N --> R : "Mã không đúng hoặc đã đổi"
+else đã là thành viên
+  API --> N : 409 already-member
+  N --> R : mở thẳng workspace
+else hợp lệ
+  API -> DB : UPSERT JoinRequest(pending, via=code)
+  API --> N : requestId
+  N --> R : /join/{requestId} "Đang chờ duyệt"
+end
+
+== Cách 2: Khám phá ==
+R -> N : sendJoinRequest(ws, lời nhắn)
+N -> API : POST /join {workspaceId, message}
+API -> DB : chỉ workspace visibility = discoverable
+API -> DB : UPSERT JoinRequest(pending, via=explore)
+
+== Chủ duyệt ==
+API -> RT : thông báo yêu cầu mới
+RT --> O : badge "Yêu cầu tham gia"
+O -> N : decideRequest(id, approve)
+N -> API : POST /join/{id}/decision
+API -> API : require_owner(ws)
+alt status != pending
+  API --> N : 409 not-pending
+else Duyệt
+  API -> DB : JoinRequest = approved, decidedBy
+  API -> DB : INSERT Membership(role=member)
+  API -> RT : phát approved
+  RT --> R : trang chờ tự chuyển vào workspace
+else Từ chối
+  API -> DB : JoinRequest = rejected
+  API -> RT : phát rejected
+  RT --> R : "Chưa được nhận, xin mã mới và gửi lại"
+end
+
+opt người xin đổi ý (khi còn pending)
+  R -> N : cancelRequest(id)
+  N -> API : DELETE /join/{id}
+  API -> DB : JoinRequest = cancelled
+end
+@enduml

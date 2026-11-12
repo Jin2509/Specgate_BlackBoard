@@ -1,0 +1,40 @@
+@startuml 05-agent-reply-to-channel
+!include ../_style.iuml
+title Tuần tự 05: Gửi câu trả lời của agent riêng vào kênh chung (thay cho copy-paste)
+autonumber
+
+actor "Lan\n(Dựng khung, Claude)" as L
+participant "ChatScreen\n(workspace riêng)" as PC
+participant "SendToChannelDialog" as D
+participant "FastAPI\n/private/conversations" as API
+database "Postgres" as DB
+participant "Realtime" as RT
+actor "Long\n(Runner, DeepSeek)" as G
+
+L -> PC : bấm "Gửi vào kênh" dưới câu trả lời\nhoặc bôi đen một đoạn
+PC -> D : mở hộp thoại (nội dung, mô hình của lượt)
+L -> D : sửa (lọc bớt), chọn #chung
+D -> API : POST /{conv}/post {turnId, channelId, text}
+API -> API : require_conversation_owner(conv)
+API -> DB : Turn(turnId).role = assistant?
+API -> DB : Conversation.workspaceId có giá trị?
+API -> API : require_member(ws)
+alt chưa gắn workspace / không còn là thành viên / nội dung trống
+  API --> D : 409 not-linked | 403 | 422
+else hợp lệ
+  API -> DB : INSERT Message(senderKind=agent, senderId=Lan,\nagentModel=Turn.model, body=text)
+  API -> RT : phát tin mới
+  RT --> G : tin "claude-sonnet-5-5 của Lan"
+  API --> D : ok
+  D --> L : "Đã gửi vào #chung" + liên kết mở kênh
+end
+
+note over API, G
+  Không gọi mô hình ở bước này: câu trả lời đã có sẵn
+  trong hội thoại riêng. Hội thoại gốc không đi theo.
+end note
+
+== Long trả lời bằng agent của mình ==
+G -> G : highlight đoạn cần trả lời (Tuần tự 04),\nhỏi DeepSeek ở workspace riêng, gửi vào kênh
+RT --> L : tin "deepseek-v4 của Long"
+@enduml

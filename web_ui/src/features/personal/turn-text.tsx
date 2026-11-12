@@ -1,8 +1,8 @@
-// Nội dung một lượt chat: tách đoạn theo dòng trống, dòng bắt đầu bằng "1." thành danh sách,
-// và tô vệt phấn vàng ở những đoạn đã highlight.
+// Nội dung một lượt chat: tách đoạn theo dòng trống, dòng bắt đầu bằng "1." thành danh sách.
+// withMarks tô vệt phấn vàng ở những đoạn đã highlight; kênh chung cũng dùng hàm này.
 import type { ReactNode } from "react";
 
-function withMarks(text: string, marks: string[]): ReactNode {
+export function withMarks(text: string, marks: string[]): ReactNode {
   const found = marks
     .map((m) => ({ m, i: text.indexOf(m) }))
     .filter((x) => x.i >= 0)

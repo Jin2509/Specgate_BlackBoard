@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { MessageSquare } from "lucide-react";
 import { PageHeader, PageLayout } from "@/components/common/page-header";
 import { ChatScreen } from "@/features/personal/chat-screen";
-import { getProviderKey } from "@/lib/mock/queries";
+import { getProviderKey, getRail } from "@/lib/mock/queries";
 import { personalHome } from "@/lib/paths";
 import { requireSession } from "@/lib/session";
 import { requirePersonalWorkspace, workspaceStaticParams } from "@/lib/workspace-route";
@@ -22,7 +22,13 @@ export default async function NewChatPage({ params }: PageProps<"/w/[ws]/chat">)
   return (
     <PageLayout>
       <PageHeader icon={<MessageSquare />} title="Hội thoại mới" meta="Chỉ mình bạn thấy" />
-      <ChatScreen turns={[]} marks={{}} model={key.model} highlightsHref={`${home}/highlights`} />
+      <ChatScreen
+        turns={[]}
+        model={key.model}
+        linkOptions={getRail(user.id)
+          .filter((w) => w.kind === "shared")
+          .map((w) => ({ id: w.id, name: w.name }))}
+      />
     </PageLayout>
   );
 }
