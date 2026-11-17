@@ -18,7 +18,7 @@ from app.jobs import create_pipeline_run
 from app.models import Dataset, Run, RunEvent
 from app.schemas import ExperimentConfig, ExperimentRequest
 
-router = APIRouter(prefix="/api/experiments", tags=["experiments"])
+router = APIRouter(prefix="/experiments", tags=["experiments"])
 
 # UI humanOracle -> ADOM --human-oracle. real_human runs without a simulated oracle; its UNKNOWN cases become
 # tickets in /annotation-queue.

@@ -1,0 +1,45 @@
+' Models importing an ADOM run from exported files and marking its validity (UC16).
+@startuml uc16-import-run
+!include ../_style.iuml
+title Hoạt động UC16: Nhập lượt chạy số liệu
+
+|Người nhập số liệu|
+start
+:Mở trang "Lượt chạy", chọn tệp;
+note right
+  ba tệp từ export_report.py:
+  <RUN>_summary.csv, <RUN>_per_task.csv,
+  <RUN>_run_meta.json
+  hoặc một tệp JSON specgate-run/1
+end note
+|Hệ thống|
+:Nhận diện từng tệp;
+if (Có tệp không nhận ra?) then (có)
+  :Báo tên tệp không nhận ra (E1);
+  stop
+else (không)
+endif
+:Hiện tệp đã đủ, tệp còn thiếu;
+|Người nhập số liệu|
+:Đặt tên lượt chạy (tùy chọn);
+:Chọn tình trạng hợp lệ hoặc không hợp lệ;
+if (Không hợp lệ mà thiếu lý do?) then (có)
+  |Hệ thống|
+  :Không cho nhập (E3);
+  stop
+else (không)
+endif
+|Người nhập số liệu|
+:Bấm "Nhập vào workspace";
+|Hệ thống|
+if (Đúng định dạng đã thống nhất và đủ tệp?) then (không)
+  :Báo lỗi, không gắn gì (E2);
+  stop
+else (đúng)
+endif
+:Gắn lượt chạy vào workspace;
+:Hiện mục Số liệu nếu chưa có;
+:Gửi tin hệ thống vào kênh "chung";
+:Mở trang Số liệu của lượt vừa nhập;
+stop
+@enduml

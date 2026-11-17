@@ -1,0 +1,51 @@
+' Models signing up, signing in and returning within the session window (UC01 part A).
+@startuml uc01-sign-in
+!include ../_style.iuml
+title Hoạt động UC01-A: Đăng ký hoặc đăng nhập bằng Google/GitHub
+
+|Khách|
+start
+:Mở một trang bất kỳ;
+|Hệ thống|
+if (Phiên còn hạn?) then (có)
+  :Tính lại 30 ngày từ đầu (A.A3);
+  :Mở đúng trang định mở;
+  stop
+else (không)
+  :Ghi nhớ trang định mở;
+  :Chuyển về trang đăng nhập;
+endif
+|Khách|
+:Chọn chế độ Đăng nhập hoặc Tạo tài khoản;
+:Bấm "Tiếp tục với Google" hoặc "Tiếp tục với GitHub";
+|Nhà cung cấp danh tính|
+:Hiện trang chọn tài khoản;
+|Khách|
+if (Chọn tài khoản và đồng ý?) then (hủy)
+  |Hệ thống|
+  :Về trang đăng nhập\n"Bạn đã hủy đăng nhập" (A.E1);
+  stop
+else (đồng ý)
+endif
+|Nhà cung cấp danh tính|
+:Trả danh tính về hệ thống;
+|Hệ thống|
+if (Danh tính hợp lệ?) then (không)
+  :Về trang đăng nhập kèm thông báo lỗi (A.E2);
+  stop
+else (có)
+endif
+:Lưu phiên 30 ngày;
+if (Danh tính đã có tài khoản?) then (chưa)
+  :Tạo tài khoản và workspace riêng (A.A1);
+  :Mở màn nhập API key kèm lời chào (UC03);
+  stop
+else (đã có)
+  if (Có trang định mở?) then (có)
+    :Mở đúng trang đó (A.A2);
+  else (không)
+    :Mở Trang chủ (UC02);
+  endif
+  stop
+endif
+@enduml

@@ -1,0 +1,48 @@
+' Models how a channel message is delivered and how slash commands are dispatched with their permissions (UC12).
+@startuml uc12-channel-command
+!include ../_style.iuml
+title Hoạt động UC12: Gửi tin và xử lý lệnh trong kênh
+
+|Thành viên|
+start
+:Soạn tin (gợi ý @ và /);
+:Gửi tin;
+|Hệ thống|
+if (Tin trống?) then (có)
+  :Không gửi (E1);
+  stop
+else (không)
+endif
+:Lưu tin, phát ngay tới mọi người đang mở kênh;
+:Tin vào ngữ cảnh agent của người gửi;
+if (Tin bắt đầu bằng lệnh do người gõ?) then (không)
+  stop
+else (có)
+endif
+if (Cú pháp đúng?) then (không)
+  :Trả tin hướng dẫn cú pháp (E2);
+  stop
+else (đúng)
+endif
+switch (Lệnh)
+case (/idea, /note, /pin)
+  :Đưa lên bảng ý tưởng (UC14-A);
+case (/decide)
+  :Chốt hoặc loại ý (UC14-C);
+case (/stats, /task)
+  if (Workspace có số liệu?) then (có)
+    :Tạo thẻ số liệu (UC18);
+  else (không)
+    :Lệnh không có trong gợi ý (UC18 E1);
+  endif
+case (/summarize, /brief)
+  if (Người gõ là chủ?) then (có)
+    :Tóm tắt kênh hoặc dựng bản tổng hợp (UC15);
+  else (không)
+    :Trả tin "đây là quyền của chủ workspace" (A2);
+  endif
+case (/help)
+  :Trả danh sách lệnh;
+endswitch
+stop
+@enduml

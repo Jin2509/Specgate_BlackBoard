@@ -18,7 +18,7 @@ from app.schemas import AdmissionReviewRequest, LockHeldOut, RunEventOut, RunMan
 
 RQ_IDS = ("rq1", "rq2", "rq3", "rq4", "rq5", "rq6")
 
-router = APIRouter(prefix="/api/runs/{run_id}", tags=["pipeline runs"])
+router = APIRouter(prefix="/runs/{run_id}", tags=["pipeline runs"])
 
 
 def manifest(run: Run) -> RunManifest:

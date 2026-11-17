@@ -1,0 +1,36 @@
+' Shows a member highlighting another member's text so that only their own agent reads it (UC13).
+@startuml uc13-agent-highlight
+!include ../_style.iuml
+title Tuần tự UC13: Highlight cho agent, rồi agent đọc kèm người nói
+autonumber
+
+actor "Long" as Long
+participant "Trình duyệt" as Web
+participant "Máy chủ SpecGate" as Server
+database "CSDL" as Db
+participant "Nhà cung cấp AI" as Ai
+
+== Highlight trong kênh ==
+Long -> Web : bôi đen đoạn trong thẻ "Claude của Lan nói"
+Web -> Web : bắt vùng chọn theo loại nội dung,\nbỏ phần là tin của Long
+Long -> Web : bấm "Highlight cho agent của tôi"
+Long -> Web : thu hẹp hai đầu, chọn nhãn, ghi chú
+Web -> Server : lưu (các đoạn, tin gốc, nhãn, ghi chú)
+Server -> Db : kiểm thành viên, kiểm tin gốc không phải của Long
+Server -> Db : đếm highlight của Long trong workspace
+alt đã có ~30
+  Server --> Web : không lưu, nhắc bỏ bớt (E2)
+else
+  Server -> Server : kiểm mỗi đoạn là chuỗi con liền của tin gốc (E1)
+  Server -> Db : lưu bản chụp, mỗi đoạn giữ người nói
+  Server --> Web : đã lưu
+  Web --> Long : vệt phấn vàng nhạt (chỉ Long thấy)
+end
+
+== Lượt hỏi kế tiếp ở workspace riêng của Long ==
+Long -> Server : hỏi trong hội thoại chọn workspace này
+ref over Server, Db : Tuần tự UC04, UC06: dựng ngữ cảnh nhóm
+Server -> Ai : "[Claude của Lan nói, Long đánh dấu Quan trọng] …"\nbằng key của Long
+Ai --> Server : "Theo Claude của Lan…"
+Server --> Long : câu trả lời nói rõ dựa vào ý của ai
+@enduml

@@ -15,7 +15,7 @@ from app.errors import ApiError
 from app.models import Dataset
 from app.schemas import AcademicTask
 
-router = APIRouter(prefix="/api/datasets", tags=["datasets"])
+router = APIRouter(prefix="/datasets", tags=["datasets"])
 
 
 def _summary(ds: Dataset) -> dict[str, Any]:

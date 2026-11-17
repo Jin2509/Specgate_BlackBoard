@@ -35,3 +35,24 @@ skinparam activity {
 skinparam partition {
   BorderColor #868E96
 }
+
+skinparam usecase {
+  BackgroundColor #F8F9FF
+  BorderColor #3B5BDB
+  ActorBorderColor #3B5BDB
+  ActorBackgroundColor #EDF2FF
+}
+skinparam package {
+  BorderColor #868E96
+  BackgroundColor #FFFFFF
+}
+skinparam rectangle {
+  BorderColor #868E96
+}
+
+skinparam state {
+  BackgroundColor #F8F9FF
+  BorderColor #3B5BDB
+  StartColor #3B5BDB
+  EndColor #3B5BDB
+}

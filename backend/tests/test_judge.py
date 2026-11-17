@@ -1,4 +1,4 @@
-"""POST /api/run: SSE events of the stateless pipeline, and the API key never leaves the request."""
+"""POST /api/v1/run: SSE events of the stateless pipeline, and the API key never leaves the request."""
 
 import asyncio
 import json
@@ -61,7 +61,7 @@ def replies(monkeypatch, dataset):
 def test_streams_steps_then_verdict(client, replies, caplog):
     caplog.set_level(logging.DEBUG)
     answers, calls = replies
-    res = client.post("/api/run", json=_body())
+    res = client.post("/api/v1/run", json=_body())
     assert res.status_code == 200 and res.headers["content-type"].startswith("text/event-stream")
     events = _events(res.text)
     assert [(e, d.get("step"), d.get("status")) for e, d in events] == [
@@ -81,9 +81,9 @@ def test_streams_steps_then_verdict(client, replies, caplog):
 def test_unknown_when_check_format_is_wrong(client, replies):
     answers, _ = replies
     answers["check"] = '{"verdict": "consistent", "reason": "ok"}'
-    assert _events(client.post("/api/run", json=_body()).text)[-1][1]["verdict"] == "consistent"
+    assert _events(client.post("/api/v1/run", json=_body()).text)[-1][1]["verdict"] == "consistent"
     answers["check"] = "I think it is fine"
-    last = _events(client.post("/api/run", json=_body()).text)[-1][1]
+    last = _events(client.post("/api/v1/run", json=_body()).text)[-1][1]
     assert last["verdict"] == "unknown" and last["question"]
 
 
@@ -92,7 +92,7 @@ def test_followup_rechecks_once_with_the_answer_and_never_asks_again(client, rep
     answers["check"] = '{"verdict": "unknown", "reason": "ambiguous"}'
     body = {"llmSpec": _body()["llmSpec"], "datasetId": "ds1", "taskId": "t_add",
             "spec": "SPEC-1", "code": "CODE-1", "answer": "add(2, 3) must be 5"}
-    events = _events(client.post("/api/run/followup", json=body).text)
+    events = _events(client.post("/api/v1/run/followup", json=body).text)
     assert [(e, d.get("step"), d.get("status")) for e, d in events] == [
         ("step", "check", "running"), ("step", "check", "done"), ("verdict", None, None)]
     assert events[-1][1] == {"verdict": "unknown", "reason": "ambiguous"}  # final: no question
@@ -102,15 +102,15 @@ def test_followup_rechecks_once_with_the_answer_and_never_asks_again(client, rep
 
 
 def test_unknown_dataset_or_task_is_404(client, dataset):
-    assert client.post("/api/run", json=_body(datasetId="nope")).status_code == 404
-    res = client.post("/api/run", json=_body(taskId="nope"))
-    assert res.status_code == 404 and res.json()["code"] == "NOT_FOUND"
+    assert client.post("/api/v1/run", json=_body(datasetId="nope")).status_code == 404
+    res = client.post("/api/v1/run", json=_body(taskId="nope"))
+    assert res.status_code == 404 and res.json()["error"]["code"] == "NOT_FOUND"
 
 
 def test_llm_error_ends_with_error_event(client, replies):
     answers, _ = replies
     answers["code"] = llm.LlmError("API key bị nhà cung cấp từ chối")
-    events = _events(client.post("/api/run", json=_body()).text)
+    events = _events(client.post("/api/v1/run", json=_body()).text)
     assert events[-1] == ("error", {"step": "code", "message": "API key bị nhà cung cấp từ chối"})
     assert all(e != "verdict" for e, _ in events)
 
@@ -121,7 +121,7 @@ def test_unexpected_error_is_generic(client, dataset, monkeypatch):
         yield  # pragma: no cover
 
     monkeypatch.setattr(judge, "run", boom)
-    res = client.post("/api/run", json=_body())
+    res = client.post("/api/v1/run", json=_body())
     assert _events(res.text) == [("error", {"message": "Lỗi nội bộ khi chạy pipeline."})]
     assert CANARY not in res.text
 
@@ -134,13 +134,13 @@ def test_unexpected_error_is_generic(client, dataset, monkeypatch):
     {"taskId": ""},
 ])
 def test_invalid_body_is_400_without_echoing_the_key(client, patch):
-    res = client.post("/api/run", json=_body(**patch))
-    assert res.status_code == 400 and res.json()["code"] == "VALIDATION_ERROR"
+    res = client.post("/api/v1/run", json=_body(**patch))
+    assert res.status_code == 400 and res.json()["error"]["code"] == "VALIDATION_ERROR"
     assert CANARY not in res.text
 
 
 def test_nothing_is_written_to_the_database(client, replies):
-    client.post("/api/run", json=_body())
+    client.post("/api/v1/run", json=_body())
     with SessionLocal() as s:
         assert s.query(Run).count() == 0 and s.query(EvalRun).count() == 0
 

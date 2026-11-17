@@ -47,11 +47,11 @@ def _stream(events: AsyncIterator[judge.Event]) -> StreamingResponse:
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
-@router.post("/api/run")
+@router.post("/run")
 def run(body: JudgeRunIn, session: Session = Depends(get_session)) -> StreamingResponse:
     return _stream(judge.run(body, _task(session, body.dataset_id, body.task_id)))
 
 
-@router.post("/api/run/followup")
+@router.post("/run/followup")
 def followup(body: JudgeFollowupIn, session: Session = Depends(get_session)) -> StreamingResponse:
     return _stream(judge.followup(body, _task(session, body.dataset_id, body.task_id)))

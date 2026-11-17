@@ -6,7 +6,7 @@ from fastapi import APIRouter
 
 from app import results
 
-router = APIRouter(prefix="/api/runs/{run_id}", tags=["results"])
+router = APIRouter(prefix="/runs/{run_id}", tags=["results"])
 
 
 @router.get("/tasks")

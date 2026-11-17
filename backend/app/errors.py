@@ -1,43 +1,61 @@
-"""Error body of the contract: `{ "error": string, "code"?: string }` for every non-2xx response."""
+"""Defines the error body of every non-2xx response: `{"error": {"code", "message", "details"}}`."""
+
+from typing import Any
 
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+VALIDATION_STATUS = 400
+NOT_IMPLEMENTED_STATUS = 501
+
 
 class ApiError(Exception):
-    def __init__(self, status: int, error: str, code: str | None = None):
-        self.status, self.error, self.code = status, error, code
+    """An error with an HTTP status, a stable machine code and a human message."""
+
+    def __init__(self, status: int, error: str, code: str | None = None, details: list[Any] | None = None):
+        super().__init__(error)
+        self.status, self.error, self.code, self.details = status, error, code, details or []
 
 
 def engine_not_configured(reason: str) -> ApiError:
-    """501 for features that need an engine (LLM / Z3 / interactive pipeline) the backend does not have."""
-    return ApiError(501, reason, "ENGINE_NOT_CONFIGURED")
+    """Return 501 for features that need an engine (LLM, Z3, interactive pipeline) the backend does not have."""
+    return ApiError(NOT_IMPLEMENTED_STATUS, reason, "ENGINE_NOT_CONFIGURED")
 
 
-def _body(error: str, code: str | None) -> dict:
-    return {"error": error, "code": code} if code else {"error": error}
+def to_error_body(message: str, code: str | None, details: list[Any] | None = None) -> dict[str, Any]:
+    return {"error": {"code": code or "ERROR", "message": message, "details": details or []}}
 
 
-def _describe(exc: RequestValidationError) -> str:
-    parts = []
+def _to_http_code(status: int) -> str:
+    return f"HTTP_{status}"
+
+
+def _to_validation_details(exc: RequestValidationError) -> list[dict[str, str]]:
+    details = []
     for err in exc.errors():
-        loc = ".".join(str(p) for p in err.get("loc", ()) if p not in ("body", "query", "path"))
-        parts.append(f"{loc}: {err.get('msg')}" if loc else str(err.get("msg")))
-    return "Dữ liệu không hợp lệ: " + "; ".join(parts)
+        field = ".".join(str(part) for part in err.get("loc", ()) if part not in ("body", "query", "path"))
+        details.append({"field": field, "message": str(err.get("msg"))})
+    return details
 
 
 def install(app: FastAPI) -> None:
+    """Register the handlers that turn every error into the shared error body."""
+
     @app.exception_handler(ApiError)
     async def _api_error(_: Request, exc: ApiError) -> JSONResponse:
-        return JSONResponse(_body(exc.error, exc.code), status_code=exc.status)
+        return JSONResponse(to_error_body(exc.error, exc.code, exc.details), status_code=exc.status)
 
     @app.exception_handler(StarletteHTTPException)
     async def _http_error(_: Request, exc: StarletteHTTPException) -> JSONResponse:
-        return JSONResponse(_body(str(exc.detail), None), status_code=exc.status_code, headers=exc.headers)
+        body = to_error_body(str(exc.detail), _to_http_code(exc.status_code))
+        return JSONResponse(body, status_code=exc.status_code, headers=exc.headers)
 
-    # The contract uses 400 for malformed bodies and queries.
+    # Malformed bodies and queries answer 400, not FastAPI's default 422.
     @app.exception_handler(RequestValidationError)
     async def _validation_error(_: Request, exc: RequestValidationError) -> JSONResponse:
-        return JSONResponse(_body(_describe(exc), "VALIDATION_ERROR"), status_code=400)
+        details = _to_validation_details(exc)
+        message = "; ".join(f"{d['field']}: {d['message']}" if d["field"] else d["message"] for d in details)
+        body = to_error_body(f"Invalid request: {message}", "VALIDATION_ERROR", details)
+        return JSONResponse(body, status_code=VALIDATION_STATUS)

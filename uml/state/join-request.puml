@@ -1,0 +1,24 @@
+' Shows the lifecycle of a join request to a shared workspace (UC10, UC11, BR-18).
+@startuml join-request
+!include ../_style.iuml
+title Trạng thái: yêu cầu tham gia
+
+state "Đang chờ" as Pending
+state "Đã duyệt" as Approved
+state "Bị từ chối" as Rejected
+state "Đã hủy" as Cancelled
+
+[*] --> Pending : nhập mã hoặc gửi từ Khám phá
+Pending --> Pending : gửi lại hoặc sửa lời nhắn\n(cập nhật, không tạo trùng)
+Pending --> Approved : chủ duyệt
+Pending --> Rejected : chủ từ chối
+Pending --> Cancelled : người xin bấm "Hủy yêu cầu"
+Approved --> [*] : thành viên mới
+Rejected --> [*]
+Cancelled --> [*]
+
+note right of Approved
+  Yêu cầu đã xử lý vào lịch sử, ghi kết quả
+  và người xử lý; không xử lý lại (UC11 E1).
+end note
+@enduml

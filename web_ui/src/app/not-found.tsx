@@ -1,19 +1,19 @@
-// Trang 404 khi workspace, kênh, lời mời hoặc trang không tồn tại.
+// Renders the 404 page for a missing workspace, channel, join request or page.
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { AuthScreen } from "@/features/login/auth-screen";
+
+import { Button } from "@/components/ui/Button";
+import { AuthScreen } from "@/features/auth";
+import { t } from "@/lib/i18n";
 
 export default function NotFound() {
   return (
     <AuthScreen className="max-w-120 text-center">
       <p className="font-mono text-sm text-subtle">404</p>
-      <h1 className="mt-1 text-2xl font-semibold text-sidebar-accent-foreground">Không tìm thấy trang này</h1>
-      <p className="mt-2 text-[15px] text-muted-foreground">
-        Workspace hoặc kênh có thể đã bị đổi tên, hoặc workspace chưa gắn mô-đun dữ kiện.
-      </p>
+      <h1 className="mt-1 text-2xl font-semibold text-sidebar-accent-foreground">{t.common.notFoundTitle}</h1>
+      <p className="mt-2 text-[15px] text-muted-foreground">{t.common.notFoundWorkspaceBody}</p>
       <Button asChild className="mt-6 h-11 w-full text-base">
         <Link href="/" prefetch={false}>
-          Về trang của bạn
+          {t.common.backToYourPage}
         </Link>
       </Button>
     </AuthScreen>

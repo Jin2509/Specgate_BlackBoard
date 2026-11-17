@@ -1,0 +1,56 @@
+' Shows one streamed chat turn and how the group context is assembled on the server (UC04, UC06).
+@startuml uc04-uc06-chat-with-context
+!include ../_style.iuml
+title Tuần tự UC04, UC06: Chat có ngữ cảnh nhóm
+autonumber
+
+actor "Thành viên" as User
+participant "Trình duyệt" as Web
+participant "Máy chủ SpecGate" as Server
+participant "Bộ dựng ngữ cảnh" as Context
+database "CSDL" as Db
+participant "Nhà cung cấp AI" as Ai
+
+User -> Web : gõ câu hỏi, Enter
+Web -> Server : gửi câu hỏi (hội thoại X)
+Server -> Db : kiểm chủ hội thoại (BR-07), lưu câu hỏi
+Server --> Web : câu hỏi đã lưu
+Server -> Db : các lượt trước (bỏ lượt lỗi, phiên bản đang hiện)
+opt hội thoại chọn workspace W
+  Server -> Context : dựng ngữ cảnh W cho người hỏi
+  Context -> Db : kiểm còn là thành viên W
+  alt không còn là thành viên
+    Context --> Server : không có ngữ cảnh (UC06 A.E1)
+  else
+    Context -> Db : đề bài, thành viên, vai, agent
+    Context -> Db : ý đã chốt, đã loại kèm lý do
+    Context -> Db : tin của người hỏi trong mọi kênh W
+    Context -> Db : highlight cho agent của người hỏi ở W
+    opt W có số liệu
+      Context -> Db : lượt chạy, tình trạng, sáu tiêu chí
+    end
+    Context -> Context : xếp một dòng thời gian, ghi người nói,\ngiữ ~50 tin gần nhất cùng các bản tóm tắt
+    Context --> Server : ngữ cảnh nhóm
+  end
+end
+Server -> Ai : lời dặn + ngữ cảnh + lịch sử + câu hỏi\n(bằng key của người hỏi, BR-06)
+loop đến khi xong, dừng hoặc lỗi
+  Ai --> Server : phần câu trả lời
+  Server --> Web : phát tiếp
+  Web --> User : hiện dần, có định dạng
+end
+alt người dùng bấm "Dừng"
+  Web -> Server : dừng
+  Server -> Db : lưu phần đã viết, "Đã dừng"
+else nhà cung cấp lỗi
+  Server -> Db : lưu lượt lỗi (không gửi lại cho agent sau này)
+  Server --> Web : câu báo lỗi trong hội thoại
+else xong
+  Server -> Db : lưu câu trả lời
+end
+note right of Context
+  BR-11: tin của người khác chỉ vào qua
+  highlight cho agent; bị nhắc tên không đủ.
+  BR-14: bản /summarize không tính là tin của mình.
+end note
+@enduml

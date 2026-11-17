@@ -1,0 +1,48 @@
+' Models selecting other members' text in a channel for one's own agent to read (UC13).
+@startuml uc13-agent-highlight
+!include ../_style.iuml
+title Hoạt động UC13: Highlight cho agent
+
+|Thành viên|
+start
+:Bôi đen một hoặc nhiều đoạn trong kênh;
+|Hệ thống|
+:Bắt vùng chọn theo loại nội dung\n(trọn từ, trọn dòng code, trọn ô, trọn dòng tiêu chí);
+if (Vùng chọn chỉ gồm tin của mình?) then (có)
+  :Nhắc "Tin của bạn đã tự vào\nngữ cảnh agent của bạn" (A1);
+  stop
+else (không)
+endif
+if (Có lẫn tin của mình?) then (có)
+  :Bỏ phần đó ra, kèm lời nhắc (A2);
+else (không)
+endif
+:Hiện nút "Highlight cho agent của tôi";
+|Thành viên|
+:Bấm nút;
+|Hệ thống|
+:Hộp thoại hiện từng đoạn kèm người nói;
+|Thành viên|
+repeat
+  :Thu hẹp hai đầu hoặc bỏ bớt đoạn;
+  |Hệ thống|
+  :Hiện trước câu agent sẽ đọc,\nthêm "…" và "trích một phần" nếu cắt giữa câu;
+  if (Sửa chữ ở giữa đoạn?) then (có)
+    :Báo chỉ được thu hẹp hai đầu,\nkhóa nút lưu (E1);
+  endif
+  |Thành viên|
+repeat while (Đã ưng?) is (chưa) not (rồi)
+:Chọn nhãn Quan trọng hoặc Cần xem xét;
+:Ghi "Ghi chú của tôi" (tùy chọn);
+:Bấm "Lưu highlight";
+|Hệ thống|
+if (Đã có ~30 highlight trong workspace?) then (có)
+  :Không lưu, nhắc tự bỏ bớt (E2);
+  stop
+else (chưa)
+endif
+:Lưu bản chụp, mỗi đoạn giữ người nói và tin gốc;
+:Vẽ vệt phấn trong kênh (chỉ mình thấy);
+:Thêm vào danh sách "Highlight cho agent"\nvà ngữ cảnh mọi hội thoại chọn workspace này;
+stop
+@enduml

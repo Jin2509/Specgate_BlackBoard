@@ -30,18 +30,23 @@ pnpm install
 pnpm dev            # http://localhost:3000, mở trang đăng nhập
 ```
 
-Hiện frontend chạy bằng dữ liệu giả ở `web_ui/src/lib/mock/` (số liệu ADOM là số thật của lượt MAIN). Khi có backend, các hàm trong `mock/queries.ts` được thay bằng client sinh từ OpenAPI (F03).
+Frontend lấy toàn bộ dữ liệu từ backend (`/api/*`, xem `docs/WORKSPACE_API.md`), nên cần chạy backend và nạp dữ liệu demo trước:
 
-Đăng nhập cũng là giả lập bằng cookie (`web_ui/src/lib/session*.ts`, `auth-actions.ts`, `proxy.ts`); khi có Supabase Auth chỉ thay phần đọc/ghi phiên. Dữ liệu thay đổi được (thành viên, mã tham gia, yêu cầu tham gia, bảng ý tưởng) nằm trong kho `lib/mock/store.ts` sống trong tiến trình máy chủ: khởi động lại `pnpm dev`/`pnpm start` là về dữ liệu ban đầu.
+```bash
+cd backend && source .venv/bin/activate
+cp .env.example .env           # một lần: LLM_FAKE=true (agent giả, không tốn tiền), AUTH_DEV_LOGIN=true
+python -m app.ws.seed          # một lần: Lan, Long, Trang (thêm --reset để làm lại từ đầu)
+uvicorn app.main:app --reload --port 8000
+```
 
-Tài khoản thử (trang chọn tài khoản giả lập sau khi bấm nút):
+Cách nối:
 
-| Nhà cung cấp | Tài khoản | Ghi chú |
-|---|---|---|
-| GitHub | Trang, Lan, Huy | Lan là chủ Đồ án và ADOM; Trang đang xin vào ADOM |
-| Google | Lan, Vy, Minh | Minh là tài khoản mới, chưa ở workspace chung nào |
+- `next.config.ts` rewrite `/api/*` sang `BACKEND_URL` (mặc định `http://localhost:8000`). Server component và server action gọi backend qua `lib/api/` (`client.ts` fetch + `ApiError`, `server.ts` kèm token từ cookie, `queries.ts` một hàm cho mỗi endpoint đọc). Trình duyệt chỉ gọi thẳng `/api` cho hai luồng SSE: trả lời của agent (`features/personal/chat-screen.tsx`) và tin mới trong kênh (`features/channel/channel-live.tsx`).
+- Phiên: token backend nằm trong cookie httpOnly `sg_session`; `proxy.ts` hỏi `GET /api/auth/session` ở mỗi lần điều hướng và ghi nhớ workspace vừa mở (`PUT /api/me/last-workspace`). Chưa cấu hình OAuth thật thì nút Google/GitHub mở màn chọn tài khoản giả lập (`GET /api/auth/dev-accounts`, `POST /api/auth/dev-login`); cấu hình rồi thì đi thẳng `/api/auth/{provider}/start`.
+- Ghi dữ liệu qua server action (`lib/*-actions.ts`), mỗi action một endpoint; xong gọi `revalidatePath("/", "layout")` để thanh workspace và các số đếm cập nhật.
+- Chỉ còn số liệu ADOM (các màn 12, 13, 14) là dữ liệu giả ở `lib/adom.ts`; backend chưa gắn ADOM vào workspace nên các màn này hiện không mở được từ giao diện.
 
-Mã tham gia thử: `KC26DAX` (Đồ án), `ADM7Q3P` (ADOM), `ONT4H8W` (Ôn thi).
+Tài khoản thử (màn chọn tài khoản giả lập sau khi bấm nút): GitHub `Lan` (chủ "Đồ án Kiểm chứng", mã `KC26DAX`), GitHub `Long` (thành viên), Google `Trang` (có key, chưa vào workspace chung nào). Tài khoản mới: tab *Tạo tài khoản*, điền tên GitHub hoặc email bất kỳ.
 
 ## Luồng đăng nhập và tham gia
 
@@ -66,7 +71,7 @@ Mã tham gia thử: `KC26DAX` (Đồ án), `ADM7Q3P` (ADOM), `ONT4H8W` (Ôn thi)
 ## Cấu trúc `web_ui/src`
 
 ```
-app/                 Chỉ có route: lấy dữ liệu qua lib/mock/queries rồi ghép component (layout, page, not-found, icon.svg)
+app/                 Chỉ có route: lấy dữ liệu qua lib/api/queries rồi ghép component (layout, page, loading, not-found, icon.svg)
 features/<trang>/    Component riêng của từng trang, test đặt cạnh file
   workspace-shell/   Thanh workspace, cột điều hướng, hộp thoại tạo workspace (03)
   login/             01, chọn tài khoản Google/GitHub và khung chung AuthScreen
@@ -77,14 +82,16 @@ features/<trang>/    Component riêng của từng trang, test đặt cạnh fil
 components/ui/       shadcn/ui (không sửa tay)
 components/common/   Thành phần dùng chung giữa các trang: PageLayout/PageHeader/PageBody, Panel,
                      SegmentedControl, ToneBadge, LegendSwatch, ActorAvatar, Logo
-lib/                 Kiểu dữ liệu, bảng màu trạng thái, lệnh, bản tổng hợp, helper route
-lib/mock/            Dữ liệu giả: data.ts (hạt giống), store.ts (kho ghi được), queries.ts (đọc), mutations.ts (ghi)
-lib/session*.ts      Phiên đăng nhập giả lập bằng cookie; proxy.ts chặn route và điều hướng trang gốc
+lib/                 Kiểu dữ liệu (types.ts, khớp JSON backend), bảng màu trạng thái, lệnh, định dạng thời gian, helper route
+lib/api/             Gọi backend: client.ts (fetch, ApiError), server.ts (token từ cookie), auth.ts, queries.ts (đọc)
+lib/*-actions.ts     Server action ghi dữ liệu: auth, private (workspace riêng), channel, join, board, workspace
+lib/adom.ts          Số liệu ADOM giả cho các màn số liệu
+lib/session*.ts      Phiên đăng nhập (token backend trong cookie); proxy.ts chặn route và điều hướng trang gốc
 hooks/               useQueryParam (mở sẵn hộp thoại cho ảnh chụp prototype)
 ```
 
-- Trang mới: tạo `features/<trang>/` cho component, route trong `app/` chỉ gọi `requireWorkspace(params)` và các hàm của `queries.ts`.
-- Component phía client không import `lib/mock`: dữ liệu (kể cả tên người, agent) đi vào qua props, ví dụ `BoardCard` mang sẵn `authorName`.
+- Trang mới: tạo `features/<trang>/` cho component, route trong `app/` bọc nội dung trong `<Suspense>` (xem `board/page.tsx`), gọi `requireWorkspace(params)` và các hàm của `lib/api/queries.ts`.
+- Component phía client không gọi backend (trừ hai luồng SSE): dữ liệu đi vào qua props, thời gian định dạng sẵn ở máy chủ (`lib/time.ts`), ví dụ `BoardCard` mang sẵn `authorName` và `atLabel`.
 - Một feature dùng component của feature khác qua đường dẫn đầy đủ (`@/features/board/board-item-card`); thứ dùng ở từ ba trang trở lên chuyển sang `components/common/`.
 
 ## Quy ước giao diện

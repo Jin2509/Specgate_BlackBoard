@@ -13,12 +13,12 @@ from app.schemas import FaultProfile, LabSettings
 router = APIRouter(tags=["lab"])
 
 
-@router.get("/api/settings")
+@router.get("/settings")
 def get_settings(session: Session = Depends(get_session)) -> dict[str, Any]:
     return lab_settings.response(session)
 
 
-@router.put("/api/settings")
+@router.put("/settings")
 def put_settings(body: LabSettings, session: Session = Depends(get_session)) -> dict[str, Any]:
     ids = lab_settings.model_ids()
     for label, model in (("defaultCoderModel", body.default_coder_model), ("defaultSpecModel", body.default_spec_model)):
@@ -38,14 +38,14 @@ _FAULTS = {
 }
 
 
-@router.get("/api/fault-injection")
+@router.get("/fault-injection")
 def fault_injection_state() -> dict[str, Any]:
     return {"options": _FAULTS, "defaults": {"specFault": "none", "codeFault": "none", "trustedFault": "none"},
             "metrics": {"misattributionRate": 0, "faultyPatchSlipRate": 0, "gateBlockedCount": 0,
                         "totalInjections": 0}}
 
 
-@router.post("/api/fault-injection")
+@router.post("/fault-injection")
 def run_fault_injection(body: FaultProfile) -> dict[str, Any]:
     allowed = {k: {o["value"] for o in v} for k, v in _FAULTS.items()}
     if (body.spec_fault not in allowed["specFaults"] or body.code_fault not in allowed["codeFaults"]

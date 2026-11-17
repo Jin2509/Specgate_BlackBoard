@@ -1,0 +1,61 @@
+' Models sending private highlights into a channel with fidelity labels and the safety prompts (UC07).
+@startuml uc07-send-highlight
+!include ../_style.iuml
+title Hoạt động UC07: Gửi highlight riêng vào kênh
+
+|Thành viên|
+start
+if (Gửi từ đâu?) then (danh sách Highlight riêng)
+  :Chọn một hoặc vài mục, bấm "Gửi vào nhóm";
+  :Chọn workspace chung và kênh;
+  :Viết thêm lời của mình (tùy chọn);
+else (ô soạn trong kênh)
+  :Gõ @ và chọn "Highlight của tôi";
+  :Lọc, chọn một hoặc nhiều highlight;
+  :Viết lời xung quanh các thẻ;
+endif
+|Hệ thống|
+:Hiện nội dung sẽ gửi và nhãn người nói;
+note right
+  BR-12:
+  trọn câu: "Claude của Lan nói"
+  cắt giữa câu: "… (trích một phần)"
+  sửa chữ: "(Lan đã chỉnh)"
+end note
+|Thành viên|
+:Bấm Gửi;
+|Hệ thống|
+if (Nội dung trống?) then (có)
+  :Không cho gửi (A.E2);
+  stop
+else (không)
+endif
+if (Còn là thành viên workspace đích?) then (không)
+  :Báo lỗi, không gửi (A.E1);
+  stop
+else (còn)
+endif
+if (Đã từng gửi vào kênh này?) then (có)
+  |Thành viên|
+  if (Xác nhận "Vẫn gửi lại"?) then (không)
+    stop
+  else (có)
+  endif
+else (chưa)
+endif
+|Hệ thống|
+if (Viết khi đọc ngữ cảnh của nhóm khác?) then (có)
+  |Thành viên|
+  if (Xác nhận vẫn gửi sang nhóm này?) then (không)
+    stop
+  else (có)
+  endif
+else (không)
+endif
+|Hệ thống|
+:Tạo một tin dưới tên thành viên,\nmỗi highlight là một thẻ trích dẫn (bản chụp);
+:Ghi lần gửi vào danh sách Highlight riêng;
+:Phát tin tới mọi người đang mở kênh;
+:Tin tự vào ngữ cảnh agent của người gửi;
+stop
+@enduml

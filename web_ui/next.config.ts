@@ -1,3 +1,4 @@
+// Configures Next.js: standalone output, Cache Components, Tailwind through Turbopack and the backend API rewrite.
 import type { NextConfig } from "next";
 
 const backendUrl = process.env.BACKEND_URL ?? "http://localhost:8000";

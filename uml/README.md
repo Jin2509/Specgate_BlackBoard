@@ -1,28 +1,36 @@
 # Sơ đồ UML của SpecGate Workspace
 
-Mã nguồn PlantUML cho các luồng trong [overallweb.md](../overallweb.md), theo mô hình ngữ cảnh của trưởng nhóm (13/11/2026): mỗi người một agent riêng, câu trả lời gửi thẳng vào kênh, highlight tin của người khác trong kênh để agent riêng đọc kèm người nói. Các sơ đồ mô tả kiến trúc **đích** (Next.js → FastAPI → Supabase, LiteLLM). Hiện tại frontend vẫn chạy bằng `web_ui/src/lib/mock/`, nên mỗi lời gọi `FastAPI` trong sơ đồ tương ứng với một hàm trong `mock/mutations.ts`.
+Mã nguồn PlantUML cho các ca sử dụng trong [SRS 0.3](../docs/SRS.md), dựa trên [flow.md](../docs/flow.md). Mỗi sơ đồ ghi mã ca sử dụng (UC), mã luồng (A, E) và quy tắc (BR) tương ứng trong SRS. Sơ đồ mô tả hành vi ở mức người dùng và hệ thống; các thành phần như "Máy chủ SpecGate", "CSDL", "Kênh thời gian thực" là vai trò logic, không ràng buộc cách cài đặt.
+
+`_style.iuml` chứa kiểu dùng chung và được `!include` trong mọi file.
 
 ## Mục lục
 
-| Loại | File | Nội dung |
-|---|---|---|
-| Lớp | [class/domain.puml](class/domain.puml) | Miền dữ liệu (theo `web_ui/src/lib/types.ts`) |
-| Lớp | [class/architecture.puml](class/architecture.puml) | Các tầng: Server Actions → mock/API → Supabase, LLM Gateway |
-| Tuần tự | [sequence/01-login-signup.puml](sequence/01-login-signup.puml) | Đăng nhập / đăng ký Google, GitHub |
-| Tuần tự | [sequence/02-save-key.puml](sequence/02-save-key.puml) | Nhập, kiểm, đổi, xóa API key |
-| Tuần tự | [sequence/03-private-chat.puml](sequence/03-private-chat.puml) | Chat nhiều lượt có stream, dựng ngữ cảnh nhóm khi hội thoại gắn workspace chung |
-| Tuần tự | [sequence/04-highlight-in-channel.puml](sequence/04-highlight-in-channel.puml) | Highlight tin của người khác trong kênh → agent riêng đọc kèm người nói |
-| Tuần tự | [sequence/05-agent-reply-to-channel.puml](sequence/05-agent-reply-to-channel.puml) | Gửi câu trả lời của agent riêng vào kênh (thay copy-paste) |
-| Tuần tự | [sequence/06-join-workspace.puml](sequence/06-join-workspace.puml) | Mã tham gia / Khám phá → duyệt |
-| Tuần tự | [sequence/07-board-and-brief.puml](sequence/07-board-and-brief.puml) | Thêm ý, chốt/loại, `/summarize`, bản tổng hợp |
-| Hoạt động | [activity/01-auth-and-routing.puml](activity/01-auth-and-routing.puml) | Đăng nhập và điều hướng |
-| Hoạt động | [activity/02-private-chat-context.puml](activity/02-private-chat-context.puml) | Key → chat có ngữ cảnh nhóm → gửi vào kênh |
-| Hoạt động | [activity/03-join-workspace.puml](activity/03-join-workspace.puml) | Xin vào workspace chung |
-| Hoạt động | [activity/04-channel-message.puml](activity/04-channel-message.puml) | Xử lý tin của người và của agent trong kênh, highlight |
-| Hoạt động | [activity/05-board-item-lifecycle.puml](activity/05-board-item-lifecycle.puml) | Vòng đời một ý trên bảng |
-| RBAC | [rbac/rbac.puml](rbac/rbac.puml) | Bảng phân quyền dạng ảnh (giống bảng bên dưới) |
-
-`_style.iuml` chứa kiểu dùng chung và được `!include` trong mọi file.
+| Loại | File | Nội dung | Ca sử dụng |
+|---|---|---|---|
+| Ca sử dụng | [use-case/00-overview.puml](use-case/00-overview.puml) | Tổng quát 20 ca | UC01 – UC20 |
+| Ca sử dụng | [use-case/01-private-workspace.puml](use-case/01-private-workspace.puml) | Workspace riêng và đường riêng sang chung | UC03 – UC08 |
+| Ca sử dụng | [use-case/02-shared-workspace.puml](use-case/02-shared-workspace.puml) | Workspace chung, kênh, bảng, số liệu | UC09 – UC19 |
+| Hoạt động | [activity/uc01-sign-in.puml](activity/uc01-sign-in.puml) | Đăng ký, đăng nhập | UC01 |
+| Hoạt động | [activity/uc04-chat.puml](activity/uc04-chat.puml) | Chat, dừng, lỗi, tạo lại | UC04 |
+| Hoạt động | [activity/uc06-group-context.puml](activity/uc06-group-context.puml) | Dựng ngữ cảnh nhóm, tóm tắt tin cũ | UC06 |
+| Hoạt động | [activity/uc07-send-highlight.puml](activity/uc07-send-highlight.puml) | Gửi highlight riêng vào kênh | UC07 |
+| Hoạt động | [activity/uc10-uc11-join.puml](activity/uc10-uc11-join.puml) | Xin tham gia và duyệt | UC10, UC11 |
+| Hoạt động | [activity/uc12-channel-command.puml](activity/uc12-channel-command.puml) | Gửi tin và xử lý lệnh | UC12 |
+| Hoạt động | [activity/uc13-agent-highlight.puml](activity/uc13-agent-highlight.puml) | Highlight cho agent | UC13 |
+| Hoạt động | [activity/uc16-import-run.puml](activity/uc16-import-run.puml) | Nhập lượt chạy | UC16 |
+| Tuần tự | [sequence/uc03-api-key.puml](sequence/uc03-api-key.puml) | Kiểm và lưu API key | UC03 |
+| Tuần tự | [sequence/uc04-uc06-chat-with-context.puml](sequence/uc04-uc06-chat-with-context.puml) | Chat có ngữ cảnh nhóm | UC04, UC06 |
+| Tuần tự | [sequence/uc07-send-highlight.puml](sequence/uc07-send-highlight.puml) | Gửi highlight riêng vào kênh | UC07 |
+| Tuần tự | [sequence/uc10-uc11-join.puml](sequence/uc10-uc11-join.puml) | Xin tham gia và duyệt | UC10, UC11 |
+| Tuần tự | [sequence/uc13-agent-highlight.puml](sequence/uc13-agent-highlight.puml) | Highlight cho agent, agent đọc kèm người nói | UC13 |
+| Tuần tự | [sequence/uc15-summarize-brief.puml](sequence/uc15-summarize-brief.puml) | /summarize và /brief | UC15 |
+| Tuần tự | [sequence/uc17-trial-run.puml](sequence/uc17-trial-run.puml) | Chạy thử trên web | UC17 |
+| Trạng thái | [state/board-item.puml](state/board-item.puml) | Một ý trên bảng ý tưởng | UC14 |
+| Trạng thái | [state/join-request.puml](state/join-request.puml) | Yêu cầu tham gia | UC10, UC11 |
+| Trạng thái | [state/trial-run.puml](state/trial-run.puml) | Lượt chạy | UC16, UC17 |
+| Trạng thái | [state/connection.puml](state/connection.puml) | Kết nối của trình duyệt | UC20 |
+| RBAC | [rbac/rbac.puml](rbac/rbac.puml) | Bảng phân quyền dạng ảnh | |
 
 ## Xuất ảnh
 
@@ -31,72 +39,106 @@ Mã nguồn PlantUML cho các luồng trong [overallweb.md](../overallweb.md), t
 ```bash
 # chạy trong thư mục uml/; cần Java, dùng plantuml.jar kèm extension PlantUML của VS Code
 java -jar ~/.vscode/extensions/jebbs.plantuml-*/plantuml.jar -charset UTF-8 -tsvg -o ../img \
-  class/*.puml sequence/*.puml activity/*.puml rbac/*.puml
+  use-case/*.puml activity/uc*.puml sequence/uc*.puml state/*.puml rbac/*.puml
 ```
 
 Hoặc dùng extension PlantUML trong VS Code (Alt+D để xem trước).
 
-## Sơ đồ lớp
+## Sơ đồ ca sử dụng
 
-### Miền dữ liệu
+### UC01 – UC20: Tổng quát 20 ca
 
-![Miền dữ liệu](img/domain.svg)
+![Tổng quát 20 ca](img/00-overview.svg)
 
-### Kiến trúc các tầng
+### UC03 – UC08: Workspace riêng và đường riêng sang chung
 
-![Kiến trúc](img/architecture.svg)
+![Workspace riêng và đường riêng sang chung](img/01-private-workspace.svg)
 
-## Sơ đồ tuần tự
+### UC09 – UC19: Workspace chung, kênh, bảng, số liệu
 
-### 01. Đăng nhập / đăng ký Google, GitHub
-
-![Tuần tự 01](img/01-login-signup.svg)
-
-### 02. Nhập, kiểm, đổi, xóa API key
-
-![Tuần tự 02](img/02-save-key.svg)
-
-### 03. Chat riêng có stream, dựng ngữ cảnh nhóm
-
-![Tuần tự 03](img/03-private-chat.svg)
-
-### 04. Highlight tin của người khác trong kênh
-
-![Tuần tự 04](img/04-highlight-in-channel.svg)
-
-### 05. Gửi câu trả lời của agent riêng vào kênh
-
-![Tuần tự 05](img/05-agent-reply-to-channel.svg)
-
-### 06. Mã tham gia / Khám phá → duyệt
-
-![Tuần tự 06](img/06-join-workspace.svg)
-
-### 07. Bảng ý tưởng và bản tổng hợp
-
-![Tuần tự 07](img/07-board-and-brief.svg)
+![Workspace chung, kênh, bảng, số liệu](img/02-shared-workspace.svg)
 
 ## Sơ đồ hoạt động
 
-### 01. Đăng nhập và điều hướng
+### UC01: Đăng ký, đăng nhập
 
-![Hoạt động 01](img/01-auth-and-routing.svg)
+![Đăng ký, đăng nhập](img/uc01-sign-in.svg)
 
-### 02. Key → chat có ngữ cảnh nhóm → gửi vào kênh
+### UC04: Chat, dừng, lỗi, tạo lại
 
-![Hoạt động 02](img/02-private-chat-context.svg)
+![Chat, dừng, lỗi, tạo lại](img/uc04-chat.svg)
 
-### 03. Xin vào workspace chung
+### UC06: Dựng ngữ cảnh nhóm, tóm tắt tin cũ
 
-![Hoạt động 03](img/03-join-workspace.svg)
+![Dựng ngữ cảnh nhóm, tóm tắt tin cũ](img/uc06-group-context.svg)
 
-### 04. Tin trong kênh và highlight
+### UC07: Gửi highlight riêng vào kênh
 
-![Hoạt động 04](img/04-channel-message.svg)
+![Gửi highlight riêng vào kênh](img/uc07-send-highlight.svg)
 
-### 05. Vòng đời một ý trên bảng
+### UC10, UC11: Xin tham gia và duyệt
 
-![Hoạt động 05](img/05-board-item-lifecycle.svg)
+![Xin tham gia và duyệt](img/uc10-uc11-join.svg)
+
+### UC12: Gửi tin và xử lý lệnh
+
+![Gửi tin và xử lý lệnh](img/uc12-channel-command.svg)
+
+### UC13: Highlight cho agent
+
+![Highlight cho agent](img/uc13-agent-highlight.svg)
+
+### UC16: Nhập lượt chạy
+
+![Nhập lượt chạy](img/uc16-import-run.svg)
+
+## Sơ đồ tuần tự
+
+### UC03: Kiểm và lưu API key
+
+![Kiểm và lưu API key](img/uc03-api-key.svg)
+
+### UC04, UC06: Chat có ngữ cảnh nhóm
+
+![Chat có ngữ cảnh nhóm](img/uc04-uc06-chat-with-context.svg)
+
+### UC07: Gửi highlight riêng vào kênh
+
+![Gửi highlight riêng vào kênh](img/uc07-send-highlight.svg)
+
+### UC10, UC11: Xin tham gia và duyệt
+
+![Xin tham gia và duyệt](img/uc10-uc11-join.svg)
+
+### UC13: Highlight cho agent, agent đọc kèm người nói
+
+![Highlight cho agent, agent đọc kèm người nói](img/uc13-agent-highlight.svg)
+
+### UC15: /summarize và /brief
+
+![/summarize và /brief](img/uc15-summarize-brief.svg)
+
+### UC17: Chạy thử trên web
+
+![Chạy thử trên web](img/uc17-trial-run.svg)
+
+## Sơ đồ trạng thái
+
+### UC14: Một ý trên bảng ý tưởng
+
+![Một ý trên bảng ý tưởng](img/board-item.svg)
+
+### UC10, UC11: Yêu cầu tham gia
+
+![Yêu cầu tham gia](img/join-request.svg)
+
+### UC16, UC17: Lượt chạy
+
+![Lượt chạy](img/trial-run.svg)
+
+### UC20: Kết nối của trình duyệt
+
+![Kết nối của trình duyệt](img/connection.svg)
 
 ## Sơ đồ RBAC
 

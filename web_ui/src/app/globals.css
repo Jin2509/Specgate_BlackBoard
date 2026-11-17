@@ -1,4 +1,4 @@
-/* Token màu, font và style toàn cục của ứng dụng (chủ đề sáng trắng và xanh dương). */
+/* Defines the colour tokens, fonts and global styles of the app (one dark theme, charcoal with a soft blue accent). */
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
@@ -90,92 +90,120 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 
   --shadow-card: none;
-  --shadow-float: 0 10px 28px rgb(15 35 80 / 0.14), 0 0 0 1px rgb(15 35 80 / 0.06);
+  --shadow-float: 0 12px 32px rgb(0 0 0 / 0.45), 0 0 0 1px rgb(255 255 255 / 0.06);
 }
 
 :root {
-  color-scheme: light;
+  color-scheme: dark;
   --radius: 0.5rem;
 
-  /* Trắng dịu và xanh dương: thanh workspace xanh đậm, cột và vùng nội dung trắng ngà xám nhẹ (không dùng trắng tinh
-     cho mảng lớn để đỡ chói), chữ xanh than, một màu nhấn xanh dương. */
-  --canvas: #f3f5f9;
-  --background: #e8ecf3;
-  --foreground: #16223b;
-  --card: #fafbfd;
-  --card-foreground: #16223b;
-  --popover: #fafbfd;
-  --popover-foreground: #16223b;
-  --muted: #e7ebf2;
-  --muted-foreground: #3f4d66;
-  --subtle: #677690;
-  --border: #d8dfeb;
-  --input: #d3dbe8;
-  --hover: #e8ecf4;
-  --composer: #fafbfd;
+  /* One dark theme for the whole app, matching the dark sign-in photo: every surface is a step on the same charcoal
+     scale (rail darkest, then sidebar, content, cards), text is warm off-white, and a single soft blue is the only
+     accent. No surface uses its own hue, so the app reads as one piece. */
+  --background: #161616;
+  --canvas: #212120;
+  --foreground: #e8e6e1;
+  --card: #2a2a28;
+  --card-foreground: #e8e6e1;
+  --popover: #2f2f2d;
+  --popover-foreground: #e8e6e1;
+  --muted: #2f2f2d;
+  --muted-foreground: #b5b1aa;
+  --subtle: #8c8880;
+  --border: #363633;
+  --input: #3d3d3a;
+  --hover: #2d2d2b;
+  --composer: #2a2a28;
 
-  --primary: #2563eb;
-  --primary-strong: #1d4ed8;
-  --primary-soft: #e1eafc;
-  --primary-foreground: #ffffff;
-  --ring: #2563eb;
-  --secondary: #dde3ee;
-  --secondary-foreground: #23324d;
-  --accent: #dde6f6;
-  --accent-foreground: #16223b;
-  --destructive: #dc2626;
+  --primary: #8fb0ec;
+  --primary-strong: #a9c4f3;
+  --primary-soft: #28303d;
+  --primary-foreground: #10141c;
+  --ring: #8fb0ec;
+  --secondary: #343432;
+  --secondary-foreground: #e8e6e1;
+  --accent: #33363c;
+  --accent-foreground: #f2f0eb;
+  --destructive: #ef7d7d;
 
-  /* Highlight: vệt bút dạ vàng nhạt dưới chữ, viền xanh của thẻ trích dẫn. */
-  --mark: rgb(250 204 21 / 0.4);
-  --mark-line: #2563eb;
-  --selection: rgb(37 99 235 / 0.18);
+  /* Highlights: a muted yellow marker stroke under the text and the accent border of quote cards. */
+  --mark: rgb(234 179 8 / 0.28);
+  --mark-line: #8fb0ec;
+  --selection: rgb(143 176 236 / 0.28);
 
-  --rail: #1d4ed8;
-  --rail-foreground: #ffffff;
-  --rail-tile: rgb(255 255 255 / 0.14);
-  --rail-active: #ffffff;
-  --rail-active-foreground: #1d4ed8;
+  --rail: #161616;
+  --rail-foreground: #c9c5be;
+  --rail-tile: rgb(255 255 255 / 0.06);
+  --rail-active: #34363b;
+  --rail-active-foreground: #f2f0eb;
 
-  --sidebar: #eaeef4;
-  --sidebar-foreground: #3f4d66;
-  --sidebar-accent: #d9e4f7;
-  --sidebar-accent-foreground: #16223b;
-  --sidebar-border: #d8dfeb;
-  --sidebar-primary: #2563eb;
-  --sidebar-primary-foreground: #ffffff;
-  --sidebar-ring: #2563eb;
-  --sidebar-footer: #e3e8f0;
+  --sidebar: #1b1b1a;
+  --sidebar-foreground: #b5b1aa;
+  --sidebar-accent: #2c2f34;
+  --sidebar-accent-foreground: #f2f0eb;
+  --sidebar-border: #2c2c2a;
+  --sidebar-primary: #8fb0ec;
+  --sidebar-primary-foreground: #10141c;
+  --sidebar-ring: #8fb0ec;
+  --sidebar-footer: #181817;
 
-  /* Trạng thái chỉ dùng cho số liệu ADOM, trạng thái chờ và lỗi. Bảng ý tưởng không tô màu theo trạng thái. */
-  --proposed: #b45309;
-  --proposed-soft: #fef3e2;
-  --proposed-line: #f6c98a;
-  --discussing: #0369a1;
-  --discussing-soft: #e6f3fb;
-  --discussing-line: #9fd0ee;
-  --decided: #15803d;
-  --decided-soft: #e8f6ee;
-  --decided-line: #9ed7b3;
-  --rejected: #dc2626;
-  --rejected-soft: #fdecec;
-  --rejected-line: #f5b4b4;
-  --data: #c2410c;
-  --data-soft: #fdf0e8;
-  --data-line: #f5c3a5;
-  --insufficient: #7c3aed;
-  --insufficient-soft: #f2ecfe;
-  --insufficient-line: #cdb8f8;
-  --agent: #1e40af;
-  --agent-soft: #e1eafc;
-  --agent-line: #bfd3fb;
+  /* Status colours are only for ADOM metrics, pending states and errors; the idea board is not coloured by status.
+     On dark surfaces each keeps a light text tone, a dark tinted background and a mid-tone border. */
+  --proposed: #e3b263;
+  --proposed-soft: #352c1d;
+  --proposed-line: #6b5530;
+  --discussing: #74b9e0;
+  --discussing-soft: #1d2d37;
+  --discussing-line: #2f5a72;
+  --decided: #7cc79a;
+  --decided-soft: #1d3026;
+  --decided-line: #34604a;
+  --rejected: #ef7d7d;
+  --rejected-soft: #3a2222;
+  --rejected-line: #6e3737;
+  --data: #eb9a6c;
+  --data-soft: #372519;
+  --data-line: #6e452d;
+  --insufficient: #b9a1f2;
+  --insufficient-soft: #2c2540;
+  --insufficient-line: #54457e;
+  --agent: #a3bdf0;
+  --agent-soft: #262d3a;
+  --agent-line: #3f4f6e;
 
-  --chart-1: #2563eb;
-  --chart-2: #0369a1;
-  --chart-3: #c2410c;
-  --chart-4: #15803d;
-  --chart-5: #7c3aed;
+  --chart-1: #8fb0ec;
+  --chart-2: #74b9e0;
+  --chart-3: #eb9a6c;
+  --chart-4: #7cc79a;
+  --chart-5: #b9a1f2;
 
-  /* Màu thương hiệu, chỉ dùng cho logo nút đăng nhập Google. */
+  /* Member avatar colours: each person in a workspace gets a distinct one; tones are lifted to read on dark. */
+  --avatar-0: #7fa2e6;
+  --avatar-1: #e39468;
+  --avatar-2: #6fbd8c;
+  --avatar-3: #ad93ef;
+  --avatar-4: #e07fab;
+  --avatar-5: #5fb8c9;
+  --avatar-6: #d4ac56;
+  --avatar-7: #8f94ec;
+  --avatar-8: #e57a7a;
+  --avatar-9: #58b897;
+  --avatar-10: #a585e8;
+  --avatar-11: #9aa5b5;
+
+  /* Private highlight colours; users decide what each colour means. */
+  --hl-yellow: rgb(250 204 21 / 0.3);
+  --hl-green: rgb(74 222 128 / 0.26);
+  --hl-blue: rgb(96 165 250 / 0.28);
+  --hl-pink: rgb(244 114 182 / 0.26);
+  --hl-purple: rgb(167 139 250 / 0.28);
+  --hl-yellow-solid: #eab308;
+  --hl-green-solid: #22c55e;
+  --hl-blue-solid: #3b82f6;
+  --hl-pink-solid: #ec4899;
+  --hl-purple-solid: #8b5cf6;
+
+  /* Brand colours, used only for the Google sign-in logo. */
   --brand-google-blue: #4285f4;
   --brand-google-red: #ea4335;
   --brand-google-yellow: #fbbc05;
@@ -213,11 +241,118 @@
   .scrollbar-none {
     scrollbar-width: none;
   }
-  /* Đoạn đã highlight: vệt bút dạ dưới chữ, không đổi màu chữ. */
+  /* A highlighted passage: a marker stroke under the text, without changing the text colour. */
   .chalk-mark {
     background: linear-gradient(transparent 58%, var(--mark) 58%);
     border-radius: 2px;
   }
+}
+
+/* Private highlights are painted with the CSS Custom Highlight API, leaving the rendered Markdown DOM untouched. */
+::highlight(hl-yellow) {
+  background-color: var(--hl-yellow);
+}
+::highlight(hl-green) {
+  background-color: var(--hl-green);
+}
+::highlight(hl-blue) {
+  background-color: var(--hl-blue);
+}
+::highlight(hl-pink) {
+  background-color: var(--hl-pink);
+}
+::highlight(hl-purple) {
+  background-color: var(--hl-purple);
+}
+
+/* Agent answers rendered as Markdown. */
+.prose-chat {
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.prose-chat > * + * {
+  margin-top: 0.75em;
+}
+.prose-chat h1,
+.prose-chat h2,
+.prose-chat h3,
+.prose-chat h4 {
+  font-weight: 650;
+  color: var(--sidebar-accent-foreground);
+  line-height: 1.3;
+  margin-top: 1.1em;
+}
+.prose-chat h1 {
+  font-size: 1.3em;
+}
+.prose-chat h2 {
+  font-size: 1.15em;
+}
+.prose-chat h3,
+.prose-chat h4 {
+  font-size: 1.02em;
+}
+.prose-chat ul {
+  list-style: disc;
+  padding-left: 1.3em;
+}
+.prose-chat ol {
+  list-style: decimal;
+  padding-left: 1.4em;
+}
+.prose-chat li + li {
+  margin-top: 0.25em;
+}
+.prose-chat li::marker {
+  color: var(--subtle);
+}
+.prose-chat strong {
+  font-weight: 650;
+}
+.prose-chat a {
+  color: var(--primary-strong);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.prose-chat blockquote {
+  border-left: 3px solid var(--border);
+  padding-left: 0.8em;
+  color: var(--muted-foreground);
+}
+.prose-chat :not(pre) > code {
+  font-family: var(--font-code), monospace;
+  font-size: 0.88em;
+  background: var(--input);
+  border-radius: 4px;
+  padding: 0.1em 0.35em;
+}
+.prose-chat pre {
+  font-family: var(--font-code), monospace;
+  font-size: 0.85em;
+  line-height: 1.55;
+  overflow-x: auto;
+  padding: 0.8em 1em;
+  background: var(--muted);
+  border-radius: 0 0 6px 6px;
+}
+.prose-chat table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+  font-size: 0.93em;
+}
+.prose-chat th,
+.prose-chat td {
+  border: 1px solid var(--border);
+  padding: 0.35em 0.7em;
+  text-align: left;
+}
+.prose-chat th {
+  background: var(--muted);
+  font-weight: 600;
+}
+.prose-chat hr {
+  border-color: var(--border);
 }
 
 @keyframes caret-blink {

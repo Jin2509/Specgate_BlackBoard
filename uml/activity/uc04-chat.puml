@@ -1,0 +1,56 @@
+' Models one question and answer turn with streaming, stop, provider errors and regeneration (UC04).
+@startuml uc04-chat
+!include ../_style.iuml
+title Hoạt động UC04: Chat với agent riêng, tạo lại câu trả lời
+
+|Người dùng|
+start
+if (Đã có key hợp lệ?) then (chưa)
+  |Hệ thống|
+  :Mở màn nhập key (A.E2, UC03);
+  stop
+else (có)
+endif
+|Người dùng|
+:Tạo hội thoại mới hoặc mở hội thoại cũ;
+if (Hội thoại mới?) then (có)
+  :Có thể chọn ngữ cảnh nhóm (UC06-A);
+else (không)
+endif
+:Gõ câu hỏi, bấm Enter;
+|Hệ thống|
+:Hiện và lưu câu hỏi ngay;
+if (Hội thoại có ngữ cảnh nhóm?) then (có)
+  :Dựng ngữ cảnh nhóm mới nhất (UC06-A);
+else (không)
+endif
+:Ghép các lượt trước (bỏ lượt lỗi,\nchỉ lấy phiên bản đang hiện);
+|Nhà cung cấp AI|
+:Sinh câu trả lời bằng key của người dùng;
+|Hệ thống|
+repeat
+  :Hiện dần từng phần câu trả lời;
+  if (Người dùng bấm "Dừng"?) then (có)
+    :Giữ phần đã viết, ghi "Đã dừng" (A.A2);
+    break
+  endif
+  if (Nhà cung cấp lỗi?) then (có)
+    :Hiện câu báo lỗi thay câu trả lời (A.E1);
+    break
+  endif
+repeat while (Còn nội dung?) is (còn) not (hết)
+:Lưu câu trả lời, hiện nút "Chép" và "Tạo lại";
+|Người dùng|
+if (Bấm "Tạo lại"?) then (có)
+  |Hệ thống|
+  :Giữ câu trả lời cũ thành một phiên bản;
+  :Gọi lại mô hình cho cùng câu hỏi (UC04-B);
+  :Hiện nút chuyển phiên bản "‹ 1/2 ›";
+  note right
+    Ở câu hỏi sau, agent chỉ đọc
+    phiên bản đang hiển thị.
+  end note
+else (không)
+endif
+stop
+@enduml

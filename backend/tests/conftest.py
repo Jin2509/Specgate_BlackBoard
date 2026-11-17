@@ -12,7 +12,7 @@ from app.main import app
 
 @pytest.fixture()
 def client(monkeypatch):
-    """API only: POST /api/runs records the run without starting the pipeline."""
+    """API only: POST /api/v1/runs records the run without starting the pipeline."""
     monkeypatch.setattr(settings, "pipeline_enabled", False)
     Base.metadata.drop_all(engine)
     with TestClient(app) as c:

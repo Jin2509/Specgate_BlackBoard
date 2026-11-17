@@ -1,0 +1,38 @@
+' Shows a private highlight leaving the private workspace as a quoted card in a channel (UC07).
+@startuml uc07-send-highlight
+!include ../_style.iuml
+title Tuần tự UC07: Gửi highlight riêng vào kênh
+autonumber
+
+actor "Lan" as Lan
+participant "Trình duyệt của Lan" as LanWeb
+participant "Máy chủ SpecGate" as Server
+database "CSDL" as Db
+participant "Kênh thời gian thực" as Realtime
+participant "Trình duyệt của Long" as LongWeb
+
+Lan -> LanWeb : chọn highlight, bấm "Gửi vào nhóm"
+LanWeb -> Server : xem trước (workspace, kênh, các highlight)
+Server -> Db : lần gửi trước, ngữ cảnh lúc agent viết
+Server --> LanWeb : nhãn người nói theo BR-12,\ncảnh báo đã gửi, cảnh báo khác nhóm
+opt có cảnh báo
+  LanWeb -> Lan : hỏi "Vẫn gửi lại" / "Vẫn gửi sang nhóm này?"
+  Lan -> LanWeb : xác nhận
+end
+Lan -> LanWeb : viết thêm lời, bấm Gửi
+LanWeb -> Server : gửi tin kèm thẻ
+Server -> Db : kiểm là thành viên workspace đích
+alt không còn là thành viên
+  Server --> LanWeb : lỗi, không gửi (A.E1)
+else
+  Server -> Db : lưu tin của Lan + thẻ trích dẫn (bản chụp, BR-13)
+  Server -> Db : ghi lần gửi vào highlight riêng
+  Server -> Realtime : phát tin mới
+  Realtime --> LongWeb : tin của Lan, thẻ "Claude của Lan nói"
+  Server --> LanWeb : đã gửi, nút mở kênh
+end
+note over Db
+  Tin này là tin của Lan, nên tự vào ngữ cảnh agent của Lan.
+  Long muốn agent của mình đọc thì highlight đoạn đó (UC13).
+end note
+@enduml

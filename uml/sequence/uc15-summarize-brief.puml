@@ -1,0 +1,48 @@
+' Shows the owner-only channel summary and the brief built from the idea board (UC15).
+@startuml uc15-summarize-brief
+!include ../_style.iuml
+title Tuần tự UC15: Tóm tắt kênh (/summarize) và bản tổng hợp (/brief)
+autonumber
+
+actor "Chủ workspace" as Owner
+participant "Trình duyệt" as Web
+participant "Máy chủ SpecGate" as Server
+database "CSDL" as Db
+participant "Nhà cung cấp AI" as Ai
+participant "Kênh thời gian thực" as Realtime
+
+== /summarize ==
+Owner -> Web : gõ /summarize
+Web -> Server : gửi tin
+Server -> Db : kiểm là chủ, có key
+alt không phải chủ hoặc chưa có key
+  Server -> Realtime : tin hệ thống từ chối hoặc nhắc nhập key
+else
+  Server -> Db : đề bài + tin gần đây của chính kênh này
+  Server -> Ai : yêu cầu tóm tắt, mỗi ý ghi của ai\n(bằng key của chủ)
+  alt key lỗi
+    Server -> Realtime : tin báo lỗi dễ hiểu (A.E3)
+  else
+    Ai --> Server : bản tóm tắt
+    Server -> Db : lưu dưới tên agent của chủ
+    Server -> Realtime : phát bản tóm tắt vào kênh
+  end
+end
+note right of Server
+  BR-14, BR-24: không đọc hội thoại riêng,
+  highlight hay kênh khác; không tự vào
+  ngữ cảnh agent của ai.
+end note
+
+== /brief ==
+Owner -> Web : gõ /brief hoặc bấm "Dựng lại"
+Web -> Server : dựng bản tổng hợp
+Server -> Db : kiểm là chủ
+Server -> Db : đề bài, ý chốt, ý loại, ý đang bàn, ghi chú
+opt workspace có số liệu
+  Server -> Db : lượt chạy làm căn cứ, tình trạng hợp lệ
+end
+Server -> Db : lưu bản mới: thời điểm, người dựng, số thành viên
+Server --> Web : trang Bản tổng hợp
+note over Web : Mọi thành viên xem, "Sao chép", "Tải Markdown"
+@enduml

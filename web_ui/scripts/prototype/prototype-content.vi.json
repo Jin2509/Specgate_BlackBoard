@@ -1,0 +1,266 @@
+{
+  "lang": "vi",
+  "browserLocale": "vi-VN",
+  "date": "12/11/2026",
+  "cover": {
+    "version": "Prototype giao diện v3",
+    "title": "Bảng đen chung cho người và LLM",
+    "lead": "Mười một màn hình cho toàn bộ luồng sử dụng: chat riêng với agent bằng key của mình, highlight đoạn đáng bàn, đưa vào workspace chung để người và nhiều LLM cùng lên ý tưởng. Các màn số liệu của bài báo ADOM do nhóm ADOM làm, không nằm trong tệp này.",
+    "screensHeading": "Màn hình và ý của spec",
+    "flowHeading": "Luồng chính (PDF đề xuất 5.1)",
+    "flowHtml": "Đặt đề bài <b>03</b> → Phát ý <b>02 · 04 · 05</b> → Phản biện <b>04</b> → Tổng hợp <b>06</b> → Chốt <b>07</b> → Xuất <b>08</b><br/>Riêng sang chung: highlight ở <b>02</b> → gửi vào kênh <b>04</b>; xin vào <b>09 → 10</b>.",
+    "colorsHeading": "Ngôn ngữ màu",
+    "changesHeading": "Thay đổi so với bản v2",
+    "techHeading": "Kỹ thuật",
+    "techHtml": "Next.js 16 (App Router), TypeScript strict, Tailwind CSS 4, shadcn/ui (Radix), icon Lucide. Màu khai báo bằng token CSS ở <code>web_ui/src/app/globals.css</code>; mã hex bị cấm trong <code>.tsx</code>. Xuất lại tệp này: <code>pnpm prototype:pdf</code>."
+  },
+  "sprintLabel": "Sprint",
+  "swatches": [
+    {
+      "name": "Trắng",
+      "color": "#ffffff",
+      "description": "cột trái và vùng nội dung; nền trang #f4f7fc"
+    },
+    {
+      "name": "Xanh than",
+      "color": "#0f1b33",
+      "description": "chữ chính"
+    },
+    {
+      "name": "Xanh dương",
+      "color": "#2563eb",
+      "description": "màu nhấn duy nhất: hành động chính, thanh workspace (#1d4ed8)"
+    },
+    {
+      "name": "Vàng nhạt",
+      "color": "#facc15",
+      "description": "vệt highlight dưới chữ"
+    },
+    {
+      "name": "Lục",
+      "color": "#15803d",
+      "description": "PASS, trực tuyến (chỉ số liệu ADOM và trạng thái người)"
+    },
+    {
+      "name": "Đỏ",
+      "color": "#dc2626",
+      "description": "lỗi, invalidated"
+    },
+    {
+      "name": "Cam",
+      "color": "#c2410c",
+      "description": "dữ kiện của bài báo ADOM"
+    },
+    {
+      "name": "Tím",
+      "color": "#7c3aed",
+      "description": "thiếu dữ liệu, không phải đạt"
+    }
+  ],
+  "changes": [
+    "Chủ đề tối \"bảng đen\" thay bộ màu kiểu Discord: nền xám xanh, chữ trắng phấn, một màu nhấn phấn vàng.",
+    "Trạng thái trên bảng ý tưởng không tô màu (Script3): phân biệt bằng cột và chữ.",
+    "Workspace riêng là trang chat với agent bằng API key của người dùng; không còn kênh, bảng, thành viên (Script4).",
+    "Highlight: bôi đen trong workspace riêng, gửi vào kênh chung bằng @; agent đọc kèm nhãn chưa chốt. Chỉ chủ đưa lên bảng.",
+    "Bỏ gói ngữ cảnh khi xin tham gia; tổng hợp (/summarize, /brief) chỉ dành cho chủ workspace.",
+    "Logo mới: cái cổng nét liền. Agent dùng ô vuông có chữ cái đầu thay biểu tượng robot.",
+    "Mỗi trang là ảnh chụp từ route thật trong web_ui/, không vẽ tay: prototype và mã không thể lệch nhau."
+  ],
+  "screens": [
+    {
+      "no": "01",
+      "as": null,
+      "title": "Đăng nhập",
+      "subtitle": "Màn hình đầu tiên. Chỉ hai cách vào qua Supabase Auth: Google hoặc GitHub.",
+      "path": "/login",
+      "spec": ["Kỹ thuật 1 · Next.js, icon Lucide", "Kỹ thuật 5 · Supabase Auth"],
+      "sprint": "F03",
+      "notes": [
+        ["Không có form mật khẩu.", "Chỉ OAuth Google hoặc GitHub; lần đầu đăng nhập hệ thống tự tạo workspace riêng."],
+        [
+          "Sau khi đăng nhập",
+          "lần đầu vào thẳng workspace riêng (chưa tham gia workspace chung nào); những lần sau vào workspace mở gần nhất."
+        ],
+        [
+          "Cột bên phải",
+          "giải thích cách vào workspace chung: nhận mã tham gia, nhập mã và chờ chủ duyệt, hoặc xin từ trang Khám phá."
+        ]
+      ]
+    },
+    {
+      "no": "02",
+      "as": "trang",
+      "title": "Workspace riêng",
+      "subtitle": "Trang chat với agent bằng API key của chính người dùng. Bôi đen một đoạn để highlight và mang ra nhóm.",
+      "path": "/w/rieng-trang/chat/c1",
+      "spec": ["Script4 ý 1 · workspace riêng nhập key", "Script4 Mode 1 · highlight"],
+      "sprint": "F11 · F12 · F13",
+      "notes": [
+        [
+          "Thanh workspace bên trái:",
+          "ô trên cùng là workspace riêng; dưới vạch là workspace chung đã tham gia; dấu cộng tạo mới; chìa khóa nhập mã; la bàn mở trang Khám phá."
+        ],
+        ["Không kênh, không bảng:", "workspace riêng chỉ có hội thoại với agent. Chưa có key thì vào thẳng màn nhập key."],
+        [
+          "Highlight chưa phải là chốt:",
+          "đoạn đã highlight có vệt phấn vàng; nhãn Quan trọng hoặc Cần xem xét. Gửi vào workspace chung bằng @ trong kênh."
+        ]
+      ]
+    },
+    {
+      "no": "03",
+      "as": "trang",
+      "title": "Tạo workspace chung",
+      "subtitle": "Người tạo đặt đề bài, chọn ai tìm thấy được, và quyết định có gắn dữ kiện của bài báo hay không.",
+      "path": "/w/rieng-trang/chat?dialog=create",
+      "spec": ["Ý 2.1 · workspace chung", "Ý 1 · gắn bài báo", "PDF 5.3, 6.3"],
+      "sprint": "F04",
+      "notes": [
+        ["Đề bài là bắt buộc;", "nút Tạo bị khóa khi trống. Đề bài giữ mọi agent bám cùng một mục tiêu."],
+        [
+          "Hai chế độ hiển thị:",
+          "Ẩn hoặc Ai cũng tìm thấy, vào phải xin. Workspace ẩn vẫn vào được bằng mã tham gia; mọi đường vào đều chờ chủ duyệt."
+        ],
+        ["Dữ kiện ADOM là công tắc tùy chọn.", "Tắt đi, workspace vẫn đủ mọi chức năng lên ý tưởng; lõi không phụ thuộc mô-đun."]
+      ]
+    },
+    {
+      "no": "04",
+      "as": "lan",
+      "title": "Kênh chat đa chủ thể",
+      "subtitle": "Người và nhiều LLM trong cùng một kênh. Mỗi agent một mô hình và một vai, cùng đọc một bảng.",
+      "path": "/w/do-an/c/chung",
+      "spec": ["Ý 3 · kênh multi-LLM", "Ý 2.1 · không mất ngữ cảnh", "PDF 5.4"],
+      "sprint": "F09",
+      "notes": [
+        ["Phân biệt chủ thể:", "agent LLM có avatar robot và nhãn AI, kèm vai và tên mô hình; người chỉ có tên."],
+        [
+          "Agent thứ hai biết agent thứ nhất nói gì",
+          "và biết ý nào đã loại vì đọc cùng bảng, không ai dán lại. Đây là lời giải cho vấn đề ở ý 2.1."
+        ],
+        ["Con trỏ đang chạy", "ở cuối câu hiện với mọi thành viên (Realtime Broadcast), không riêng người gọi."]
+      ]
+    },
+    {
+      "no": "05",
+      "as": "lan",
+      "title": "Gọi agent và dùng lệnh",
+      "subtitle": "Hai cách điều khiển kênh: gõ @ để chọn agent trả lời, gõ / để thao tác lên bảng.",
+      "path": "/w/do-an/c/chung?menus=both&composer=@",
+      "spec": ["Ý 3 · giao tiếp qua lệnh", "Con người điều phối", "PDF 5.4"],
+      "sprint": "F09",
+      "notes": [
+        [
+          "Hai bảng gợi ý được vẽ cùng lúc để tiện xem;",
+          "khi dùng thật chỉ hiện một bảng theo ký tự vừa gõ. Điều hướng bằng phím mũi tên, Enter hoặc Tab để chọn."
+        ],
+        ["Agent chỉ lên tiếng khi được gọi tên.", "Agent gọi agent tối đa hai lượt nối tiếp rồi dừng chờ người."],
+        ["Lệnh chỉ chạy khi do người gửi.", "Lệnh /stats /task /run chỉ xuất hiện ở workspace đã gắn ADOM."]
+      ]
+    },
+    {
+      "no": "06",
+      "as": "lan",
+      "title": "Bảng ý tưởng",
+      "subtitle": "Phần được chọn lọc của bảng đen. Ý tưởng đi qua bốn trạng thái; ý đã loại vẫn ở lại kèm lý do.",
+      "path": "/w/do-an/board",
+      "spec": ["Ý 2.1 · tổng hợp, lên ý tưởng", "Bộ nhớ dùng chung", "PDF 5.2"],
+      "sprint": "F10",
+      "notes": [
+        ["Mỗi thẻ ghi rõ nguồn:", "người hay agent nêu ra, số thứ tự (#4) để dùng với /decide, và liên kết về tin nhắn gốc."],
+        ["Cột \"Đã loại\" không bị ẩn.", "Agent được gọi sau đọc cột này nên không đề xuất lại."],
+        [
+          "Ba ô dưới",
+          "(ghi chú, câu hỏi mở, tóm tắt cuộn) cùng nằm trong ngữ cảnh của mọi lần gọi LLM (khối 3, 4 của bộ lắp ráp)."
+        ]
+      ]
+    },
+    {
+      "no": "07",
+      "as": "lan",
+      "title": "Chốt hoặc loại một ý",
+      "subtitle": "Bước ra quyết định. Lý do là bắt buộc vì nó ngăn cả nhóm và các agent bàn lại chuyện cũ.",
+      "path": "/w/do-an/board?decide=i2",
+      "spec": ["Con người điều phối", "Ý 3 · lệnh /decide", "PDF 5.1 bước 5"],
+      "sprint": "F10",
+      "notes": [
+        [
+          "Mở từ thẻ trên bảng hoặc bằng /decide trong kênh;",
+          "dòng \"Tương đương lệnh\" cập nhật theo lựa chọn để người dùng học cú pháp."
+        ],
+        [
+          "Không quay ngược:",
+          "chỉ thẻ ở cột Đề xuất và Đang bàn bấm được. Ý đã chốt hoặc đã loại muốn bàn lại phải nêu thành ý mới."
+        ],
+        ["Thẻ chuyển cột ngay", "trên màn hình của mọi thành viên đang mở bảng."]
+      ]
+    },
+    {
+      "no": "08",
+      "as": "lan",
+      "title": "Bản tổng hợp",
+      "subtitle": "Đầu ra cầm được của một buổi lên ý tưởng: chốt gì, loại gì, vì sao, còn gì chưa xong.",
+      "path": "/w/do-an/brief",
+      "spec": ["Ý 2.1 · tổng hợp thông tin", "Ý 3 · lệnh /brief", "PDF 5.1 bước 6"],
+      "sprint": "F10",
+      "notes": [
+        ["Dựng từ bảng, không từ lịch sử chat,", "nên chỉ chứa những gì nhóm đã chủ động ghi lại."],
+        ["Tải về dạng Markdown", "để dán vào báo cáo; lệnh /brief trong kênh mở đúng trang này."],
+        ["Không có nội dung do LLM tự thêm:", "từng dòng truy được về một thẻ trên bảng."]
+      ]
+    },
+    {
+      "no": "09",
+      "as": "trang",
+      "title": "Tìm workspace và xin tham gia",
+      "subtitle": "Đường đi từ riêng sang chung khi chưa có mã. Vào rồi thì mang phần đã nghĩ ra bằng highlight.",
+      "path": "/w/rieng-trang/explore",
+      "spec": ["Ý 2.1 · yêu cầu join", "Ý 2.1 · không copy giữa các agent", "PDF 5.3"],
+      "sprint": "F07",
+      "notes": [
+        ["Chỉ kèm lời nhắn.", "Gói ngữ cảnh đã bỏ; highlight làm đúng việc đó sau khi vào workspace."],
+        [
+          "Hai đường vào:",
+          "có mã tham gia thì nhập vào ô đầu trang; không có thì gửi yêu cầu. Cả hai đều chờ chủ duyệt, trạng thái Đang chờ duyệt hiện trên thẻ."
+        ]
+      ]
+    },
+    {
+      "no": "10",
+      "as": "lan",
+      "title": "Duyệt yêu cầu tham gia",
+      "subtitle": "Chủ workspace đọc lời nhắn rồi duyệt hoặc từ chối. Màn hình 10 và 11 xem dưới tài khoản Lan.",
+      "path": "/w/do-an/requests",
+      "spec": ["Ý 2.1 · request join", "Phân quyền owner / member"],
+      "sprint": "F11",
+      "notes": [
+        [
+          "Chỉ chủ workspace thấy màn hình này.",
+          "Thành viên thường không có mục \"Yêu cầu tham gia\"; số chờ duyệt hiện thành chấm đỏ cạnh tên workspace."
+        ],
+        ["Duyệt", "biến người xin thành thành viên, cho họ thấy toàn bộ lịch sử và bảng."],
+        ["Vòng đời:", "pending → approved | rejected | cancelled; không chuyển ngược."]
+      ]
+    },
+    {
+      "no": "11",
+      "as": "lan",
+      "title": "Thành viên và agent",
+      "subtitle": "Nơi cấu hình các LLM của workspace: vai, mô hình, khóa API và trần chi phí.",
+      "path": "/w/do-an/settings",
+      "spec": ["Ý 3 · multi-LLM, api_key", "Phân quyền owner / member", "PDF 10"],
+      "sprint": "F08",
+      "notes": [
+        ["Khóa API chỉ ghi.", "Sau khi lưu chỉ còn bốn ký tự cuối; khóa nằm trong Vault và không bao giờ quay lại trình duyệt."],
+        [
+          "Trần chi phí theo agent.",
+          "@critic ở 97% nên thanh và cảnh báo chuyển hồng: chạm trần thì agent từ chối và báo lý do trong kênh."
+        ],
+        [
+          "Ba vai mẫu có sẵn chỉ dẫn;",
+          "\"Tự viết\" cho phép đặt vai bất kỳ. Tắt agent thì agent biến khỏi cột trái và khỏi gợi ý @."
+        ]
+      ]
+    }
+  ]
+}

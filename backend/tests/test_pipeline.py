@@ -1,4 +1,4 @@
-"""POST /api/runs drives the real ADOM pipeline with fixed LLM answers (no API calls).
+"""POST /api/v1/runs drives the real ADOM pipeline with fixed LLM answers (no API calls).
 
 Needs spec-gate/adom at ADOM_DIR and the HumanEval+ download that adom caches; skipped otherwise.
 """
@@ -37,7 +37,7 @@ def pipeline_client(monkeypatch, tmp_path):
 
 
 def _events(client, run_id):
-    text = client.get(f"/api/runs/{run_id}/events?follow=false").text
+    text = client.get(f"/api/v1/runs/{run_id}/events?follow=false").text
     out = []
     for block in text.strip().split("\n\n"):
         fields = dict(line.split(": ", 1) for line in block.splitlines() if not line.startswith(":"))
@@ -59,9 +59,9 @@ def test_run_cmd_uses_level_and_tasks_dir():
 @pytest.mark.slow
 def test_post_run_executes_pipeline(pipeline_client):
     # TestClient returns only after background tasks finish, so the job is complete here.
-    run_id = pipeline_client.post("/api/runs", json={"seed": "7", "taskIds": FIXTURE_TASKS}).json()["id"]
+    run_id = pipeline_client.post("/api/v1/runs", json={"seed": "7", "taskIds": FIXTURE_TASKS}).json()["id"]
 
-    manifest = pipeline_client.get(f"/api/runs/{run_id}/manifest").json()
+    manifest = pipeline_client.get(f"/api/v1/runs/{run_id}/manifest").json()
     assert manifest["status"] == "done"
     assert manifest["runTaskIds"] == sorted(FIXTURE_TASKS)
 
@@ -76,14 +76,14 @@ def test_post_run_executes_pipeline(pipeline_client):
 
 @pytest.mark.slow
 def test_failed_step_marks_run_failed(pipeline_client):
-    run_id = pipeline_client.post("/api/runs", json={"taskIds": ["HumanEval/9999"]}).json()["id"]
+    run_id = pipeline_client.post("/api/v1/runs", json={"taskIds": ["HumanEval/9999"]}).json()["id"]
 
-    assert pipeline_client.get(f"/api/runs/{run_id}/manifest").json()["status"] == "failed"
+    assert pipeline_client.get(f"/api/v1/runs/{run_id}/manifest").json()["status"] == "failed"
     err = [d for e, d in _events(pipeline_client, run_id) if e == "run_failed"]
     assert err and err[0]["step"] == "setup" and "0 tasks ready" in err[0]["message"]
 
 
 def test_followed_stream_closes_when_run_finished(pipeline_client):
-    run_id = pipeline_client.post("/api/runs", json={"taskIds": ["HumanEval/9999"]}).json()["id"]
+    run_id = pipeline_client.post("/api/v1/runs", json={"taskIds": ["HumanEval/9999"]}).json()["id"]
     # follow=true would hang forever if the stream ignored the terminal status.
-    assert "event: run_failed" in pipeline_client.get(f"/api/runs/{run_id}/events").text
+    assert "event: run_failed" in pipeline_client.get(f"/api/v1/runs/{run_id}/events").text

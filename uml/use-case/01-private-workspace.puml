@@ -1,0 +1,62 @@
+' Details the private workspace use cases and how their parts include and extend each other.
+@startuml 01-private-workspace
+!include ../_style.iuml
+title Ca sử dụng chi tiết: workspace riêng và đường riêng sang chung
+left to right direction
+
+actor "Người dùng" as User
+actor "Thành viên" as Member
+actor "Nhà cung cấp AI" as Ai <<hệ thống>>
+Member -|> User
+
+rectangle "Workspace riêng" {
+  usecase "UC03 Thiết lập API key\nvà chọn mô hình" as UC03
+  usecase "Kiểm key với\nnhà cung cấp" as CheckKey
+
+  usecase "UC04-A Chat với agent riêng" as UC04A
+  usecase "UC04-B Tạo lại câu trả lời,\nchuyển phiên bản" as UC04B
+  usecase "UC04-C Đổi tên, xóa hội thoại" as UC04C
+
+  usecase "UC05-A Tạo highlight riêng" as UC05A
+  usecase "UC05-B Quản lý danh sách\nHighlight riêng" as UC05B
+
+  usecase "UC06-A Chọn ngữ cảnh nhóm" as UC06A
+  usecase "UC06-B Tóm tắt tin cũ của tôi" as UC06B
+
+  usecase "UC08 Tóm tắt hội thoại\ncho nhóm" as UC08
+}
+
+rectangle "Kênh của workspace chung" {
+  usecase "UC07-A Gửi highlight riêng\ntừ danh sách" as UC07A
+  usecase "UC07-B Chèn highlight riêng\nbằng @" as UC07B
+}
+
+User --> UC03
+User --> UC04A
+User --> UC04C
+User --> UC05A
+User --> UC05B
+Member --> UC06A
+Member --> UC08
+Member --> UC07A
+Member --> UC07B
+
+UC03 ..> CheckKey : <<include>>
+CheckKey --> Ai
+UC04A --> Ai
+UC04B .> UC04A : <<extend>>\nbấm "Tạo lại"
+UC04A ..> UC03 : <<include>>\ncần key hợp lệ
+UC06A .> UC04A : <<extend>>\nhội thoại có ngữ cảnh nhóm
+UC06B .> UC06A : <<extend>>\ntin của mình vượt ~50
+UC06B --> Ai
+UC08 --> Ai
+UC08 ..> UC05B : <<include>>\nlưu thành mục "bản tóm tắt"
+UC07A .> UC05B : <<extend>>\nbấm "Gửi vào nhóm"
+UC06B ..> UC05B : chia sẻ bản tóm tắt\n(tùy chọn)
+
+note bottom of UC07A
+  BR-15: mọi thứ từ workspace riêng vào kênh
+  phải đi qua danh sách Highlight riêng.
+  Không có nút gửi thẳng câu trả lời.
+end note
+@enduml

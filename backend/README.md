@@ -1,5 +1,7 @@
 # backend
 
+> **SpecGate Workspace** (tài khoản, agent riêng, workspace chung, kênh, highlight, bảng ý tưởng theo `docs/SRS.md`): xem [docs/WORKSPACE_API.md](../docs/WORKSPACE_API.md). Phần dưới đây là mô-đun ADOM.
+
 API FastAPI của SpecGate, nằm trong monorepo cạnh `web_ui/` (Next.js). Pipeline ADOM lấy từ repo `spec-gate` (nhánh `cleanup-scripts`, private) đặt cạnh repo này.
 
 ```

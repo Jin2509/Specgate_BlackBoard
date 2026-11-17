@@ -32,12 +32,12 @@ def finished_run(tmp_path_factory):
         Base.metadata.drop_all(engine)
         with TestClient(app) as client:
             # TestClient returns only after the background job has finished.
-            run_id = client.post("/api/runs", json={"taskIds": TASKS}).json()["id"]
+            run_id = client.post("/api/v1/runs", json={"taskIds": TASKS}).json()["id"]
             yield client, run_id
 
 
 def _events(client, run_id):
-    text = client.get(f"/api/runs/{run_id}/events?follow=false").text
+    text = client.get(f"/api/v1/runs/{run_id}/events?follow=false").text
     out = []
     for block in text.strip().split("\n\n"):
         fields = dict(line.split(": ", 1) for line in block.splitlines() if not line.startswith(":"))
@@ -70,22 +70,22 @@ def test_ui_events_mirror_adom_events(finished_run):
 @pytest.mark.slow
 def test_variants_and_tasks(finished_run):
     client, run_id = finished_run
-    variants = client.get(f"/api/runs/{run_id}/variants").json()
+    variants = client.get(f"/api/v1/runs/{run_id}/variants").json()
     assert [v["variant"] for v in variants] == [VARIANT]
     assert set(variants[0]["tasks"]) == set(TASKS)
     assert variants[0]["tasks"]["HumanEval/53"]["status"] == "ok"
-    assert client.get(f"/api/runs/{run_id}/variants/{VARIANT}").json()["level"] == "A3"
-    assert set(client.get(f"/api/runs/{run_id}/tasks").json()) == set(TASKS)
-    assert set(client.get(f"/api/runs/{run_id}/specs").json()) == set(TASKS)
+    assert client.get(f"/api/v1/runs/{run_id}/variants/{VARIANT}").json()["level"] == "A3"
+    assert set(client.get(f"/api/v1/runs/{run_id}/tasks").json()) == set(TASKS)
+    assert set(client.get(f"/api/v1/runs/{run_id}/specs").json()) == set(TASKS)
 
 
 @pytest.mark.slow
 def test_state_and_monitor_history(finished_run):
     client, run_id = finished_run
-    final = client.get(f"/api/runs/{run_id}/variants").json()[0]["tasks"]["HumanEval/53"]["finalVersion"]
-    state = client.get(f"/api/runs/{run_id}/variants/{VARIANT}/state/HumanEval/53").json()
+    final = client.get(f"/api/v1/runs/{run_id}/variants").json()[0]["tasks"]["HumanEval/53"]["finalVersion"]
+    state = client.get(f"/api/v1/runs/{run_id}/variants/{VARIANT}/state/HumanEval/53").json()
     assert {"monitor", "stores"} <= set(state)
-    monitors = client.get(f"/api/runs/{run_id}/variants/{VARIANT}/monitors/HumanEval/53").json()
+    monitors = client.get(f"/api/v1/runs/{run_id}/variants/{VARIANT}/monitors/HumanEval/53").json()
     assert [m["version"] for m in monitors] == list(range(final + 1))
 
 
@@ -99,9 +99,9 @@ def test_state_and_monitor_history(finished_run):
 ])
 def test_unknown_or_escaping_names_are_404(finished_run, path):
     client, run_id = finished_run
-    assert client.get(f"/api/runs/{run_id}/{path}").status_code == 404
+    assert client.get(f"/api/v1/runs/{run_id}/{path}").status_code == 404
 
 
 def test_run_without_results_is_404(client):
-    run_id = client.post("/api/runs", json={}).json()["id"]
-    assert client.get(f"/api/runs/{run_id}/variants").status_code == 404
+    run_id = client.post("/api/v1/runs", json={}).json()["id"]
+    assert client.get(f"/api/v1/runs/{run_id}/variants").status_code == 404

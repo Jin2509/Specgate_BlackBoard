@@ -47,7 +47,7 @@ def _validation(exc: ValidationError) -> ApiError:
         f"{'.'.join(map(str, e['loc']))}: {e['msg']}" for e in exc.errors()), "VALIDATION_ERROR")
 
 
-@router.post("/api/runs", status_code=201)
+@router.post("/runs", status_code=201)
 async def create_run(request: Request, background: BackgroundTasks,
                      session: Session = Depends(get_session)) -> Any:
     raw = await request.body()
@@ -82,7 +82,7 @@ def _create_eval_run(session: Session, body: EvalRunCreate) -> EvalRun:
     return run
 
 
-@router.get("/api/runs")
+@router.get("/runs")
 def list_runs(page: int = Query(1, ge=1), pageSize: int = Query(25, ge=1, le=100), verdict: str | None = None,
               problem: str | None = None, dataset: str | None = None, from_: str | None = Query(None, alias="from"),
               to: str | None = None, session: Session = Depends(get_session)) -> dict[str, Any]:
@@ -93,7 +93,7 @@ def list_runs(page: int = Query(1, ge=1), pageSize: int = Query(25, ge=1, le=100
             "runs": [evaluation.run_out(r) for r in runs[start:start + pageSize]]}
 
 
-@router.delete("/api/runs")
+@router.delete("/runs")
 def clear_runs(body: ClearRunsIn, session: Session = Depends(get_session)) -> dict[str, bool]:
     if body.confirmation != CLEAR_PHRASE:
         raise ApiError(400, f'Cụm xác nhận phải là "{CLEAR_PHRASE}".')
@@ -102,7 +102,7 @@ def clear_runs(body: ClearRunsIn, session: Session = Depends(get_session)) -> di
     return {"deleted": True}
 
 
-@router.get("/api/runs/current")
+@router.get("/runs/current")
 def current_run(session: Session = Depends(get_session)) -> dict[str, str]:
     """The newest pipeline run; pages without [runId] in the URL work on it."""
     run = session.scalar(select(Run).order_by(Run.created_at.desc()).limit(1))
@@ -111,7 +111,7 @@ def current_run(session: Session = Depends(get_session)) -> dict[str, str]:
     return {"runId": run.id}
 
 
-@router.get("/api/runs/export")
+@router.get("/runs/export")
 def export_runs(format: Literal["csv", "json", "stats"] = "json", session: Session = Depends(get_session)) -> Response:
     runs = list(session.scalars(select(EvalRun).order_by(EvalRun.created_at.desc())))
     stamp = _now().strftime("%Y%m%d-%H%M%S")
@@ -124,12 +124,12 @@ def export_runs(format: Literal["csv", "json", "stats"] = "json", session: Sessi
     return Response(body, media_type=media, headers={"Content-Disposition": f'attachment; filename="{name}"'})
 
 
-@router.get("/api/runs/{run_id}")
+@router.get("/runs/{run_id}")
 def get_run(run_id: str, session: Session = Depends(get_session)) -> dict[str, Any]:
     return {"run": evaluation.run_out(_eval_run(session, run_id))}
 
 
-@router.patch("/api/runs/{run_id}")
+@router.patch("/runs/{run_id}")
 def patch_run(run_id: str, body: RunPatch, session: Session = Depends(get_session)) -> dict[str, Any]:
     run = _eval_run(session, run_id)
     now = _now().isoformat()
@@ -150,7 +150,7 @@ def patch_run(run_id: str, body: RunPatch, session: Session = Depends(get_sessio
     return {"run": evaluation.run_out(run)}
 
 
-@router.patch("/api/runs/{run_id}/review")
+@router.patch("/runs/{run_id}/review")
 def review_run(run_id: str, body: ReviewIn, session: Session = Depends(get_session)) -> dict[str, Any]:
     run = _eval_run(session, run_id)
     run.review = {"agree": body.agree, "note": body.note, "at": _now().isoformat()}
@@ -159,7 +159,7 @@ def review_run(run_id: str, body: ReviewIn, session: Session = Depends(get_sessi
     return {"run": evaluation.run_out(run)}
 
 
-@router.post("/api/runs/{run_id}/followup")
+@router.post("/runs/{run_id}/followup")
 def followup(run_id: str, body: FollowupIn, session: Session = Depends(get_session)) -> dict[str, Any]:
     if not body.content.strip():
         raise ApiError(400, "Nội dung lượt bổ sung không được rỗng.")
@@ -173,7 +173,7 @@ def followup(run_id: str, body: FollowupIn, session: Session = Depends(get_sessi
     return {"run": evaluation.run_out(run)}
 
 
-@router.get("/api/logs/stream")
+@router.get("/logs/stream")
 async def stream_logs(request: Request, runId: str | None = None,
                       session: Session = Depends(get_session)) -> StreamingResponse:
     """SSE of RunLog entries; closes once the run is final or error and every log has been sent."""
@@ -201,7 +201,7 @@ async def stream_logs(request: Request, runId: str | None = None,
                              headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"})
 
 
-@router.get("/api/stats")
+@router.get("/stats")
 def stats(dataset: str | None = None, verdict: str | None = None, from_: str | None = Query(None, alias="from"),
           to: str | None = None, session: Session = Depends(get_session)) -> JSONResponse:
     runs = [r for r in session.scalars(select(EvalRun).order_by(EvalRun.created_at.desc()))

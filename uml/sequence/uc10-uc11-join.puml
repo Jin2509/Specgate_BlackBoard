@@ -1,0 +1,43 @@
+' Shows a join request by code or Explore and the realtime hand-off when the owner decides (UC10, UC11).
+@startuml uc10-uc11-join
+!include ../_style.iuml
+title Tuần tự UC10, UC11: Xin tham gia và duyệt
+autonumber
+
+actor "Người xin" as Requester
+participant "Trình duyệt\nngười xin" as ReqWeb
+participant "Máy chủ SpecGate" as Server
+database "CSDL" as Db
+participant "Kênh thời gian thực" as Realtime
+participant "Trình duyệt\nchủ" as OwnerWeb
+actor "Chủ workspace" as Owner
+
+alt bằng mã
+  Requester -> ReqWeb : nhập mã
+  ReqWeb -> Server : xin tham gia bằng mã
+  Server -> Db : tìm workspace theo mã đã chuẩn hóa
+  alt mã sai hoặc đã đổi
+    Server --> ReqWeb : mã không hợp lệ (A.E1)
+  end
+else qua Khám phá
+  Requester -> ReqWeb : chọn workspace, viết lời nhắn
+  ReqWeb -> Server : gửi yêu cầu
+end
+Server -> Db : tạo hoặc cập nhật yêu cầu đang chờ
+Server --> ReqWeb : mở trang "Đang chờ duyệt"
+Server -> Realtime : có yêu cầu mới
+Realtime --> OwnerWeb : tăng số trên thanh bên
+Owner -> OwnerWeb : mở "Yêu cầu tham gia"
+Owner -> OwnerWeb : Duyệt hoặc Từ chối
+OwnerWeb -> Server : quyết định
+Server -> Db : kiểm là chủ, yêu cầu còn chờ (E1)
+alt duyệt
+  Server -> Db : thêm thành viên, gán màu, xử lý tên trùng
+  Server -> Realtime : yêu cầu đã duyệt
+  Realtime --> ReqWeb : tự chuyển vào workspace
+else từ chối
+  Server -> Realtime : yêu cầu bị từ chối
+  Realtime --> ReqWeb : "Yêu cầu bị từ chối" (A.E2)
+end
+Server -> Db : lưu lịch sử: kết quả, người xử lý
+@enduml

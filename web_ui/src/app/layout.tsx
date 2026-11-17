@@ -1,8 +1,14 @@
-// Layout gốc: nạp font, CSS toàn cục, metadata và TooltipProvider.
+// Sets up the root document: fonts, global styles, metadata, the connection banner and the tooltip provider.
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro, JetBrains_Mono } from "next/font/google";
-import { TooltipProvider } from "@/components/ui/tooltip";
+
+import { ConnectionBanner } from "@/components/ConnectionBanner";
+import { TooltipProvider } from "@/components/ui/Tooltip";
+import { locale, t } from "@/lib/i18n";
+
 import "./globals.css";
+
+const TOOLTIP_DELAY_MS = 200;
 
 const uiFont = Be_Vietnam_Pro({
   variable: "--font-ui",
@@ -17,17 +23,18 @@ const codeFont = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "SpecGate Workspace",
-    template: "%s · SpecGate Workspace",
+    default: t.common.appTitle,
+    template: `%s · ${t.common.appTitle}`,
   },
-  description: "Bảng đen chung cho người và LLM: lên ý tưởng không mất ngữ cảnh.",
+  description: t.common.appDescription,
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="vi" className={`${uiFont.variable} ${codeFont.variable} h-full antialiased`}>
+    <html lang={locale} className={`${uiFont.variable} ${codeFont.variable} h-full antialiased`}>
       <body className="min-h-full">
-        <TooltipProvider delayDuration={200}>{children}</TooltipProvider>
+        <ConnectionBanner />
+        <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>{children}</TooltipProvider>
       </body>
     </html>
   );

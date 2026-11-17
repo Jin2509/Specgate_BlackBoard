@@ -1,0 +1,41 @@
+' Shows how an API key is checked, encrypted and turned into the user's personal agent (UC03).
+@startuml uc03-api-key
+!include ../_style.iuml
+title Tuần tự UC03: Thiết lập API key và chọn mô hình
+autonumber
+
+actor "Người dùng" as User
+participant "Trình duyệt" as Web
+participant "Máy chủ SpecGate" as Server
+participant "Nhà cung cấp AI" as Ai
+database "CSDL" as Db
+
+User -> Web : chọn nhà cung cấp (Anthropic | kiểu OpenAI)
+opt kiểu OpenAI
+  User -> Web : nhập địa chỉ API
+end
+User -> Web : dán key, bấm "Kiểm và lưu key"
+Web -> Server : gửi nhà cung cấp, địa chỉ, key
+alt địa chỉ API không hợp lệ
+  Server --> Web : lỗi ở ô địa chỉ (E2)
+else
+  Server -> Ai : gọi thử bằng key
+  alt key sai, hết tiền, không kết nối được
+    Ai --> Server : lỗi
+    Server --> Web : một câu tiếng Việt dễ hiểu, không lưu (E1)
+  else key dùng được
+    Ai --> Server : danh sách mô hình
+    Server -> Db : lưu key đã mã hóa, 4 ký tự cuối
+    Server --> Web : danh sách mô hình, "…abcd"
+    User -> Web : chọn mô hình
+    Web -> Server : lưu mô hình
+    Server -> Db : cập nhật agent riêng
+    Server --> Web : agent "‹mô hình› của ‹tên›" sẵn sàng
+  end
+end
+note over Server, Db
+  BR-05: không ai đọc lại được key đầy đủ.
+  Đổi key, đổi mô hình không làm mất highlight riêng;
+  tin cũ trong kênh giữ tên mô hình lúc gửi.
+end note
+@enduml

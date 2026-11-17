@@ -23,7 +23,7 @@ from app.errors import ApiError, engine_not_configured
 from app.models import Dataset, EvalRun
 from app.schemas import ChatFollowupIn, ChatRunIn, LlmConfigIn
 
-router = APIRouter(prefix="/api/run", tags=["chat"])
+router = APIRouter(prefix="/run", tags=["chat"])
 
 # Chat verdict -> EvalVerdict of the UI (Stats groups by these).
 TO_EVAL = {"consistent": "ACC", "spec_fault": "SPEC_FAULT", "code_fault": "CODE_FAULT", "unknown": "UNKNOWN"}

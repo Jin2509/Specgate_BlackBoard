@@ -28,25 +28,25 @@ def _case_event(session: Session, cid: str, run_id: str | None = None) -> RunEve
     return ev
 
 
-@router.get("/api/cases")
+@router.get("/cases")
 def list_cases(runId: str | None = None, hasTicket: bool = False,
                session: Session = Depends(get_session)) -> dict[str, Any]:
     return {"cases": views.list_cases(session, runId, hasTicket)}
 
 
-@router.get("/api/cases/{case_id}")
+@router.get("/cases/{case_id}")
 def get_case(case_id: str, session: Session = Depends(get_session)) -> dict[str, Any]:
     return views.case_dossier(session, _case_event(session, case_id))
 
 
-@router.get("/api/runs/{run_id}/cases/{case_id}/repair-candidates")
+@router.get("/runs/{run_id}/cases/{case_id}/repair-candidates")
 def repair_candidates(run_id: str, case_id: str, session: Session = Depends(get_session)) -> dict[str, Any]:
     get_run(session, run_id)
     ev = _case_event(session, case_id, run_id)
     return {"caseId": case_id, "candidates": views.repair_candidates(session, run_id, ev)}
 
 
-@router.post("/api/cases/{case_id}/repair/deploy")
+@router.post("/cases/{case_id}/repair/deploy")
 def deploy_repair(case_id: str, session: Session = Depends(get_session)) -> dict[str, Any]:
     _case_event(session, case_id)
     raise engine_not_configured(
@@ -54,7 +54,7 @@ def deploy_repair(case_id: str, session: Session = Depends(get_session)) -> dict
         "backend chưa có engine để triển khai thủ công một ứng viên.")
 
 
-@router.post("/api/runs/{run_id}/cases/{case_id}/stream")
+@router.post("/runs/{run_id}/cases/{case_id}/stream")
 def stream_case(run_id: str, case_id: str, session: Session = Depends(get_session)) -> dict[str, Any]:
     get_run(session, run_id)
     _case_event(session, case_id, run_id)
@@ -69,7 +69,7 @@ def _ticket(session: Session, ticket_id: str) -> Ticket:
     return t
 
 
-@router.post("/api/tickets/{ticket_id}/answer")
+@router.post("/tickets/{ticket_id}/answer")
 def answer_ticket(ticket_id: str, body: TicketAnswerIn, session: Session = Depends(get_session)) -> dict[str, Any]:
     t = _ticket(session, ticket_id)
     if t.status == "spent":
@@ -84,7 +84,7 @@ def answer_ticket(ticket_id: str, body: TicketAnswerIn, session: Session = Depen
             "message": "Đã ghi câu trả lời. Backend không phân xử lại nên chưa có verdict cuối."}
 
 
-@router.post("/api/tickets/{ticket_id}/defer")
+@router.post("/tickets/{ticket_id}/defer")
 def defer_ticket(ticket_id: str, session: Session = Depends(get_session)) -> dict[str, Any]:
     t = _ticket(session, ticket_id)
     if t.status == "spent":
@@ -94,7 +94,7 @@ def defer_ticket(ticket_id: str, session: Session = Depends(get_session)) -> dic
     return {"success": True, "ticketId": t.id, "status": "open", "message": "Đã hoãn vé."}
 
 
-@router.get("/api/runs/{run_id}/annotation-queue")
+@router.get("/runs/{run_id}/annotation-queue")
 def annotation_queue(run_id: str, session: Session = Depends(get_session)) -> dict[str, Any]:
     run = get_run(session, run_id)
     items = []

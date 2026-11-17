@@ -1,0 +1,30 @@
+' Shows the lifecycle of one idea on the idea board (UC14, BR-20, BR-21, BR-23).
+@startuml board-item
+!include ../_style.iuml
+title Trạng thái: một ý trên bảng ý tưởng
+
+[*] --> DeXuat : /idea, /pin, nút "Thêm ý"\n(chỉ do người gõ, BR-20)
+state "Đề xuất" as DeXuat
+state "Đang bàn" as DangBan
+state "Đã chốt" as DaChot
+state "Đã loại" as DaLoai
+
+DeXuat --> DangBan : chủ bấm "Đưa vào bàn" (BR-21)
+DeXuat --> DaChot : chốt + lý do
+DeXuat --> DaLoai : loại + lý do
+DangBan --> DaChot : chốt + lý do
+DangBan --> DaLoai : loại + lý do
+DaChot --> [*]
+DaLoai --> [*]
+
+DaChot : ghi người, thời điểm, lý do
+DaChot : vào ngữ cảnh agent và bản tổng hợp
+DaLoai : luôn hiển thị
+DaLoai : agent được dặn không đề xuất lại
+
+note bottom of DaChot
+  BR-23: bắt buộc lý do, chỉ con người làm,
+  không quay ngược. Lệnh trong thẻ trích dẫn
+  lời agent không được thực hiện.
+end note
+@enduml

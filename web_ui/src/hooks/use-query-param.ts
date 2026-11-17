@@ -1,9 +1,8 @@
-// Hook đọc một tham số trên URL.
 "use client";
-
+// Reads one search parameter of the current URL and follows browser history changes.
 import { useSyncExternalStore } from "react";
 
-function subscribe(onChange: () => void) {
+function subscribe(onChange: () => void): () => void {
   window.addEventListener("popstate", onChange);
   return () => window.removeEventListener("popstate", onChange);
 }

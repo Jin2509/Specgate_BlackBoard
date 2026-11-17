@@ -1,0 +1,54 @@
+' Models how the group context is built for every question and how old own messages are summarized (UC06).
+@startuml uc06-group-context
+!include ../_style.iuml
+title Hoạt động UC06: Dựng ngữ cảnh nhóm và tóm tắt tin cũ
+
+|Thành viên|
+start
+:Chọn workspace ở ô "Ngữ cảnh nhóm";
+|Hệ thống|
+:Lưu lựa chọn, gắn biểu tượng nhóm cho hội thoại;
+:Mở khung "Agent đang đọc";
+|Thành viên|
+:Gửi câu hỏi;
+|Hệ thống|
+if (Còn là thành viên workspace đã chọn?) then (không)
+  :Gửi câu hỏi không kèm thông tin nhóm (A.E1);
+  stop
+else (còn)
+endif
+partition "Dựng ngữ cảnh mới nhất (BR-10)" {
+  :Lấy đề bài;
+  :Lấy thành viên: tên, chủ, vai, agent;
+  :Lấy ý đã chốt, ý đã loại kèm lý do;
+  :Lấy dòng thời gian chung:\ntin của mình trong mọi kênh\n+ highlight cho agent của mình;
+  if (Workspace có số liệu?) then (có)
+    :Thêm lượt chạy, tình trạng hợp lệ,\nsáu tiêu chí, lời nhắc (BR-28);
+  else (không)
+  endif
+}
+if (Tin của mình vượt ~50?) then (có)
+  :Chỉ gửi ~50 tin gần nhất (cùng các bản tóm tắt đã có);
+  :Khung ghi "N tin cũ đang không được gửi",\nkèm nút "Tóm tắt tin cũ" (A.A5);
+  |Thành viên|
+  if (Bấm "Tóm tắt tin cũ"?) then (có)
+    |Hệ thống|
+    :Báo trước số tin, số khối,\nsố khối cần gọi agent;
+    :Chia tin cũ thành khối,\ncắt tại mốc giờ của từng highlight;
+    :Giữ nguyên văn khối dưới ~5 tin;
+    |Nhà cung cấp AI|
+    :Tóm tắt các khối còn lại\ntrong một lần gọi;
+    |Hệ thống|
+    if (Key lỗi?) then (có)
+      :Báo lỗi, giữ bản tóm tắt cũ (B.E1);
+    else (không)
+      :Đặt từng bản tóm tắt đúng chỗ\ntrên dòng thời gian;
+    endif
+  else (không)
+  endif
+else (không)
+endif
+|Hệ thống|
+:Gửi ngữ cảnh kèm câu hỏi cho agent (UC04);
+stop
+@enduml

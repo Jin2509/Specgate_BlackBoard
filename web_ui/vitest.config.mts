@@ -1,4 +1,6 @@
+// Configures Vitest: jsdom, the React plugin, the @/ alias and the test setup file.
 import { fileURLToPath } from "node:url";
+
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vitest/config";
 

@@ -1,0 +1,58 @@
+' Models both ways into a shared workspace and the owner's approval (UC10, UC11).
+@startuml uc10-uc11-join
+!include ../_style.iuml
+title Hoạt động UC10, UC11: Xin tham gia và duyệt
+
+|Người dùng|
+start
+if (Đi đường nào?) then (mã tham gia)
+  :Nhập mã 7 ký tự;
+  |Hệ thống|
+  :Chuẩn hóa mã (chữ thường, dấu cách, gạch nối);
+  if (Mã hợp lệ và còn hiệu lực?) then (không)
+    :Báo mã không hợp lệ, gợi ý xin mã mới (A.E1);
+    stop
+  else (có)
+  endif
+else (trang Khám phá)
+  :Tìm theo tên hoặc đề bài;
+  :Chọn workspace, viết lời nhắn cho chủ;
+endif
+|Hệ thống|
+if (Đã là thành viên?) then (có)
+  :Mở thẳng workspace;
+  stop
+else (chưa)
+endif
+if (Đã có yêu cầu đang chờ?) then (có)
+  :Cập nhật yêu cầu cũ (A.A2);
+else (chưa)
+  :Tạo yêu cầu tham gia;
+endif
+:Mở trang "Đang chờ duyệt";
+:Hiện workspace mờ trên thanh bên;
+:Tăng số yêu cầu trên thanh bên của chủ;
+fork
+  |Người dùng|
+  :Có thể bấm "Hủy yêu cầu" (A.A1);
+fork again
+  |Chủ workspace|
+  :Mở trang "Yêu cầu tham gia";
+  :Xem ai xin, xin bằng gì, lời nhắn;
+end fork
+|Chủ workspace|
+if (Quyết định?) then (duyệt)
+  |Hệ thống|
+  :Thêm thành viên, gán màu ảnh đại diện chưa ai dùng;
+  if (Tên trùng thành viên khác?) then (có)
+    :Đặt tên tạm kèm số, nhắc chọn biệt danh (UC19-A);
+  else (không)
+  endif
+  :Trang chờ tự chuyển người dùng vào workspace;
+else (từ chối)
+  |Hệ thống|
+  :Trang chờ hiện "Yêu cầu bị từ chối" (A.E2);
+endif
+:Đưa yêu cầu vào lịch sử, ghi kết quả và người xử lý;
+stop
+@enduml
