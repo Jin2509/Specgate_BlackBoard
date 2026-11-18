@@ -1,148 +1,399 @@
-# Sơ đồ UML của SpecGate Workspace
+# Biểu đồ UML của SpecGate Workspace
 
-Mã nguồn PlantUML cho các ca sử dụng trong [SRS 0.3](../docs/SRS.md), dựa trên [flow.md](../docs/flow.md). Mỗi sơ đồ ghi mã ca sử dụng (UC), mã luồng (A, E) và quy tắc (BR) tương ứng trong SRS. Sơ đồ mô tả hành vi ở mức người dùng và hệ thống; các thành phần như "Máy chủ SpecGate", "CSDL", "Kênh thời gian thực" là vai trò logic, không ràng buộc cách cài đặt.
+Mã nguồn PlantUML cho các ca sử dụng trong [SRS 0.3](../docs/SRS.md), dựa trên [flow.md](../docs/flow.md) và mã đang chạy trong `backend/`, `web_ui/`. Cách đọc đầy đủ: [docs/diagram-reading-guide.md](../docs/diagram-reading-guide.md).
 
-`_style.iuml` chứa kiểu dùng chung và được `!include` trong mọi file.
+- **Mỗi phần luồng có một cặp biểu đồ.** Mỗi ca không chia phần, và mỗi Phần A, B, C của ca có chia phần, có đúng một biểu đồ hoạt động (`act-`) và một biểu đồ tuần tự (`seq-`). Tên tệp mang mã ca và chữ của phần: `uc04b-…` là UC04 phần B.
+- **Biểu đồ hoạt động** chia làn theo tác nhân, Hệ thống và hệ thống ngoài; mỗi hộp mở đầu bằng mã luồng của SRS: `(3)` bước của luồng chính, `[A.E1]` luồng thay thế hoặc ngoại lệ.
+- **Biểu đồ tuần tự** theo mô hình Boundary – Control – Entity: màn hình của `web_ui`, bộ điều khiển và dịch vụ của backend, thực thể là bảng trong CSDL; tin nhắn đánh số, khung `alt`/`opt`/`loop` ghi mã luồng.
+- **Biểu đồ trạng thái** (`st-`) cho các thực thể có vòng đời, chuyển trạng thái ghi `sự kiện [điều kiện] / hành động`.
+- Mọi biểu đồ dùng `_style.iuml`: chữ Times New Roman, cỡ 14 (tiêu đề 18), chỉ đen và trắng.
 
 ## Mục lục
 
-| Loại | File | Nội dung | Ca sử dụng |
+| Loại | Tên biểu đồ | Mã nguồn | Ảnh |
 |---|---|---|---|
-| Ca sử dụng | [use-case/00-overview.puml](use-case/00-overview.puml) | Tổng quát 20 ca | UC01 – UC20 |
-| Ca sử dụng | [use-case/01-private-workspace.puml](use-case/01-private-workspace.puml) | Workspace riêng và đường riêng sang chung | UC03 – UC08 |
-| Ca sử dụng | [use-case/02-shared-workspace.puml](use-case/02-shared-workspace.puml) | Workspace chung, kênh, bảng, số liệu | UC09 – UC19 |
-| Hoạt động | [activity/uc01-sign-in.puml](activity/uc01-sign-in.puml) | Đăng ký, đăng nhập | UC01 |
-| Hoạt động | [activity/uc04-chat.puml](activity/uc04-chat.puml) | Chat, dừng, lỗi, tạo lại | UC04 |
-| Hoạt động | [activity/uc06-group-context.puml](activity/uc06-group-context.puml) | Dựng ngữ cảnh nhóm, tóm tắt tin cũ | UC06 |
-| Hoạt động | [activity/uc07-send-highlight.puml](activity/uc07-send-highlight.puml) | Gửi highlight riêng vào kênh | UC07 |
-| Hoạt động | [activity/uc10-uc11-join.puml](activity/uc10-uc11-join.puml) | Xin tham gia và duyệt | UC10, UC11 |
-| Hoạt động | [activity/uc12-channel-command.puml](activity/uc12-channel-command.puml) | Gửi tin và xử lý lệnh | UC12 |
-| Hoạt động | [activity/uc13-agent-highlight.puml](activity/uc13-agent-highlight.puml) | Highlight cho agent | UC13 |
-| Hoạt động | [activity/uc16-import-run.puml](activity/uc16-import-run.puml) | Nhập lượt chạy | UC16 |
-| Tuần tự | [sequence/uc03-api-key.puml](sequence/uc03-api-key.puml) | Kiểm và lưu API key | UC03 |
-| Tuần tự | [sequence/uc04-uc06-chat-with-context.puml](sequence/uc04-uc06-chat-with-context.puml) | Chat có ngữ cảnh nhóm | UC04, UC06 |
-| Tuần tự | [sequence/uc07-send-highlight.puml](sequence/uc07-send-highlight.puml) | Gửi highlight riêng vào kênh | UC07 |
-| Tuần tự | [sequence/uc10-uc11-join.puml](sequence/uc10-uc11-join.puml) | Xin tham gia và duyệt | UC10, UC11 |
-| Tuần tự | [sequence/uc13-agent-highlight.puml](sequence/uc13-agent-highlight.puml) | Highlight cho agent, agent đọc kèm người nói | UC13 |
-| Tuần tự | [sequence/uc15-summarize-brief.puml](sequence/uc15-summarize-brief.puml) | /summarize và /brief | UC15 |
-| Tuần tự | [sequence/uc17-trial-run.puml](sequence/uc17-trial-run.puml) | Chạy thử trên web | UC17 |
-| Trạng thái | [state/board-item.puml](state/board-item.puml) | Một ý trên bảng ý tưởng | UC14 |
-| Trạng thái | [state/join-request.puml](state/join-request.puml) | Yêu cầu tham gia | UC10, UC11 |
-| Trạng thái | [state/trial-run.puml](state/trial-run.puml) | Lượt chạy | UC16, UC17 |
-| Trạng thái | [state/connection.puml](state/connection.puml) | Kết nối của trình duyệt | UC20 |
-| RBAC | [rbac/rbac.puml](rbac/rbac.puml) | Bảng phân quyền dạng ảnh | |
+| Ca sử dụng | Sơ đồ ca sử dụng tổng quát (SRS 0.3) | [00-overview.puml](use-case/00-overview.puml) | [SVG](img/uc-00-overview.svg) |
+| Ca sử dụng | Ca sử dụng chi tiết: workspace riêng và đường riêng sang chung | [01-private-workspace.puml](use-case/01-private-workspace.puml) | [SVG](img/uc-01-private-workspace.svg) |
+| Ca sử dụng | Ca sử dụng chi tiết: workspace chung, kênh và bảng | [02-shared-workspace.puml](use-case/02-shared-workspace.puml) | [SVG](img/uc-02-shared-workspace.svg) |
+| Hoạt động | Biểu đồ hoạt động UC01 - Phần A: Đăng ký hoặc đăng nhập | [uc01a-sign-in.puml](activity/uc01a-sign-in.puml) | [SVG](img/act-uc01a.svg) |
+| Hoạt động | Biểu đồ hoạt động UC01 - Phần B: Đăng xuất | [uc01b-sign-out.puml](activity/uc01b-sign-out.puml) | [SVG](img/act-uc01b.svg) |
+| Hoạt động | Biểu đồ hoạt động UC02: Dùng Trang chủ và dấu báo ở thanh bên | [uc02-home-badges.puml](activity/uc02-home-badges.puml) | [SVG](img/act-uc02.svg) |
+| Hoạt động | Biểu đồ hoạt động UC03: Thiết lập API key và chọn mô hình | [uc03-api-key.puml](activity/uc03-api-key.puml) | [SVG](img/act-uc03.svg) |
+| Hoạt động | Biểu đồ hoạt động UC04 - Phần A: Chat với agent riêng | [uc04a-chat.puml](activity/uc04a-chat.puml) | [SVG](img/act-uc04a.svg) |
+| Hoạt động | Biểu đồ hoạt động UC04 - Phần B: Tạo lại câu trả lời | [uc04b-regenerate.puml](activity/uc04b-regenerate.puml) | [SVG](img/act-uc04b.svg) |
+| Hoạt động | Biểu đồ hoạt động UC04 - Phần C: Quản lý hội thoại | [uc04c-manage-conversations.puml](activity/uc04c-manage-conversations.puml) | [SVG](img/act-uc04c.svg) |
+| Hoạt động | Biểu đồ hoạt động UC05 - Phần A: Tạo highlight riêng | [uc05a-create-private-highlight.puml](activity/uc05a-create-private-highlight.puml) | [SVG](img/act-uc05a.svg) |
+| Hoạt động | Biểu đồ hoạt động UC05 - Phần B: Quản lý danh sách Highlight riêng | [uc05b-manage-private-highlights.puml](activity/uc05b-manage-private-highlights.puml) | [SVG](img/act-uc05b.svg) |
+| Hoạt động | Biểu đồ hoạt động UC06 - Phần A: Chọn ngữ cảnh nhóm cho hội thoại | [uc06a-choose-context.puml](activity/uc06a-choose-context.puml) | [SVG](img/act-uc06a.svg) |
+| Hoạt động | Biểu đồ hoạt động UC06 - Phần B: Tóm tắt tin cũ của tôi | [uc06b-digest.puml](activity/uc06b-digest.puml) | [SVG](img/act-uc06b.svg) |
+| Hoạt động | Biểu đồ hoạt động UC07 - Phần A: Gửi highlight riêng từ danh sách | [uc07a-send-from-list.puml](activity/uc07a-send-from-list.puml) | [SVG](img/act-uc07a.svg) |
+| Hoạt động | Biểu đồ hoạt động UC07 - Phần B: Chèn highlight riêng bằng @ | [uc07b-insert-with-mention.puml](activity/uc07b-insert-with-mention.puml) | [SVG](img/act-uc07b.svg) |
+| Hoạt động | Biểu đồ hoạt động UC08: Tóm tắt hội thoại cho nhóm | [uc08-conversation-summary.puml](activity/uc08-conversation-summary.puml) | [SVG](img/act-uc08.svg) |
+| Hoạt động | Biểu đồ hoạt động UC09: Tạo workspace chung | [uc09-create-workspace.puml](activity/uc09-create-workspace.puml) | [SVG](img/act-uc09.svg) |
+| Hoạt động | Biểu đồ hoạt động UC10 - Phần A: Xin tham gia bằng mã | [uc10a-join-with-code.puml](activity/uc10a-join-with-code.puml) | [SVG](img/act-uc10a.svg) |
+| Hoạt động | Biểu đồ hoạt động UC10 - Phần B: Xin tham gia qua trang Khám phá | [uc10b-join-from-explore.puml](activity/uc10b-join-from-explore.puml) | [SVG](img/act-uc10b.svg) |
+| Hoạt động | Biểu đồ hoạt động UC11: Duyệt yêu cầu tham gia | [uc11-approve.puml](activity/uc11-approve.puml) | [SVG](img/act-uc11.svg) |
+| Hoạt động | Biểu đồ hoạt động UC12: Nhắn tin trong kênh | [uc12-channel-command.puml](activity/uc12-channel-command.puml) | [SVG](img/act-uc12.svg) |
+| Hoạt động | Biểu đồ hoạt động UC13: Highlight cho agent | [uc13-agent-highlight.puml](activity/uc13-agent-highlight.puml) | [SVG](img/act-uc13.svg) |
+| Hoạt động | Biểu đồ hoạt động UC14 - Phần A: Đưa ý lên bảng ý tưởng | [uc14a-add-idea.puml](activity/uc14a-add-idea.puml) | [SVG](img/act-uc14a.svg) |
+| Hoạt động | Biểu đồ hoạt động UC14 - Phần B: Chuyển ý sang Đang bàn | [uc14b-discuss.puml](activity/uc14b-discuss.puml) | [SVG](img/act-uc14b.svg) |
+| Hoạt động | Biểu đồ hoạt động UC14 - Phần C: Chốt hoặc loại ý | [uc14c-decide.puml](activity/uc14c-decide.puml) | [SVG](img/act-uc14c.svg) |
+| Hoạt động | Biểu đồ hoạt động UC15 - Phần A: Tóm tắt kênh (/summarize) | [uc15a-summarize.puml](activity/uc15a-summarize.puml) | [SVG](img/act-uc15a.svg) |
+| Hoạt động | Biểu đồ hoạt động UC15 - Phần B: Dựng và tải bản tổng hợp (/brief) | [uc15b-brief.puml](activity/uc15b-brief.puml) | [SVG](img/act-uc15b.svg) |
+| Hoạt động | Biểu đồ hoạt động UC16 - Phần A: Quản lý tên, vai và tư cách thành viên | [uc16a-members.puml](activity/uc16a-members.puml) | [SVG](img/act-uc16a.svg) |
+| Hoạt động | Biểu đồ hoạt động UC16 - Phần B: Cấu hình workspace chung | [uc16b-settings.puml](activity/uc16b-settings.puml) | [SVG](img/act-uc16b.svg) |
+| Hoạt động | Biểu đồ hoạt động UC17: Tiếp tục làm việc khi mạng chập chờn | [uc17-connection.puml](activity/uc17-connection.puml) | [SVG](img/act-uc17.svg) |
+| Tuần tự | Biểu đồ tuần tự UC01 - Phần A: Đăng ký hoặc đăng nhập | [uc01a-sign-in.puml](sequence/uc01a-sign-in.puml) | [SVG](img/seq-uc01a.svg) |
+| Tuần tự | Biểu đồ tuần tự UC01 - Phần B: Đăng xuất | [uc01b-sign-out.puml](sequence/uc01b-sign-out.puml) | [SVG](img/seq-uc01b.svg) |
+| Tuần tự | Biểu đồ tuần tự UC02: Dùng Trang chủ và dấu báo ở thanh bên | [uc02-home.puml](sequence/uc02-home.puml) | [SVG](img/seq-uc02.svg) |
+| Tuần tự | Biểu đồ tuần tự UC03: Thiết lập API key và chọn mô hình | [uc03-api-key.puml](sequence/uc03-api-key.puml) | [SVG](img/seq-uc03.svg) |
+| Tuần tự | Biểu đồ tuần tự UC04 - Phần A: Chat với agent riêng | [uc04a-chat.puml](sequence/uc04a-chat.puml) | [SVG](img/seq-uc04a.svg) |
+| Tuần tự | Biểu đồ tuần tự UC04 - Phần B: Tạo lại câu trả lời | [uc04b-regenerate.puml](sequence/uc04b-regenerate.puml) | [SVG](img/seq-uc04b.svg) |
+| Tuần tự | Biểu đồ tuần tự UC04 - Phần C: Quản lý hội thoại | [uc04c-manage-conversations.puml](sequence/uc04c-manage-conversations.puml) | [SVG](img/seq-uc04c.svg) |
+| Tuần tự | Biểu đồ tuần tự UC05 - Phần A: Tạo highlight riêng | [uc05a-create-private-highlight.puml](sequence/uc05a-create-private-highlight.puml) | [SVG](img/seq-uc05a.svg) |
+| Tuần tự | Biểu đồ tuần tự UC05 - Phần B: Quản lý danh sách Highlight riêng | [uc05b-manage-private-highlights.puml](sequence/uc05b-manage-private-highlights.puml) | [SVG](img/seq-uc05b.svg) |
+| Tuần tự | Biểu đồ tuần tự UC06 - Phần A: Chọn ngữ cảnh nhóm cho hội thoại | [uc06a-choose-context.puml](sequence/uc06a-choose-context.puml) | [SVG](img/seq-uc06a.svg) |
+| Tuần tự | Biểu đồ tuần tự UC06 - Phần B: Tóm tắt tin cũ của tôi | [uc06b-digest.puml](sequence/uc06b-digest.puml) | [SVG](img/seq-uc06b.svg) |
+| Tuần tự | Biểu đồ tuần tự UC07 - Phần A: Gửi highlight riêng từ danh sách | [uc07a-send-from-list.puml](sequence/uc07a-send-from-list.puml) | [SVG](img/seq-uc07a.svg) |
+| Tuần tự | Biểu đồ tuần tự UC07 - Phần B: Chèn highlight riêng bằng @ | [uc07b-insert-with-mention.puml](sequence/uc07b-insert-with-mention.puml) | [SVG](img/seq-uc07b.svg) |
+| Tuần tự | Biểu đồ tuần tự UC08: Tóm tắt hội thoại cho nhóm | [uc08-conversation-summary.puml](sequence/uc08-conversation-summary.puml) | [SVG](img/seq-uc08.svg) |
+| Tuần tự | Biểu đồ tuần tự UC09: Tạo workspace chung | [uc09-create-workspace.puml](sequence/uc09-create-workspace.puml) | [SVG](img/seq-uc09.svg) |
+| Tuần tự | Biểu đồ tuần tự UC10 - Phần A: Xin tham gia bằng mã | [uc10a-join-with-code.puml](sequence/uc10a-join-with-code.puml) | [SVG](img/seq-uc10a.svg) |
+| Tuần tự | Biểu đồ tuần tự UC10 - Phần B: Xin tham gia qua trang Khám phá | [uc10b-join-from-explore.puml](sequence/uc10b-join-from-explore.puml) | [SVG](img/seq-uc10b.svg) |
+| Tuần tự | Biểu đồ tuần tự UC11: Duyệt yêu cầu tham gia | [uc11-approve.puml](sequence/uc11-approve.puml) | [SVG](img/seq-uc11.svg) |
+| Tuần tự | Biểu đồ tuần tự UC12: Nhắn tin trong kênh | [uc12-channel-command.puml](sequence/uc12-channel-command.puml) | [SVG](img/seq-uc12.svg) |
+| Tuần tự | Biểu đồ tuần tự UC13: Highlight cho agent | [uc13-agent-highlight.puml](sequence/uc13-agent-highlight.puml) | [SVG](img/seq-uc13.svg) |
+| Tuần tự | Biểu đồ tuần tự UC14 - Phần A: Đưa ý lên bảng ý tưởng | [uc14a-add-idea.puml](sequence/uc14a-add-idea.puml) | [SVG](img/seq-uc14a.svg) |
+| Tuần tự | Biểu đồ tuần tự UC14 - Phần B: Chuyển ý sang Đang bàn | [uc14b-discuss.puml](sequence/uc14b-discuss.puml) | [SVG](img/seq-uc14b.svg) |
+| Tuần tự | Biểu đồ tuần tự UC14 - Phần C: Chốt hoặc loại ý | [uc14c-decide.puml](sequence/uc14c-decide.puml) | [SVG](img/seq-uc14c.svg) |
+| Tuần tự | Biểu đồ tuần tự UC15 - Phần A: Tóm tắt kênh (/summarize) | [uc15a-summarize.puml](sequence/uc15a-summarize.puml) | [SVG](img/seq-uc15a.svg) |
+| Tuần tự | Biểu đồ tuần tự UC15 - Phần B: Dựng và tải bản tổng hợp (/brief) | [uc15b-brief.puml](sequence/uc15b-brief.puml) | [SVG](img/seq-uc15b.svg) |
+| Tuần tự | Biểu đồ tuần tự UC16 - Phần A: Quản lý tên, vai và tư cách thành viên | [uc16a-members.puml](sequence/uc16a-members.puml) | [SVG](img/seq-uc16a.svg) |
+| Tuần tự | Biểu đồ tuần tự UC16 - Phần B: Cấu hình workspace chung | [uc16b-settings.puml](sequence/uc16b-settings.puml) | [SVG](img/seq-uc16b.svg) |
+| Tuần tự | Biểu đồ tuần tự UC17: Tiếp tục làm việc khi mạng chập chờn | [uc17-connection.puml](sequence/uc17-connection.puml) | [SVG](img/seq-uc17.svg) |
+| Trạng thái | Biểu đồ trạng thái: Highlight cho agent (Highlight) | [agent-highlight.puml](state/agent-highlight.puml) | [SVG](img/st-agent-highlight.svg) |
+| Trạng thái | Biểu đồ trạng thái: Câu trả lời của agent (Turn) | [answer-turn.puml](state/answer-turn.puml) | [SVG](img/st-answer-turn.svg) |
+| Trạng thái | Biểu đồ trạng thái: Ý trên bảng ý tưởng (BoardItem) | [board-item.puml](state/board-item.puml) | [SVG](img/st-board-item.svg) |
+| Trạng thái | Biểu đồ trạng thái: Kết nối của trình duyệt | [connection.puml](state/connection.puml) | [SVG](img/st-connection.svg) |
+| Trạng thái | Biểu đồ trạng thái: Yêu cầu tham gia (JoinRequest) | [join-request.puml](state/join-request.puml) | [SVG](img/st-join-request.svg) |
+| Trạng thái | Biểu đồ trạng thái: Thành viên workspace (Member) | [member.puml](state/member.puml) | [SVG](img/st-member.svg) |
+| Trạng thái | Biểu đồ trạng thái: Highlight riêng (PrivateHighlight) | [private-highlight.puml](state/private-highlight.puml) | [SVG](img/st-private-highlight.svg) |
+| Trạng thái | Biểu đồ trạng thái: Agent riêng theo API key (ProviderKey) | [provider-key.puml](state/provider-key.puml) | [SVG](img/st-provider-key.svg) |
+| Lớp | SpecGate: kiến trúc thành phần (web_ui → backend → CSDL) | [architecture.puml](class/architecture.puml) | [SVG](img/cls-architecture.svg) |
+| Lớp | SpecGate: sơ đồ lớp miền dữ liệu (bảng ws_* trong backend) | [domain.puml](class/domain.puml) | [SVG](img/cls-domain.svg) |
+| Tầm nhìn | Cây tính năng SpecGate Workspace | [feature-tree.puml](vision/feature-tree.puml) | [SVG](img/vs-feature-tree.svg) |
+| Tầm nhìn | Sơ đồ ngữ cảnh SpecGate Workspace | [context-diagram.puml](vision/context-diagram.puml) | [SVG](img/vs-context-diagram.svg) |
+| RBAC | Bảng RBAC SpecGate (✔ được, ✘ không, ◐ có điều kiện) | [rbac.puml](rbac/rbac.puml) | [SVG](img/rbac.svg) |
+
+Các tệp `.puml` khác trong `activity/`, `sequence/` và ảnh không có trong bảng trên là bản cũ; SRS không dùng chúng.
 
 ## Xuất ảnh
 
-Ảnh SVG nằm trong [img/](img/). Sau khi sửa một file `.puml`, xuất lại:
+Ảnh SVG nằm trong [img/](img/). Sau khi sửa một tệp `.puml`, xuất lại đúng tệp đó (chạy trong thư mục `uml/`, cần Java và `plantuml.jar` kèm extension PlantUML của VS Code), ví dụ:
 
 ```bash
-# chạy trong thư mục uml/; cần Java, dùng plantuml.jar kèm extension PlantUML của VS Code
-java -jar ~/.vscode/extensions/jebbs.plantuml-*/plantuml.jar -charset UTF-8 -tsvg -o ../img \
-  use-case/*.puml activity/uc*.puml sequence/uc*.puml state/*.puml rbac/*.puml
+java -jar ~/.vscode/extensions/jebbs.plantuml-*/plantuml.jar -charset UTF-8 -tsvg -o ../img activity/uc04b-regenerate.puml
 ```
+
+Tên ảnh lấy theo dòng `@startuml` của tệp, ví dụ `act-uc04b.svg`.
 
 Hoặc dùng extension PlantUML trong VS Code (Alt+D để xem trước).
 
-## Sơ đồ ca sử dụng
+## Biểu đồ ca sử dụng
 
-### UC01 – UC20: Tổng quát 20 ca
+### Sơ đồ ca sử dụng tổng quát (SRS 0.3)
 
-![Tổng quát 20 ca](img/00-overview.svg)
+![Sơ đồ ca sử dụng tổng quát (SRS 0.3)](img/uc-00-overview.svg)
 
-### UC03 – UC08: Workspace riêng và đường riêng sang chung
+### Ca sử dụng chi tiết: workspace riêng và đường riêng sang chung
 
-![Workspace riêng và đường riêng sang chung](img/01-private-workspace.svg)
+![Ca sử dụng chi tiết: workspace riêng và đường riêng sang chung](img/uc-01-private-workspace.svg)
 
-### UC09 – UC19: Workspace chung, kênh, bảng, số liệu
+### Ca sử dụng chi tiết: workspace chung, kênh và bảng
 
-![Workspace chung, kênh, bảng, số liệu](img/02-shared-workspace.svg)
+![Ca sử dụng chi tiết: workspace chung, kênh và bảng](img/uc-02-shared-workspace.svg)
 
-## Sơ đồ hoạt động
+## Biểu đồ hoạt động
 
-### UC01: Đăng ký, đăng nhập
+### Biểu đồ hoạt động UC01 - Phần A: Đăng ký hoặc đăng nhập
 
-![Đăng ký, đăng nhập](img/uc01-sign-in.svg)
+![Biểu đồ hoạt động UC01 - Phần A: Đăng ký hoặc đăng nhập](img/act-uc01a.svg)
 
-### UC04: Chat, dừng, lỗi, tạo lại
+### Biểu đồ hoạt động UC01 - Phần B: Đăng xuất
 
-![Chat, dừng, lỗi, tạo lại](img/uc04-chat.svg)
+![Biểu đồ hoạt động UC01 - Phần B: Đăng xuất](img/act-uc01b.svg)
 
-### UC06: Dựng ngữ cảnh nhóm, tóm tắt tin cũ
+### Biểu đồ hoạt động UC02: Dùng Trang chủ và dấu báo ở thanh bên
 
-![Dựng ngữ cảnh nhóm, tóm tắt tin cũ](img/uc06-group-context.svg)
+![Biểu đồ hoạt động UC02: Dùng Trang chủ và dấu báo ở thanh bên](img/act-uc02.svg)
 
-### UC07: Gửi highlight riêng vào kênh
+### Biểu đồ hoạt động UC03: Thiết lập API key và chọn mô hình
 
-![Gửi highlight riêng vào kênh](img/uc07-send-highlight.svg)
+![Biểu đồ hoạt động UC03: Thiết lập API key và chọn mô hình](img/act-uc03.svg)
 
-### UC10, UC11: Xin tham gia và duyệt
+### Biểu đồ hoạt động UC04 - Phần A: Chat với agent riêng
 
-![Xin tham gia và duyệt](img/uc10-uc11-join.svg)
+![Biểu đồ hoạt động UC04 - Phần A: Chat với agent riêng](img/act-uc04a.svg)
 
-### UC12: Gửi tin và xử lý lệnh
+### Biểu đồ hoạt động UC04 - Phần B: Tạo lại câu trả lời
 
-![Gửi tin và xử lý lệnh](img/uc12-channel-command.svg)
+![Biểu đồ hoạt động UC04 - Phần B: Tạo lại câu trả lời](img/act-uc04b.svg)
 
-### UC13: Highlight cho agent
+### Biểu đồ hoạt động UC04 - Phần C: Quản lý hội thoại
 
-![Highlight cho agent](img/uc13-agent-highlight.svg)
+![Biểu đồ hoạt động UC04 - Phần C: Quản lý hội thoại](img/act-uc04c.svg)
 
-### UC16: Nhập lượt chạy
+### Biểu đồ hoạt động UC05 - Phần A: Tạo highlight riêng
 
-![Nhập lượt chạy](img/uc16-import-run.svg)
+![Biểu đồ hoạt động UC05 - Phần A: Tạo highlight riêng](img/act-uc05a.svg)
 
-## Sơ đồ tuần tự
+### Biểu đồ hoạt động UC05 - Phần B: Quản lý danh sách Highlight riêng
 
-### UC03: Kiểm và lưu API key
+![Biểu đồ hoạt động UC05 - Phần B: Quản lý danh sách Highlight riêng](img/act-uc05b.svg)
 
-![Kiểm và lưu API key](img/uc03-api-key.svg)
+### Biểu đồ hoạt động UC06 - Phần A: Chọn ngữ cảnh nhóm cho hội thoại
 
-### UC04, UC06: Chat có ngữ cảnh nhóm
+![Biểu đồ hoạt động UC06 - Phần A: Chọn ngữ cảnh nhóm cho hội thoại](img/act-uc06a.svg)
 
-![Chat có ngữ cảnh nhóm](img/uc04-uc06-chat-with-context.svg)
+### Biểu đồ hoạt động UC06 - Phần B: Tóm tắt tin cũ của tôi
 
-### UC07: Gửi highlight riêng vào kênh
+![Biểu đồ hoạt động UC06 - Phần B: Tóm tắt tin cũ của tôi](img/act-uc06b.svg)
 
-![Gửi highlight riêng vào kênh](img/uc07-send-highlight.svg)
+### Biểu đồ hoạt động UC07 - Phần A: Gửi highlight riêng từ danh sách
 
-### UC10, UC11: Xin tham gia và duyệt
+![Biểu đồ hoạt động UC07 - Phần A: Gửi highlight riêng từ danh sách](img/act-uc07a.svg)
 
-![Xin tham gia và duyệt](img/uc10-uc11-join.svg)
+### Biểu đồ hoạt động UC07 - Phần B: Chèn highlight riêng bằng @
 
-### UC13: Highlight cho agent, agent đọc kèm người nói
+![Biểu đồ hoạt động UC07 - Phần B: Chèn highlight riêng bằng @](img/act-uc07b.svg)
 
-![Highlight cho agent, agent đọc kèm người nói](img/uc13-agent-highlight.svg)
+### Biểu đồ hoạt động UC08: Tóm tắt hội thoại cho nhóm
 
-### UC15: /summarize và /brief
+![Biểu đồ hoạt động UC08: Tóm tắt hội thoại cho nhóm](img/act-uc08.svg)
 
-![/summarize và /brief](img/uc15-summarize-brief.svg)
+### Biểu đồ hoạt động UC09: Tạo workspace chung
 
-### UC17: Chạy thử trên web
+![Biểu đồ hoạt động UC09: Tạo workspace chung](img/act-uc09.svg)
 
-![Chạy thử trên web](img/uc17-trial-run.svg)
+### Biểu đồ hoạt động UC10 - Phần A: Xin tham gia bằng mã
 
-## Sơ đồ trạng thái
+![Biểu đồ hoạt động UC10 - Phần A: Xin tham gia bằng mã](img/act-uc10a.svg)
 
-### UC14: Một ý trên bảng ý tưởng
+### Biểu đồ hoạt động UC10 - Phần B: Xin tham gia qua trang Khám phá
 
-![Một ý trên bảng ý tưởng](img/board-item.svg)
+![Biểu đồ hoạt động UC10 - Phần B: Xin tham gia qua trang Khám phá](img/act-uc10b.svg)
 
-### UC10, UC11: Yêu cầu tham gia
+### Biểu đồ hoạt động UC11: Duyệt yêu cầu tham gia
 
-![Yêu cầu tham gia](img/join-request.svg)
+![Biểu đồ hoạt động UC11: Duyệt yêu cầu tham gia](img/act-uc11.svg)
 
-### UC16, UC17: Lượt chạy
+### Biểu đồ hoạt động UC12: Nhắn tin trong kênh
 
-![Lượt chạy](img/trial-run.svg)
+![Biểu đồ hoạt động UC12: Nhắn tin trong kênh](img/act-uc12.svg)
 
-### UC20: Kết nối của trình duyệt
+### Biểu đồ hoạt động UC13: Highlight cho agent
 
-![Kết nối của trình duyệt](img/connection.svg)
+![Biểu đồ hoạt động UC13: Highlight cho agent](img/act-uc13.svg)
 
-## Sơ đồ RBAC
+### Biểu đồ hoạt động UC14 - Phần A: Đưa ý lên bảng ý tưởng
 
-![RBAC](img/rbac.svg)
+![Biểu đồ hoạt động UC14 - Phần A: Đưa ý lên bảng ý tưởng](img/act-uc14a.svg)
+
+### Biểu đồ hoạt động UC14 - Phần B: Chuyển ý sang Đang bàn
+
+![Biểu đồ hoạt động UC14 - Phần B: Chuyển ý sang Đang bàn](img/act-uc14b.svg)
+
+### Biểu đồ hoạt động UC14 - Phần C: Chốt hoặc loại ý
+
+![Biểu đồ hoạt động UC14 - Phần C: Chốt hoặc loại ý](img/act-uc14c.svg)
+
+### Biểu đồ hoạt động UC15 - Phần A: Tóm tắt kênh (/summarize)
+
+![Biểu đồ hoạt động UC15 - Phần A: Tóm tắt kênh (/summarize)](img/act-uc15a.svg)
+
+### Biểu đồ hoạt động UC15 - Phần B: Dựng và tải bản tổng hợp (/brief)
+
+![Biểu đồ hoạt động UC15 - Phần B: Dựng và tải bản tổng hợp (/brief)](img/act-uc15b.svg)
+
+### Biểu đồ hoạt động UC16 - Phần A: Quản lý tên, vai và tư cách thành viên
+
+![Biểu đồ hoạt động UC16 - Phần A: Quản lý tên, vai và tư cách thành viên](img/act-uc16a.svg)
+
+### Biểu đồ hoạt động UC16 - Phần B: Cấu hình workspace chung
+
+![Biểu đồ hoạt động UC16 - Phần B: Cấu hình workspace chung](img/act-uc16b.svg)
+
+### Biểu đồ hoạt động UC17: Tiếp tục làm việc khi mạng chập chờn
+
+![Biểu đồ hoạt động UC17: Tiếp tục làm việc khi mạng chập chờn](img/act-uc17.svg)
+
+## Biểu đồ tuần tự
+
+### Biểu đồ tuần tự UC01 - Phần A: Đăng ký hoặc đăng nhập
+
+![Biểu đồ tuần tự UC01 - Phần A: Đăng ký hoặc đăng nhập](img/seq-uc01a.svg)
+
+### Biểu đồ tuần tự UC01 - Phần B: Đăng xuất
+
+![Biểu đồ tuần tự UC01 - Phần B: Đăng xuất](img/seq-uc01b.svg)
+
+### Biểu đồ tuần tự UC02: Dùng Trang chủ và dấu báo ở thanh bên
+
+![Biểu đồ tuần tự UC02: Dùng Trang chủ và dấu báo ở thanh bên](img/seq-uc02.svg)
+
+### Biểu đồ tuần tự UC03: Thiết lập API key và chọn mô hình
+
+![Biểu đồ tuần tự UC03: Thiết lập API key và chọn mô hình](img/seq-uc03.svg)
+
+### Biểu đồ tuần tự UC04 - Phần A: Chat với agent riêng
+
+![Biểu đồ tuần tự UC04 - Phần A: Chat với agent riêng](img/seq-uc04a.svg)
+
+### Biểu đồ tuần tự UC04 - Phần B: Tạo lại câu trả lời
+
+![Biểu đồ tuần tự UC04 - Phần B: Tạo lại câu trả lời](img/seq-uc04b.svg)
+
+### Biểu đồ tuần tự UC04 - Phần C: Quản lý hội thoại
+
+![Biểu đồ tuần tự UC04 - Phần C: Quản lý hội thoại](img/seq-uc04c.svg)
+
+### Biểu đồ tuần tự UC05 - Phần A: Tạo highlight riêng
+
+![Biểu đồ tuần tự UC05 - Phần A: Tạo highlight riêng](img/seq-uc05a.svg)
+
+### Biểu đồ tuần tự UC05 - Phần B: Quản lý danh sách Highlight riêng
+
+![Biểu đồ tuần tự UC05 - Phần B: Quản lý danh sách Highlight riêng](img/seq-uc05b.svg)
+
+### Biểu đồ tuần tự UC06 - Phần A: Chọn ngữ cảnh nhóm cho hội thoại
+
+![Biểu đồ tuần tự UC06 - Phần A: Chọn ngữ cảnh nhóm cho hội thoại](img/seq-uc06a.svg)
+
+### Biểu đồ tuần tự UC06 - Phần B: Tóm tắt tin cũ của tôi
+
+![Biểu đồ tuần tự UC06 - Phần B: Tóm tắt tin cũ của tôi](img/seq-uc06b.svg)
+
+### Biểu đồ tuần tự UC07 - Phần A: Gửi highlight riêng từ danh sách
+
+![Biểu đồ tuần tự UC07 - Phần A: Gửi highlight riêng từ danh sách](img/seq-uc07a.svg)
+
+### Biểu đồ tuần tự UC07 - Phần B: Chèn highlight riêng bằng @
+
+![Biểu đồ tuần tự UC07 - Phần B: Chèn highlight riêng bằng @](img/seq-uc07b.svg)
+
+### Biểu đồ tuần tự UC08: Tóm tắt hội thoại cho nhóm
+
+![Biểu đồ tuần tự UC08: Tóm tắt hội thoại cho nhóm](img/seq-uc08.svg)
+
+### Biểu đồ tuần tự UC09: Tạo workspace chung
+
+![Biểu đồ tuần tự UC09: Tạo workspace chung](img/seq-uc09.svg)
+
+### Biểu đồ tuần tự UC10 - Phần A: Xin tham gia bằng mã
+
+![Biểu đồ tuần tự UC10 - Phần A: Xin tham gia bằng mã](img/seq-uc10a.svg)
+
+### Biểu đồ tuần tự UC10 - Phần B: Xin tham gia qua trang Khám phá
+
+![Biểu đồ tuần tự UC10 - Phần B: Xin tham gia qua trang Khám phá](img/seq-uc10b.svg)
+
+### Biểu đồ tuần tự UC11: Duyệt yêu cầu tham gia
+
+![Biểu đồ tuần tự UC11: Duyệt yêu cầu tham gia](img/seq-uc11.svg)
+
+### Biểu đồ tuần tự UC12: Nhắn tin trong kênh
+
+![Biểu đồ tuần tự UC12: Nhắn tin trong kênh](img/seq-uc12.svg)
+
+### Biểu đồ tuần tự UC13: Highlight cho agent
+
+![Biểu đồ tuần tự UC13: Highlight cho agent](img/seq-uc13.svg)
+
+### Biểu đồ tuần tự UC14 - Phần A: Đưa ý lên bảng ý tưởng
+
+![Biểu đồ tuần tự UC14 - Phần A: Đưa ý lên bảng ý tưởng](img/seq-uc14a.svg)
+
+### Biểu đồ tuần tự UC14 - Phần B: Chuyển ý sang Đang bàn
+
+![Biểu đồ tuần tự UC14 - Phần B: Chuyển ý sang Đang bàn](img/seq-uc14b.svg)
+
+### Biểu đồ tuần tự UC14 - Phần C: Chốt hoặc loại ý
+
+![Biểu đồ tuần tự UC14 - Phần C: Chốt hoặc loại ý](img/seq-uc14c.svg)
+
+### Biểu đồ tuần tự UC15 - Phần A: Tóm tắt kênh (/summarize)
+
+![Biểu đồ tuần tự UC15 - Phần A: Tóm tắt kênh (/summarize)](img/seq-uc15a.svg)
+
+### Biểu đồ tuần tự UC15 - Phần B: Dựng và tải bản tổng hợp (/brief)
+
+![Biểu đồ tuần tự UC15 - Phần B: Dựng và tải bản tổng hợp (/brief)](img/seq-uc15b.svg)
+
+### Biểu đồ tuần tự UC16 - Phần A: Quản lý tên, vai và tư cách thành viên
+
+![Biểu đồ tuần tự UC16 - Phần A: Quản lý tên, vai và tư cách thành viên](img/seq-uc16a.svg)
+
+### Biểu đồ tuần tự UC16 - Phần B: Cấu hình workspace chung
+
+![Biểu đồ tuần tự UC16 - Phần B: Cấu hình workspace chung](img/seq-uc16b.svg)
+
+### Biểu đồ tuần tự UC17: Tiếp tục làm việc khi mạng chập chờn
+
+![Biểu đồ tuần tự UC17: Tiếp tục làm việc khi mạng chập chờn](img/seq-uc17.svg)
+
+## Biểu đồ trạng thái
+
+### Biểu đồ trạng thái: Highlight cho agent (Highlight)
+
+![Biểu đồ trạng thái: Highlight cho agent (Highlight)](img/st-agent-highlight.svg)
+
+### Biểu đồ trạng thái: Câu trả lời của agent (Turn)
+
+![Biểu đồ trạng thái: Câu trả lời của agent (Turn)](img/st-answer-turn.svg)
+
+### Biểu đồ trạng thái: Ý trên bảng ý tưởng (BoardItem)
+
+![Biểu đồ trạng thái: Ý trên bảng ý tưởng (BoardItem)](img/st-board-item.svg)
+
+### Biểu đồ trạng thái: Kết nối của trình duyệt
+
+![Biểu đồ trạng thái: Kết nối của trình duyệt](img/st-connection.svg)
+
+### Biểu đồ trạng thái: Yêu cầu tham gia (JoinRequest)
+
+![Biểu đồ trạng thái: Yêu cầu tham gia (JoinRequest)](img/st-join-request.svg)
+
+### Biểu đồ trạng thái: Thành viên workspace (Member)
+
+![Biểu đồ trạng thái: Thành viên workspace (Member)](img/st-member.svg)
+
+### Biểu đồ trạng thái: Highlight riêng (PrivateHighlight)
+
+![Biểu đồ trạng thái: Highlight riêng (PrivateHighlight)](img/st-private-highlight.svg)
+
+### Biểu đồ trạng thái: Agent riêng theo API key (ProviderKey)
+
+![Biểu đồ trạng thái: Agent riêng theo API key (ProviderKey)](img/st-provider-key.svg)
+
+## Biểu đồ lớp và thành phần
+
+### SpecGate: kiến trúc thành phần (web_ui → backend → CSDL)
+
+![SpecGate: kiến trúc thành phần (web_ui → backend → CSDL)](img/cls-architecture.svg)
+
+### SpecGate: sơ đồ lớp miền dữ liệu (bảng ws_* trong backend)
+
+![SpecGate: sơ đồ lớp miền dữ liệu (bảng ws_* trong backend)](img/cls-domain.svg)
+
+## Biểu đồ RBAC
+
+### Bảng RBAC SpecGate (✔ được, ✘ không, ◐ có điều kiện)
+
+![Bảng RBAC SpecGate (✔ được, ✘ không, ◐ có điều kiện)](img/rbac.svg)
+
+## Bảng RBAC SpecGate (✔ được, ✘ không, ◐ có điều kiện)
+
+![Bảng RBAC SpecGate (✔ được, ✘ không, ◐ có điều kiện)](img/rbac.svg)
 
 ## Bảng RBAC
 
@@ -151,11 +402,11 @@ Hoặc dùng extension PlantUML trong VS Code (Alt+D để xem trước).
 | Vai trò | Định nghĩa | Kiểm ở đâu |
 |---|---|---|
 | **Khách** | Chưa đăng nhập | `proxy.ts` chuyển về `/login?next=…` |
-| **Người dùng** | Đã đăng nhập, là chủ workspace riêng của mình, chưa thuộc workspace chung đang xét | phiên Supabase Auth |
-| **Người xin** | Người dùng có `JoinRequest(status=pending)` với workspace đang xét | `getPendingRequest` |
-| **Thành viên** | `Membership(role=member)` của workspace chung | `isMember`, RLS |
-| **Chủ WS** | `Membership(role=owner)`, đồng thời là `ownerId` | `isOwner`, RLS |
-| **Agent riêng** | Mô hình một người chọn ở workspace riêng, chạy bằng key của người đó. Không tự hành động trong kênh: chỉ chạy khi chủ nó hỏi ở workspace riêng, và tin chỉ vào kênh khi chủ nó gửi | `require_conversation_owner`, ContextBuilder |
+| **Người dùng** | Đã đăng nhập, là chủ workspace riêng của mình, chưa thuộc workspace chung đang xét | cookie `sg_session`, `current_user` |
+| **Người xin** | Người dùng có `JoinRequest(status=pending)` với workspace đang xét | `JoinRequest(status=pending)` |
+| **Thành viên** | `Membership(role=member)` của workspace chung | `require_member` |
+| **Chủ WS** | `Membership(role=owner)`, đồng thời là `ownerId` | `require_owner` |
+| **Agent riêng** | Mô hình một người chọn ở workspace riêng, chạy bằng key của người đó. Không tự hành động trong kênh: chỉ chạy khi chủ nó hỏi ở workspace riêng, và tin chỉ vào kênh khi chủ nó gửi | chủ hội thoại, `context.py` |
 
 Vai trò tính **theo từng workspace**: một người có thể là chủ workspace này và là thành viên ở workspace khác. Chủ WS có mọi quyền của Thành viên.
 
@@ -169,46 +420,47 @@ Vai trò tính **theo từng workspace**: một người có thể là chủ wor
 | Tài khoản | Đăng xuất | ✘ | ✔ | ✔ | ✔ | ✔ | ✘ |
 | WS riêng | Lưu / đổi / xóa API key của mình (tạo agent riêng) | ✘ | ✔ | ✔ | ✔ | ✔ | ✘ |
 | WS riêng | Xem key gốc (chỉ thấy 4 ký tự cuối) | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ |
-| WS riêng | Chat, xem, xóa hội thoại của mình | ✘ | ✔ | ✔ | ✔ | ✔ | ✘ |
+| WS riêng | Chat, tạo lại, đổi tên, xóa hội thoại của mình | ✘ | ✔ | ✔ | ✔ | ✔ | ✘ |
 | WS riêng | Xem hội thoại riêng của người khác | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ |
-| WS riêng | Gắn hội thoại với workspace chung | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
-| WS riêng | Gửi câu trả lời của agent mình vào kênh | ✘ | ✘ | ✘ | ✔ | ✔ | ◐⁶ |
+| WS riêng | Tạo, sửa, dọn dẹp Highlight riêng của mình | ✘ | ✔ | ✔ | ✔ | ✔ | ✘ |
+| WS riêng | Chọn workspace chung làm ngữ cảnh nhóm | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
+| WS riêng | Tóm tắt tin cũ, Tóm tắt cho nhóm | ✘ | ✘ | ✘ | ✔ | ✔ | ◐⁷ |
+| Riêng sang chung | Gửi Highlight riêng / bản tóm tắt vào kênh | ✘ | ✘ | ✘ | ✔ | ✔ | ✘⁶ |
 | WS chung | Tạo workspace chung (thành chủ) | ✘ | ✔ | ✔ | ✔ | ✔ | ✘ |
 | WS chung | Xem kênh, bảng, bản tổng hợp | ✘ | ✘ | ✘ | ✔ | ✔ | ◐¹ |
 | WS chung | Xem thành viên, vai, agent riêng (không thấy key) | ✘ | ✘ | ✘ | ✔ | ✔ | ◐¹ |
-| WS chung | Đặt vai trong nhóm của mình | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
-| WS chung | Sửa vai của người khác | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ |
-| WS chung | Sửa đề bài, tên, hiển thị ở Khám phá | ✘ | ✘ | ✘ | ✘ | ✔ | ✘ |
+| WS chung | Đặt vai, đổi tên trong workspace của mình | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
+| WS chung | Sửa vai, tên của người khác | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ |
+| WS chung | Rời workspace | ✘ | ✘ | ✘ | ✔ | ✘ | ✘ |
+| WS chung | Sửa đề bài, tên, hiển thị ở Khám phá; tạo kênh | ✘ | ✘ | ✘ | ✘ | ✔ | ✘ |
 | WS chung | Xóa thành viên | ✘ | ✘ | ✘ | ✘ | ✔ | ✘ |
-| Tham gia | Xem và chia sẻ mã tham gia | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
+| Tham gia | Xem và chép mã tham gia | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
 | Tham gia | Đổi mã (mã cũ hết hiệu lực ngay) | ✘ | ✘ | ✘ | ✘ | ✔ | ✘ |
 | Tham gia | Nhập mã / gửi yêu cầu từ Khám phá | ✘ | ✔ | ✔² | ✘³ | ✘³ | ✘ |
 | Tham gia | Hủy yêu cầu của mình | ✘ | ✘ | ✔ | ✘ | ✘ | ✘ |
 | Tham gia | Xem, duyệt, từ chối yêu cầu | ✘ | ✘ | ✘ | ✘ | ✔ | ✘ |
 | Kênh | Gửi tin, @ nhắc người | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
-| Kênh | Highlight tin của người khác (chỉ mình thấy) | ✘ | ✘ | ✘ | ✔⁴ | ✔⁴ | ✘ |
+| Kênh | Highlight cho agent (chỉ mình thấy) | ✘ | ✘ | ✘ | ✔⁴ | ✔⁴ | ✘ |
 | Kênh | Xem highlight của người khác | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ |
 | Kênh | /idea /note /pin /help | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
 | Kênh | /summarize /brief | ✘ | ✘ | ✘ | ✘⁵ | ✔ | ✘ |
 | Bảng | Thêm ý lên bảng (cột Đề xuất) | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
-| Bảng | Chốt / loại (bắt buộc lý do) | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
+| Bảng | Chuyển ý sang Đang bàn | ✘ | ✘ | ✘ | ✘ | ✔ | ✘ |
+| Bảng | Chốt / loại (bắt buộc lý do) | ✘ | ✘ | ✘ | ✔⁸ | ✔ | ✘ |
 | Bảng | Mở lại ý đã chốt / loại | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ |
 | Tổng hợp | Dựng lại bản tổng hợp | ✘ | ✘ | ✘ | ✘ | ✔ | ✘ |
-| Tổng hợp | Tải bản tổng hợp Markdown | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
-| Chi phí | Gọi mô hình bằng key của chủ agent | – | – | – | – | – | ◐⁷ |
-| ADOM | Xem lượt chạy, chỉ số; /stats /task | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
-| ADOM | Nhập báo cáo, /run | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
+| Tổng hợp | Xem, tải bản tổng hợp Markdown | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
 
-1. Agent riêng chỉ "đọc" qua ContextBuilder khi chủ nó hỏi trong hội thoại gắn workspace: đề bài, đội và vai, ý chốt/loại, tin của chủ nó, highlight của chủ nó kèm người nói.
+1. Agent riêng chỉ "đọc" qua bộ dựng ngữ cảnh khi chủ nó hỏi trong hội thoại chọn workspace: đề bài, thành viên và vai, ý chốt/loại, tin của chủ nó, highlight cho agent của chủ nó kèm người nói.
 2. Gửi lại thì cập nhật yêu cầu đang chờ, không tạo trùng.
 3. Đã là thành viên thì mở thẳng workspace.
-4. Chỉ trên tin của người khác hoặc agent người khác; tin của mình và agent mình đã tự vào ngữ cảnh.
-5. Hệ thống trả tin từ chối kèm lý do.
-6. Agent không tự đăng: tin chỉ vào kênh khi chủ của nó bấm "Gửi vào kênh"; lệnh trong tin của agent không thực thi; agent không chốt được.
-7. Mọi lời gọi chạy bằng key của chủ agent; /summarize dùng agent và key của chủ workspace. Không có trần chi phí.
+4. Chỉ trên tin của người khác; tin của mình (kể cả thẻ trích dẫn lời agent mình) đã tự vào ngữ cảnh.
+5. Hệ thống trả tin "đây là quyền của chủ workspace".
+6. Agent không tự gửi: lời agent chỉ vào kênh khi chủ nó gửi một Highlight riêng hoặc bản tóm tắt (BR-15); lệnh trong lời agent không thực hiện.
+7. Chỉ chạy khi chủ agent bấm, bằng key của chủ agent; /summarize dùng agent và key của chủ workspace (BR-06).
+8. Phương án đang áp dụng của điểm mở 9.3 (BR-21).
 
 ### Ghi chú cài đặt
 
-- API: `require_member(ws)` / `require_owner(ws)` là dependency FastAPI; RLS của Postgres chặn thêm ở tầng dữ liệu.
-- Các mục đã có kiểm quyền trong mock: đổi mã, duyệt yêu cầu, gửi tin, `/summarize` `/brief`, gắn hội thoại với workspace, gửi câu trả lời vào kênh, highlight (chặn tin của mình, chỉ thành viên), đặt vai trong nhóm, trang Yêu cầu tham gia, dựng lại bản tổng hợp.
-- Các mục chưa có trong mock (sửa đề bài, xóa thành viên, nhập báo cáo ADOM) là quyền đề xuất, cần chốt khi làm backend.
+- Mỗi đường API kiểm quyền ở máy chủ bằng `current_user`, `require_member(ws)`, `require_owner(ws)` trong `backend/app/ws/deps.py` (NFR-04). Hội thoại, Highlight riêng và Highlight cho agent của người khác trả "không tìm thấy" (BR-07, NFR-05).
+- Backend kết nối CSDL bằng một tài khoản duy nhất; quyền nằm ở tầng API, không dựa vào RLS của Postgres. Khi dùng Supabase, bật RLS không kèm chính sách để chặn Data API công khai (xem [docs/supabase-setup.md](../docs/supabase-setup.md)).

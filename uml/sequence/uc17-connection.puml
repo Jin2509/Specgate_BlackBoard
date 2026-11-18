@@ -1,0 +1,34 @@
+' Sequence diagram of UC17: the channel stream drops, keeps the draft and resumes from the last sequence number.
+@startuml seq-uc17
+!include ../_style.iuml
+title Biểu đồ tuần tự UC17: Tiếp tục làm việc khi mạng chập chờn
+autonumber
+
+actor "Người dùng" as A
+boundary "Giao diện web" as UI
+participant "Bộ nhớ trình duyệt" as LS
+control "ChannelController" as C
+entity "Message" as MS
+
+UI -> C : GET …/stream?after=120 (SSE)
+C --> UI : tin seq 121, 122
+A -> UI : đang soạn tin
+UI -> LS : lưu chữ đang soạn
+note over UI, C : mất Internet
+UI --> A : (1) dải "Mất kết nối, đang thử kết nối lại"
+UI --> A : (2) khóa nút gửi
+opt A2 - tải lại trang
+  UI -> LS : (3) đọc chữ đang soạn
+  LS --> UI : chữ đang soạn hiện lại
+end
+loop tới khi có mạng
+  UI -> C : thử kết nối lại
+end
+UI -> C : GET …/stream?after=122
+C -> MS : tin có seq > 122
+C --> UI : (4) tin đã lỡ, rồi tin mới
+UI --> A : ẩn dải báo, mở nút gửi
+note over UI, C
+  A1: phần trả lời agent đã nhận được giữ trong hội thoại (UC04 A.A2).
+end note
+@enduml

@@ -1,0 +1,49 @@
+' Sequence diagram of UC04 part A: one streamed question and answer turn.
+@startuml seq-uc04a
+!include ../_style.iuml
+title Biểu đồ tuần tự UC04 - Phần A: Chat với agent riêng
+autonumber
+
+actor "Người dùng" as A
+boundary "Màn hình chat" as UI
+control "ConversationController" as C
+control "ContextBuilder" as CB
+control "LlmGateway" as G
+participant "Nhà cung cấp AI" as AI
+entity "Conversation" as CV
+entity "Turn" as T
+entity "ProviderKey" as K
+
+A -> UI : gõ câu hỏi, Enter
+UI -> C : POST /conversations/{id}/turns {text}
+C -> CV : kiểm chủ hội thoại
+C -> K : lấy key và mô hình
+alt A.E2 - chưa có key
+  C --> UI : 409 mở màn nhập key
+else
+  C -> T : lưu câu hỏi
+  C -> T : lấy các lượt gần nhất (bỏ lượt lỗi)
+  opt hội thoại có ngữ cảnh nhóm
+    C -> CB : build(user, workspace)
+    CB --> C : ngữ cảnh nhóm (UC06)
+  end
+  C -> G : stream(lượt trước + ngữ cảnh + câu hỏi)
+  G -> AI : gọi mô hình bằng key của người dùng
+  loop từng phần câu trả lời
+    AI --> G : phần chữ
+    G --> C : phần chữ
+    C --> UI : sự kiện SSE
+    UI --> A : hiện dần, có định dạng
+  end
+  alt A.A2 - người dùng bấm "Dừng"
+    UI -> C : hủy kết nối
+    C -> T : lưu phần đã viết (stopped)
+  else A.E1 - nhà cung cấp lỗi
+    C -> T : lưu lượt lỗi (không gửi lại sau này)
+    C --> UI : câu báo lỗi
+  else xong
+    C -> T : lưu câu trả lời
+    C --> UI : xong, nút "Chép", "Tạo lại"
+  end
+end
+@enduml

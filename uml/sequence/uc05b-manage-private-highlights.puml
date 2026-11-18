@@ -1,0 +1,41 @@
+' Sequence diagram of UC05 part B: listing, editing, deleting and cleaning up private highlights.
+@startuml seq-uc05b
+!include ../_style.iuml
+title Biểu đồ tuần tự UC05 - Phần B: Quản lý danh sách Highlight riêng
+autonumber
+
+actor "Người dùng" as A
+boundary "Danh sách Highlight riêng" as UI
+control "PrivateHighlightController" as C
+entity "PrivateHighlight" as PH
+
+A -> UI : mở "Highlight riêng", chọn bộ lọc
+UI -> C : GET /private-highlights?color&conversation&kind
+C -> PH : lấy highlight của người dùng
+C --> UI : danh sách, số đã dùng / 200
+opt B.E1 - gần đủ giới hạn
+  UI --> A : "Bạn đã dùng N/200 highlight riêng"
+end
+alt B.A1 - sửa
+  A -> UI : sửa chữ, màu, ghi chú
+  UI -> C : PATCH /private-highlights/{id}
+  C -> PH : cập nhật
+  C --> UI : highlight, nhãn trung thực mới
+else B.A2 - xóa một mục
+  A -> UI : bấm xóa, xác nhận
+  UI -> C : DELETE /private-highlights/{id}
+  C -> PH : xóa
+else B.A3 - dọn dẹp
+  A -> UI : chọn điều kiện, xác nhận
+  UI -> C : POST /private-highlights/cleanup {color, conversation, sentOnly}
+  C -> PH : xóa các mục khớp
+  C --> UI : số đã xóa, số còn lại
+else B.A5 - đính kèm lượt gốc
+  A -> UI : chọn tối đa 4 lượt
+  UI -> C : PATCH /private-highlights/{id} {attachedTurns}
+  C -> PH : cập nhật attached_turns
+end
+note over C, PH
+  Thẻ đã gửi vào kênh là bản chụp, không đổi theo (BR-13).
+end note
+@enduml

@@ -1,0 +1,33 @@
+' Activity diagram of UC10 part A: asking to join a shared workspace with a join code.
+@startuml act-uc10a
+!include ../_style.iuml
+title Biểu đồ hoạt động UC10 - Phần A: Xin tham gia bằng mã
+
+|Người dùng|
+start
+:(1) Nhận mã 7 ký tự từ một thành viên;
+:(2) Bấm "Nhập mã", nhập mã;
+|Hệ thống|
+:Chuẩn hóa mã (chữ thường, dấu cách, gạch nối);
+if (Mã hợp lệ và còn hiệu lực?) then (không)
+  :[A.E1] Báo mã không hợp lệ,\ngợi ý xin mã mới;
+  stop
+elseif (Đã là thành viên?) then (có)
+  :[A.A3] Mở thẳng workspace;
+  stop
+elseif (Đã có yêu cầu đang chờ?) then (có)
+  :[A.A2] Cập nhật yêu cầu cũ;
+else (chưa)
+  :(3) Tạo yêu cầu tham gia;
+endif
+:(3) Mở trang "Đang chờ duyệt";
+:(4) Workspace hiện mờ trên thanh bên;
+if (Diễn biến?) then (người dùng bấm "Hủy yêu cầu")
+  :[A.A1] Hủy yêu cầu;
+elseif () then (chủ duyệt, UC11)
+  :(5) Tự chuyển vào workspace;
+else (chủ từ chối, UC11)
+  :[A.E2] Hiện "Yêu cầu bị từ chối";
+endif
+stop
+@enduml

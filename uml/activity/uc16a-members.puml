@@ -1,0 +1,36 @@
+' Activity diagram of UC16 part A: names, team roles and membership.
+@startuml act-uc16a
+!include ../_style.iuml
+title Biểu đồ hoạt động UC16 - Phần A: Quản lý tên, vai và tư cách thành viên
+
+|Thành viên|
+start
+:Mở trang "Thành viên và agent";
+|Hệ thống|
+:(1) Liệt kê thành viên: ảnh màu, tên, vai,\ntài khoản gốc, agent đang dùng;
+:(2) Không hiện key của ai;
+|Thành viên|
+:Chọn một việc;
+|Hệ thống|
+if (Việc?) then ([A.A1] đặt biệt danh,\n[A.A3] đổi tên)
+  if (Trùng tên ai đã dùng?) then (có)
+    :[A.E1] Không cho lưu;
+    stop
+  else (không)
+    :Lưu tên trong workspace;
+  endif
+elseif () then ([A.A2] sửa vai)
+  :Lưu vai (≤ 40 ký tự);
+elseif () then ([A.A4] rời workspace)
+  if (Là chủ?) then (có)
+    :[A.E2] Không có lựa chọn rời;
+    stop
+  else (không)
+    :Ghi đã rời, giữ chỗ tên;
+  endif
+else ([A.A5] chủ xóa thành viên)
+  :Ghi đã rời, giữ chỗ tên;
+endif
+:Áp dụng ở mọi nơi và trong\nngữ cảnh agent từ câu hỏi sau;
+stop
+@enduml

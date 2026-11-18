@@ -79,7 +79,7 @@ def segment_speaker(s: Session, workspace_id: str, seg: dict) -> str:
     """Speaker of one passage of a "Highlight cho agent": a card keeps the speaker it was posted with, plus
     "(đã rời)" once that person left (flow §14)."""
     if seg.get("speaker"):
-        left = seg.get("authorKind") != "data" and seg.get("authorUserId") and has_left(s, workspace_id, seg["authorUserId"])
+        left = seg.get("authorUserId") and has_left(s, workspace_id, seg["authorUserId"])
         return seg["speaker"] + (f" · {base_name(s, seg['authorUserId'], workspace_id)}{LEFT_SUFFIX}" if left else "")
     if seg.get("authorKind") == "agent":
         return agent_label(s, seg["authorUserId"], seg.get("authorModel"), workspace_id)
@@ -104,7 +104,7 @@ def board_author(s: Session, item: m.BoardItem) -> str:
     """FR-51: cards from an agent's message read "<agent> của <tên>"; a pinned card keeps the speaker of the card
     (flow §11), e.g. "Claude của Lan nói (trích một phần)"."""
     if item.author_label:
-        left = item.created_by_kind != "data" and has_left(s, item.workspace_id, item.created_by_id)
+        left = has_left(s, item.workspace_id, item.created_by_id)
         return item.author_label + (f" · {base_name(s, item.created_by_id, item.workspace_id)}{LEFT_SUFFIX}" if left else "")
     if item.created_by_kind == "agent":
         return agent_label(s, item.created_by_id, item.created_by_model, item.workspace_id)
@@ -213,10 +213,6 @@ def team(s: Session, ws: m.Workspace) -> list[dict]:
     return out
 
 
-def has_runs(s: Session, ws_id: str) -> bool:
-    return s.scalar(select(m.PaperRun.id).where(m.PaperRun.workspace_id == ws_id).limit(1)) is not None
-
-
 def channels(s: Session, ws_id: str) -> list[m.Channel]:
     return list(s.scalars(select(m.Channel).where(m.Channel.workspace_id == ws_id).order_by(m.Channel.created_at, m.Channel.name)))
 
@@ -232,8 +228,6 @@ def workspace_out(s: Session, ws: m.Workspace, me: m.Member | None) -> dict:
             "myTeamRole": me.team_role,
             "myName": me.nickname or name_of(s, me.user_id),
             "needsNickname": me.needs_nickname,
-            # flow §13: the "Số liệu" section exists only once a run is attached.
-            "modules": ["adom"] if has_runs(s, ws.id) else [],
             # FR-31: every member sees and copies the code.
             "joinCode": ws.join_code,
             "joinCodeAt": iso(ws.join_code_at),
@@ -278,74 +272,13 @@ def card_text(card: dict) -> str:
     """The words of a card, as they are highlighted and as the owner's agent reads them."""
     if card.get("kind") in ("quote", "conversation-summary"):
         return card.get("text", "")
-    if card.get("kind") == "stats":
-        return "\n".join(card.get("lines") or stats_lines(card)[1:])
-    if card.get("kind") == "task":
-        return card.get("line") or task_line(card)
     return ""
 
 
-def stats_lines(card: dict) -> list[str]:
-    run = card.get("run", {})
-    head = (f"Lượt chạy {run.get('name')} ({run.get('dataset')}, {run.get('tasks')} tác vụ"
-            f"{', chạy thử' if run.get('kind') == 'trial' else ''}): "
-            f"{'hợp lệ' if run.get('validity') == 'valid' else 'không hợp lệ'}")
-    return [head] + [criterion_line(c) for c in card.get("criteria", [])]
-
-
-VERDICT_TEXT = {"PASS": "Đạt", "FAIL": "Không đạt", "INSUFFICIENT_DATA": "Chưa đủ dữ liệu", "NOT_SET": "Chưa đặt ngưỡng"}
-
-
-def criterion_line(c: dict) -> str:
-    ci = f", khoảng tin cậy [{c['ciLow']:.2f}, {c['ciHigh']:.2f}]" if c.get("ciLow") is not None and c.get("ciHigh") is not None else ""
-    th = f", ngưỡng {c['threshold']['op']} {c['threshold']['value']}" if c.get("threshold") else ""
-    return f"Tiêu chí {c['number']} ({c['title']}): {c['display']}{ci}{th}, {VERDICT_TEXT.get(c['verdict'], c['verdict'])}"
-
-
-def task_line(card: dict) -> str:
-    t = card.get("task", {})
-    return (f"Tác vụ {t.get('taskId')} (lượt {card.get('run', {}).get('name')}): {t.get('violations')} vi phạm, "
-            f"trạng thái {t.get('status', 'ok')}, hai bản nháp {t.get('a3State')}, "
-            f"{'có' if t.get('contributing') else 'không'} góp vào tiêu chí, {t.get('wallSeconds')} giây")
-
-
-RUN_NOTICE = {
-    "removed": "Lượt chạy này đã bị gỡ khỏi workspace.",
-    "invalidated": "Lượt chạy này đã bị đánh dấu không hợp lệ.",
-    "superseded": "Đã có lượt chạy mới hơn.",
-}
-# What the agent reads next to a highlighted line of such a card (flow §13).
-RUN_NOTICE_FOR_AGENT = {
-    "removed": "đoạn này lấy từ lượt chạy đã bị gỡ khỏi workspace",
-    "invalidated": "đoạn này lấy từ lượt chạy đã bị đánh dấu không hợp lệ",
-    "superseded": "đã có lượt chạy mới hơn lượt của đoạn này",
-}
-
-
-def run_state(s: Session, run_id: str | None, validity_then: str | None) -> str | None:
-    """removed | invalidated | superseded | None, for any snapshot taken from a run: a stats/task card, a highlighted
-    line of it, or the card pinned on the board (flow §13). Words stay as they were; only a notice is added."""
-    if not run_id:
-        return None
-    run = s.get(m.PaperRun, run_id)
-    if not run:
-        return "removed"
-    if run.validity != "valid" and validity_then == "valid":
-        return "invalidated"
-    newer = s.scalar(select(m.PaperRun.id).where(m.PaperRun.workspace_id == run.workspace_id, m.PaperRun.status == "done",
-                                                 m.PaperRun.created_at > run.created_at).limit(1))
-    return "superseded" if newer else None
-
-
 def card_out(s: Session, card: dict, workspace_id: str | None = None) -> dict:
-    """Cards are snapshots; a stats/task card gets a live notice when its run was invalidated or superseded, a quote
-    card names its owner as "(đã rời)" once they left (flow §14)."""
+    """Cards are snapshots; a quote card names its owner as "(đã rời)" once they left (flow §14)."""
     out = dict(card)
-    if card.get("kind") in ("stats", "task"):
-        state = run_state(s, card.get("run", {}).get("id"), card.get("run", {}).get("validity"))
-        if state:
-            out["notice"], out["runState"] = RUN_NOTICE[state], state
-    elif card.get("ownerId") and has_left(s, workspace_id, card["ownerId"]):
+    if card.get("ownerId") and has_left(s, workspace_id, card["ownerId"]):
         out["ownerLeft"] = True
         out["speakerLabel"] = f"{card.get('speakerLabel')} · {base_name(s, card['ownerId'], workspace_id)}{LEFT_SUFFIX}"
     return out
@@ -353,11 +286,7 @@ def card_out(s: Session, card: dict, workspace_id: str | None = None) -> dict:
 
 def segment_out(s: Session, workspace_id: str, seg: dict) -> dict:
     ch = s.get(m.Channel, seg.get("channelId"))
-    out = {**seg, "speaker": segment_speaker(s, workspace_id, seg), "channelName": ch.name if ch else None}
-    state = run_state(s, seg.get("runId"), seg.get("runValidity"))
-    if state:
-        out["notice"], out["runState"] = RUN_NOTICE[state], state
-    return out
+    return {**seg, "speaker": segment_speaker(s, workspace_id, seg), "channelName": ch.name if ch else None}
 
 
 def highlight_out(s: Session, h: m.Highlight) -> dict:
@@ -501,9 +430,6 @@ def board_item_out(s: Session, it: m.BoardItem) -> dict:
     }
     if it.parts:
         out["parts"] = it.parts
-    state = run_state(s, it.run_id, it.run_validity)
-    if state:
-        out["notice"], out["runState"] = RUN_NOTICE[state], state
     if it.decided_by:
         out["decidedBy"] = {"id": it.decided_by, "at": iso(it.decided_at)}
         out["deciderName"] = name_of(s, it.decided_by, it.workspace_id)

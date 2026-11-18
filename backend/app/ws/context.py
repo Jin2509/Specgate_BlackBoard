@@ -20,8 +20,8 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.ws import models as m
 from app.ws import providers as pv
-from app.ws import runs as rn
 from app.ws import service as sv
+from app.ws import tasks as tk
 
 LABELS = {"important": "Quan trọng", "review": "Cần xem xét"}
 
@@ -50,8 +50,6 @@ def message_words(s: Session, msg: m.Message) -> str:
             parts.append(f"[Trích dẫn: {card.get('speakerLabel')} nói: \"{words}\"]")
         elif kind == "conversation-summary":
             parts.append(f"[{card.get('title')}, do {card.get('speakerLabel')} viết, chưa được lọc: {card.get('text')}]")
-        elif kind in ("stats", "task"):
-            parts.append(f"[Thẻ số liệu: {sv.card_text(card)}]")
     return "\n".join(parts)
 
 
@@ -188,6 +186,8 @@ def build(s: Session, user: m.User, workspace_id: str) -> dict | None:
         "myName": me.nickname or user.display_name,
         "myTeamRole": me.team_role,
         "team": sv.team(s, ws),
+        # flow §13: unfinished tasks, assigned or not; finished ones are not sent.
+        "tasks": tk.context_rows(s, ws),
         "decided": [card(i) for i in ideas if i.status == "decided"],
         "rejected": [card(i) for i in ideas if i.status == "rejected"],
         "timeline": [item for _, item in timeline],
@@ -200,7 +200,6 @@ def build(s: Session, user: m.User, workspace_id: str) -> dict | None:
         "digestPlan": digest_plan(s, user.id, ws.id, pending) if pending else None,
         "highlights": highlights,
         "highlightLimit": settings.agent_highlights_max,
-        "metrics": rn.context_block(s, ws.id),
     }
 
 
@@ -273,7 +272,7 @@ async def run_digest(s: Session, user: m.User, workspace_id: str, target: pv.Tar
 
 def render_segment(seg: dict) -> str:
     """One passage as the agent reads it: verbatim, "…" where cut, "(trích một phần)" when cut mid-sentence, and the
-    notices of flow §6 (a summary is relayed words) and §13 (the run of a data line was invalidated or superseded)."""
+    notice of flow §6 (a summary is relayed words)."""
     text = ("…" if seg.get("cutStart") else "") + seg["text"] + ("…" if seg.get("cutEnd") else "")
     verb = "viết" if seg.get("relayed") else "nói"
     marks = []
@@ -281,8 +280,6 @@ def render_segment(seg: dict) -> str:
         marks.append("trích một phần")
     if seg.get("relayed"):
         marks.append("lời thuật lại của agent, không phải lập trường riêng của người hay của agent nào")
-    if seg.get("runState"):
-        marks.append(sv.RUN_NOTICE_FOR_AGENT[seg["runState"]])
     tail = f" ({'; '.join(marks)})" if marks else ""
     return f"    - {seg['speaker']} {verb}{tail}: \"{text}\""
 
@@ -303,6 +300,10 @@ def render_system(user_name: str, agent_label: str, ctx: dict | None) -> str:
         lines.append(f"- {who}: vai \"{role}\", agent {agent}")
     parts.append("## Thành viên\n" + "\n".join(lines))
     parts.append(f"Bạn đang làm việc cho {name}. Vai của {name}: {ctx['myTeamRole'] or '(chưa ghi)'}")
+
+    tasks = "\n".join(f"- {tk.label(t['number'])}: {t['body']} (phụ trách: {t['assigneeName'] or 'chưa có người phụ trách'})"
+                      for t in ctx.get("tasks", [])) or "(chưa có việc nào)"
+    parts.append("## Bảng phân công: việc đang làm và việc chưa có người phụ trách\n" + tasks)
 
     def ideas(title: str, rows: list[dict]) -> str:
         body = "\n".join(f"- #{r['number']} {r['body']} (lý do: {r['reason']})" for r in rows) or "(không có)"
@@ -333,20 +334,7 @@ def render_system(user_name: str, agent_label: str, ctx: dict | None) -> str:
     parts.append(f"## Dòng thời gian: tin của {name} và các đoạn {name} đã highlight từ người khác\n"
                  + ("\n".join(rows) or "(chưa có)"))
 
-    mt = ctx.get("metrics")
-    if mt:
-        r = mt["run"]
-        status = "hợp lệ" if r["validity"] == "valid" else f"KHÔNG hợp lệ: {r.get('invalidReason') or 'không rõ lý do'}"
-        trial = ", chạy thử trên web" if r["kind"] == "trial" else ""
-        body = "\n".join(f"- {line}" for line in mt["lines"])
-        warn = ("\nLượt chạy này không hợp lệ: không dùng các con số này làm kết luận, và nói rõ điều đó khi nhắc tới."
-                if r["validity"] != "valid" else "")
-        parts.append(f"## Số liệu bài báo ADOM: lượt {r['name']} ({r['dataset']}, {r['tasks']} tác vụ{trial}), {status}\n"
-                     f"{body}{warn}\n\"Chưa đủ dữ liệu\" không có nghĩa là đạt.")
-
     parts.append("Khi trả lời, nói rõ bạn dựa vào ý của ai (ví dụ \"Long nói…\"). Highlight chỉ là đánh dấu của "
                  f"{name}, chưa phải quyết định của nhóm. Đoạn ghi \"trích một phần\" đã bị cắt giữa câu: đừng suy ra ý "
-                 "của người nói từ phần bị cắt. Bản tóm tắt là lời thuật lại: đừng coi đó là lập trường của riêng ai. "
-                 "Khi có số liệu, dựa vào con số thật, đừng tự đặt ra số; đoạn số liệu nào ghi lượt chạy đã không hợp lệ "
-                 "hoặc đã có lượt mới hơn thì không dùng làm kết luận.")
+                 "của người nói từ phần bị cắt. Bản tóm tắt là lời thuật lại: đừng coi đó là lập trường của riêng ai.")
     return "\n\n".join(parts)

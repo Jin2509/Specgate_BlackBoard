@@ -1,24 +1,24 @@
-' Shows the lifecycle of a join request to a shared workspace (UC10, UC11, BR-18).
-@startuml join-request
+' State diagram of a JoinRequest entity (UC10, UC11).
+@startuml st-join-request
 !include ../_style.iuml
-title Trạng thái: yêu cầu tham gia
+title Biểu đồ trạng thái: Yêu cầu tham gia (JoinRequest)
 
 state "Đang chờ" as Pending
 state "Đã duyệt" as Approved
 state "Bị từ chối" as Rejected
 state "Đã hủy" as Cancelled
 
-[*] --> Pending : nhập mã hoặc gửi từ Khám phá
-Pending --> Pending : gửi lại hoặc sửa lời nhắn\n(cập nhật, không tạo trùng)
-Pending --> Approved : chủ duyệt
-Pending --> Rejected : chủ từ chối
+[*] --> Pending : nhập mã đúng (UC10-A)\nhoặc gửi từ Khám phá (UC10-B)
+Pending --> Pending : xin lại, sửa lời nhắn\n/ cập nhật, không tạo trùng
+Pending --> Approved : chủ bấm "Duyệt" (UC11)\n/ thêm thành viên, gán màu
+Pending --> Rejected : chủ bấm "Từ chối" (UC11)
 Pending --> Cancelled : người xin bấm "Hủy yêu cầu"
-Approved --> [*] : thành viên mới
+Approved --> [*]
 Rejected --> [*]
 Cancelled --> [*]
 
-note right of Approved
-  Yêu cầu đã xử lý vào lịch sử, ghi kết quả
-  và người xử lý; không xử lý lại (UC11 E1).
-end note
+Pending : trang "Đang chờ duyệt"
+Pending : workspace hiện mờ trên thanh bên
+Approved : ghi người xử lý, thời điểm
+Rejected : ghi người xử lý, thời điểm
 @enduml

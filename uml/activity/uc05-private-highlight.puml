@@ -1,0 +1,63 @@
+' Mirrors every flow of UC05: creating a private highlight (part A) and managing the list (part B).
+@startuml act-uc05
+!include ../_style.iuml
+title Hoạt động UC05: Highlight riêng
+
+start
+partition "Phần A. Tạo highlight riêng" {
+  :(1) Người dùng bôi đen một đoạn trong một lượt;
+  if (Vùng chọn trải qua hai lượt, hoặc nằm\ntrong lượt lỗi, lượt đang viết?) then (có)
+    :[A.E1] Thanh lưu không hiện;
+    stop
+  else (không)
+  endif
+  :(2) Thanh nhỏ hiện cạnh vùng chọn, có các màu;
+  :(3) Chọn màu; ghi chú ngắn nếu muốn;
+  if (Người dùng?) then (bấm Hủy hoặc bấm ra ngoài)
+    :[A.A1] Không lưu gì;
+    stop
+  else (bấm Lưu)
+    :(4) Bấm Lưu;
+  endif
+  if (Đã đủ ~200 highlight riêng?) then (có)
+    :[A.E2] Không lưu, nhắc dọn bớt (phần B);
+    stop
+  else (chưa)
+  endif
+  :(5) Tô màu trong hội thoại; lưu nguyên văn, người nói,\nmô hình lúc tạo, hội thoại và lượt gốc, ngữ cảnh nhóm lúc viết;
+  :(6) Báo "Đã lưu vào Highlight riêng.\nChưa có gì được gửi vào nhóm.";
+}
+stop
+
+partition "Phần B. Quản lý danh sách Highlight riêng" {
+  start
+  :(1) Hiện mọi highlight theo thời gian: màu, người nói, mô hình,\nhội thoại gốc, thời điểm, ghi chú, các lần đã gửi, nhãn ngữ cảnh;
+  if (Đã gần đủ giới hạn?) then (có)
+    :[B.E1] Nhắc "Bạn đã dùng N/200 highlight riêng";
+  else (không)
+  endif
+  :(2) Lọc theo màu, hội thoại, loại, đã gửi; hoặc gõ chữ để tìm;
+  switch (Thao tác)
+  case (Mở)
+    :(3) Mở đúng hội thoại, đúng chỗ đã đánh dấu;
+  case (Sửa)
+    :[B.A1] Sửa nội dung, màu, ghi chú rồi lưu;
+    if (Sửa chữ của agent, không chỉ cắt bớt?) then (có)
+      :[B.A1] Báo trước thẻ sẽ ghi "(‹tên› đã chỉnh)";
+    else (không)
+    endif
+  case (Xóa)
+    :[B.A2] Xóa mục; thẻ đã gửi vào kênh vẫn còn;
+  case (Dọn dẹp)
+    :[B.A3] Chọn điều kiện (màu, hội thoại, chỉ mục đã gửi), xác nhận;\nxóa các mục khớp, báo số đã xóa và số còn lại;
+  case (Gửi)
+    :[B.A4] Chọn một hoặc vài mục, "Gửi vào nhóm" (UC07 phần A);
+  case (Đính kèm)
+    :[B.A5] Với bản tóm tắt: chọn tối đa 4 lượt gốc (UC08);
+  endswitch
+  note right
+  BR-08, BR-09: chỉ người tạo thấy; hệ thống không bao giờ tự xóa.
+  end note
+  stop
+}
+@enduml

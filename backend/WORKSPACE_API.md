@@ -1,6 +1,6 @@
 # API SpecGate Workspace
 
-Backend cho các chức năng trong [`docs/SRS.md`](../docs/SRS.md) bản 0.2. Mã nằm ở `app/ws/`, chạy chung FastAPI app với phần ADOM (route ADOM giữ nguyên). JSON dạng camelCase, theo kiểu trong `web_ui/src/lib/types.ts`. Mọi route có tiền tố `/api/v1/v1`. Lỗi luôn có dạng `{ "error": { "code": "<MÃ>", "message": "<câu tiếng Việt>", "details": [] } }`.
+Backend cho các chức năng trong [`docs/SRS.md`](../docs/SRS.md) bản 0.2. Mã nằm ở `app/ws/`. JSON dạng camelCase, theo kiểu trong `web_ui/src/lib/types.ts`. Mọi route có tiền tố `/api/v1`. Lỗi luôn có dạng `{ "error": { "code": "<MÃ>", "message": "<câu tiếng Việt>", "details": [] } }`.
 
 ## Chạy để kiểm tra
 
@@ -56,6 +56,7 @@ Mọi endpoint (trừ `/api/v1/auth/*`) cần đăng nhập: `Authorization: Bea
 | GET | `/api/v1/auth/session` | Người đang đăng nhập, trang mở mặc định (`home`) và các tài khoản Google/GitHub của người đó (`identities`) |
 | GET | `/api/v1/me` | Hồ sơ, workspace riêng, key (4 ký tự cuối), agent, workspace chung, yêu cầu đang chờ |
 | PUT | `/api/v1/me/last-workspace` | UI gọi khi mở workspace chung; lần đăng nhập sau mở lại workspace này |
+| GET | `/api/v1/me/badges` | Dấu báo ở thanh bên (flow mục 2): mỗi workspace chung có `unread`, `mentioned`, `pendingRequests` (chỉ chủ) và `channels` (chấm theo từng kênh). UI hỏi lại mỗi 10 giây |
 
 ### API key và agent riêng (UC02)
 
@@ -88,6 +89,8 @@ Mọi endpoint (trừ `/api/v1/auth/*`) cần đăng nhập: `Authorization: Bea
 | PUT | `/api/v1/workspaces/{ws}/members/me/team-role` | `{teamRole}` ≤ 40 ký tự, chỉ vai của mình |
 | GET/PUT | `/api/v1/workspaces/{ws}/join-code` | Xem (mọi thành viên) / đổi mã (chủ) |
 | GET | `/api/v1/workspaces/{ws}/join-requests` | Chỉ chủ: `pending` và `history` |
+| DELETE | `/api/v1/workspaces/{ws}/members/me` | Rời workspace (chủ không rời được). Việc chưa xong của người rời chuyển thành chưa có người phụ trách, `#chung` có tin hệ thống |
+| DELETE | `/api/v1/workspaces/{ws}/members/{userId}` | Chỉ chủ: xóa thành viên, xử lý bảng phân công như khi rời |
 
 ### Kênh (UC06, UC10)
 
@@ -103,7 +106,7 @@ Mọi endpoint (trừ `/api/v1/auth/*`) cần đăng nhập: `Authorization: Bea
 | GET | `/api/v1/highlights?workspaceId=` | "Highlight của tôi", nhóm theo workspace |
 | DELETE | `/api/v1/highlights/{id}` | Chỉ người tạo |
 
-Lệnh: `/idea <nội dung>`, `/note <nội dung>`, `/pin` (kèm `replyToId`), `/decide #<số> chốt|loại <lý do>`, `/summarize` và `/brief` (chỉ chủ), `/help`. Lệnh chỉ chạy khi là từ đầu tiên của tin do người gửi; tin agent gửi qua `send-to-channel` không bao giờ chạy lệnh.
+Lệnh: `/idea <nội dung>`, `/note <nội dung>`, `/pin` (kèm `replyToId`), `/decide #<số> chốt|loại <lý do>`, `/task [@tên] <mô tả>` (chỉ chủ được thêm `@tên` để giao cho người khác), `/summarize` và `/brief` (chỉ chủ), `/help`. Lệnh chỉ chạy khi là từ đầu tiên của tin do người gửi; tin agent gửi qua `send-to-channel` không bao giờ chạy lệnh.
 
 ### Bảng ý tưởng và tổng hợp (UC11–UC13)
 
@@ -114,6 +117,20 @@ Lệnh: `/idea <nội dung>`, `/note <nội dung>`, `/pin` (kèm `replyToId`), `
 | PUT | `/api/v1/workspaces/{ws}/board/{số}/status` | `{status: "discussing"}`: Đề xuất → Đang bàn |
 | GET/POST | `/api/v1/workspaces/{ws}/brief` | Xem bản mới nhất (mọi thành viên) / dựng (chủ, giống `/brief`) |
 | GET | `/api/v1/workspaces/{ws}/brief.md` | Tải Markdown |
+
+### Bảng phân công (flow mục 13)
+
+Mỗi việc có số riêng, luôn ghi là "việc N" để không nhầm với ý trên bảng ý tưởng. Việc đang làm và việc chưa có người phụ trách đi vào ngữ cảnh agent của mọi thành viên; việc đã xong thì không.
+
+| Method | Path | Ghi chú |
+| --- | --- | --- |
+| GET | `/api/v1/workspaces/{ws}/tasks` | `{locked, tasks}` |
+| POST | `/api/v1/workspaces/{ws}/tasks` | `{body, assigneeId?, unassigned?}`. Thành viên chỉ tạo việc đứng tên mình; chủ giao cho người khác hoặc để trống. `#chung` có tin hệ thống |
+| PATCH | `/api/v1/workspaces/{ws}/tasks/{số}` | Chỉ chủ: `{body?, assigneeId?, changeAssignee}` |
+| POST | `/api/v1/workspaces/{ws}/tasks/{số}/claim` | Nhận một việc chưa có người phụ trách |
+| PUT | `/api/v1/workspaces/{ws}/tasks/{số}/status` | `{status: doing\|done}`. Người phụ trách đổi được cả khi bảng đã khóa; chủ đổi việc của người khác khi bảng chưa khóa |
+| DELETE | `/api/v1/workspaces/{ws}/tasks/{số}` | Chỉ chủ |
+| PUT | `/api/v1/workspaces/{ws}/tasks/lock` | Chỉ chủ: `{locked}`. Khóa thì không thêm, sửa, xóa, giao hay nhận được (409 `TASKS_LOCKED`). Mỗi lần khóa hoặc mở, `#chung` có tin hệ thống |
 
 ### Tham gia (UC08, UC09)
 
@@ -192,7 +209,7 @@ Cột "Test" là tên hàm trong `tests/test_ws.py`.
 
 ## Giới hạn hiện tại
 
-- Dùng SQLite và `create_all` như phần ADOM; chưa có Alembic, chưa chuyển Supabase Postgres / Auth / Vault / Realtime như `overallweb.md` §5. Khóa mã hóa API key lấy từ `SECRET_KEY` (hoặc `KEY_ENCRYPTION_KEY`): đổi khóa thì key đã lưu không đọc được, người dùng phải nhập lại.
+- Dùng SQLite và `create_all`; chưa có Alembic, chưa chuyển Supabase Postgres / Auth / Vault / Realtime như `overallweb.md` §5. Khóa mã hóa API key lấy từ `SECRET_KEY` (hoặc `KEY_ENCRYPTION_KEY`): đổi khóa thì key đã lưu không đọc được, người dùng phải nhập lại.
 - Realtime chạy trong một tiến trình (broker trong bộ nhớ). Chạy nhiều worker uvicorn thì cần Postgres LISTEN/NOTIFY hoặc Supabase Realtime.
 - Với Anthropic, `GET /v1/models` không biết key đã hết tiền; lỗi hết hạn mức chỉ hiện ở lần chat đầu.
 - Địa chỉ API kiểu OpenAI trỏ vào mạng nội bộ bị chặn (chống SSRF). Dùng Ollama trên máy thì đặt `ALLOW_PRIVATE_BASE_URLS=true`.

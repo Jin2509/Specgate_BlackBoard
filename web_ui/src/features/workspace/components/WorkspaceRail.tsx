@@ -16,6 +16,7 @@ import { cn } from "@/utils/cn";
 import { toPersonalHomePath, toSharedHomePath } from "@/utils/route-paths";
 
 import { CreateWorkspaceDialog } from "./CreateWorkspaceDialog";
+import { useWorkspaceBadges } from "../hooks/use-workspace-badges";
 
 export function WorkspaceRail({
   workspaces,
@@ -32,6 +33,7 @@ export function WorkspaceRail({
   const dialogFlag = useQueryParam("dialog");
   const [isCreateOpen, setIsCreateOpen] = useState<boolean | null>(null);
   const [isJoinOpen, setIsJoinOpen] = useState<boolean | null>(null);
+  const badgesByWorkspaceId = useWorkspaceBadges();
 
   return (
     <nav aria-label={t.workspace.railLabel} className="flex w-20 shrink-0 flex-col bg-rail py-3 text-rail-foreground">
@@ -67,6 +69,7 @@ export function WorkspaceRail({
             isActive={workspace.id === activeId && !isExploreActive}
           >
             {workspace.short}
+            <RailBadges workspace={badgesByWorkspaceId?.get(workspace.id) ?? workspace} />
           </RailTile>
         ))}
 
@@ -170,6 +173,36 @@ function RailTile({
         {title}
       </TooltipContent>
     </Tooltip>
+  );
+}
+
+/** A dot for unread messages, a stronger one for a mention, and for the owner the number of join requests waiting. */
+function RailBadges({ workspace }: { workspace: RailWorkspace }) {
+  const pendingCount = workspace.pendingRequests ?? 0;
+  return (
+    <>
+      {workspace.mentioned ? (
+        <span
+          role="img"
+          aria-label={t.workspace.mentionDot}
+          className="absolute -top-1 -right-1 size-3.5 rounded-full border-2 border-rail bg-destructive"
+        />
+      ) : workspace.unread ? (
+        <span
+          role="img"
+          aria-label={t.workspace.unreadDot}
+          className="absolute -top-0.5 -right-0.5 size-2.5 rounded-full border-2 border-rail bg-rail-foreground"
+        />
+      ) : null}
+      {pendingCount > 0 ? (
+        <span
+          aria-label={format(t.workspace.pendingCount, { count: pendingCount })}
+          className="tabular absolute -right-1.5 -bottom-1 flex h-4.5 min-w-4.5 items-center justify-center rounded-full border-2 border-rail bg-destructive px-1 text-[10px] font-bold text-primary-foreground"
+        >
+          {pendingCount}
+        </span>
+      ) : null}
+    </>
   );
 }
 

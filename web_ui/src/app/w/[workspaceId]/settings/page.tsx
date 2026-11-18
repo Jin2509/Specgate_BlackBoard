@@ -1,4 +1,4 @@
-// Shows the workspace brief, join code, members and each member's personal agent.
+// Shows the workspace name and visibility, brief, join code, members and each member's personal agent.
 import { Settings } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/PageHeader";
 import { PageLayout } from "@/components/PageLayout";
 import { SettingsSection } from "@/components/SettingsSection";
 import { requireMe } from "@/features/auth/server";
-import { BriefEditor, JoinCodePanel, MemberList } from "@/features/settings";
+import { BriefEditor, JoinCodePanel, MemberList, WorkspaceDetailsForm } from "@/features/settings";
 import { ContentSkeleton, isOwner } from "@/features/workspace";
 import { requireSharedWorkspace } from "@/features/workspace/server";
 import { format, t } from "@/lib/i18n";
@@ -43,6 +43,11 @@ async function SettingsPageContent({ params }: PageProps<"/w/[workspaceId]/setti
       />
       <PageBody>
         <div className={toContentWidthClassName("wide")}>
+          {isViewerOwner ? (
+            <SettingsSection title={t.settings.workspaceTitle} description={t.settings.workspaceDescription}>
+              <WorkspaceDetailsForm workspaceId={workspace.id} name={workspace.name} visibility={workspace.visibility} />
+            </SettingsSection>
+          ) : null}
           <SettingsSection title={t.settings.brief} description={t.settings.briefDescription}>
             <BriefEditor workspaceId={workspace.id} brief={workspace.brief} canEdit={isViewerOwner} />
           </SettingsSection>

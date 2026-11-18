@@ -1,0 +1,34 @@
+' Activity diagram of UC05 part A: creating a private highlight in a conversation.
+@startuml act-uc05a
+!include ../_style.iuml
+title Biểu đồ hoạt động UC05 - Phần A: Tạo highlight riêng
+
+|Người dùng|
+start
+:(1) Bôi đen một đoạn trong một lượt;
+|Hệ thống|
+if (Vùng chọn trong một lượt đã lưu?) then (không)
+  :[A.E1] Không hiện thanh lưu;
+  stop
+else (có)
+endif
+:(2) Hiện thanh chọn màu;
+|Người dùng|
+if (Lưu?) then (hủy)
+  :[A.A1] Bấm Hủy hoặc bấm ra ngoài;
+  stop
+else (lưu)
+  :(3) Chọn màu, ghi chú (tùy chọn);
+  :(4) Bấm Lưu;
+endif
+|Hệ thống|
+if (Đã có ~200 highlight riêng?) then (có)
+  :[A.E2] Không lưu, nhắc dọn bớt;
+  stop
+else (chưa)
+endif
+:(5) Lưu nguyên văn, người nói, mô hình,\nlượt gốc, ngữ cảnh nhóm lúc viết;
+:(5) Tô màu đoạn trong hội thoại;
+:(6) Báo "Chưa có gì được gửi vào nhóm";
+stop
+@enduml

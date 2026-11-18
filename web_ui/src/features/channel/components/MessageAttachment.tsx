@@ -1,5 +1,5 @@
-// Renders what follows a message: board receipt, command list, summary link, channel summary tag or new run link.
-import { FileText, FlaskConical, ListCollapse, Pin } from "lucide-react";
+// Renders what follows a message: board receipt, command list, brief link or channel summary tag.
+import { FileText, ListCollapse, Pin } from "lucide-react";
 import Link from "next/link";
 
 import { format, t } from "@/lib/i18n";
@@ -46,15 +46,6 @@ export function MessageAttachment({ attachment, workspaceId }: { attachment: Att
         <p className="mt-1 inline-flex items-center gap-1.5 text-[12px] text-subtle">
           <ListCollapse className="size-3.5" /> {t.channel.channelSummaryNote}
         </p>
-      );
-    case "run":
-      return (
-        <Link
-          href={`/w/${workspaceId}/metrics?run=${attachment.runId}`}
-          className="mt-1 inline-flex items-center gap-1.5 text-[13px] font-medium text-data hover:underline"
-        >
-          <FlaskConical className="size-3.5" /> {t.channel.openMetrics}
-        </Link>
       );
   }
 }

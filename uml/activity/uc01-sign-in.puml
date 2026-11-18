@@ -1,51 +1,67 @@
-' Models signing up, signing in and returning within the session window (UC01 part A).
-@startuml uc01-sign-in
+' Mirrors every flow of UC01: sign up or sign in with Google/GitHub (part A) and sign out (part B).
+@startuml act-uc01
 !include ../_style.iuml
-title Hoạt động UC01-A: Đăng ký hoặc đăng nhập bằng Google/GitHub
+title Hoạt động UC01: Đăng nhập, đăng ký và đăng xuất
 
-|Khách|
 start
-:Mở một trang bất kỳ;
-|Hệ thống|
-if (Phiên còn hạn?) then (có)
-  :Tính lại 30 ngày từ đầu (A.A3);
-  :Mở đúng trang định mở;
-  stop
-else (không)
-  :Ghi nhớ trang định mở;
-  :Chuyển về trang đăng nhập;
-endif
-|Khách|
-:Chọn chế độ Đăng nhập hoặc Tạo tài khoản;
-:Bấm "Tiếp tục với Google" hoặc "Tiếp tục với GitHub";
-|Nhà cung cấp danh tính|
-:Hiện trang chọn tài khoản;
-|Khách|
-if (Chọn tài khoản và đồng ý?) then (hủy)
-  |Hệ thống|
-  :Về trang đăng nhập\n"Bạn đã hủy đăng nhập" (A.E1);
-  stop
-else (đồng ý)
-endif
-|Nhà cung cấp danh tính|
-:Trả danh tính về hệ thống;
-|Hệ thống|
-if (Danh tính hợp lệ?) then (không)
-  :Về trang đăng nhập kèm thông báo lỗi (A.E2);
-  stop
-else (có)
-endif
-:Lưu phiên 30 ngày;
-if (Danh tính đã có tài khoản?) then (chưa)
-  :Tạo tài khoản và workspace riêng (A.A1);
-  :Mở màn nhập API key kèm lời chào (UC03);
-  stop
-else (đã có)
-  if (Có trang định mở?) then (có)
-    :Mở đúng trang đó (A.A2);
+partition "Phần A. Đăng ký hoặc đăng nhập bằng Google/GitHub" {
+  :(1) Khách mở một trang bất kỳ;
+  if (Phiên còn hạn?) then (còn)
+    :[A.A3] Bỏ qua trang đăng nhập,\ntính lại 30 ngày từ đầu, mở đúng trang;
+    stop
   else (không)
-    :Mở Trang chủ (UC02);
+  endif
+  :(1) Hệ thống chuyển về trang đăng nhập,\nghi nhớ trang định mở;
+  if (Máy chủ SpecGate phản hồi?) then (không)
+    :[A.E3] Báo máy chủ tạm không phản hồi;\nkhông đăng xuất phiên đang có;
+    stop
+  else (có)
+  endif
+  :(2) Trang đăng nhập: chế độ Đăng nhập, Tạo tài khoản;\nnút "Tiếp tục với Google", "Tiếp tục với GitHub";
+  :(3) Khách bấm một nút;
+  if (Đã cấu hình OAuth?) then (có)
+    :(3) Chuyển sang trang chọn tài khoản của nhà cung cấp;
+    :(4) Khách chọn tài khoản, đồng ý chia sẻ tên, email;
+    if (Khách hủy?) then (hủy)
+      :[A.E1] Về trang đăng nhập\n"Bạn đã hủy đăng nhập"; không tạo gì;
+      stop
+    else (đồng ý)
+    endif
+    :(5) Nhà cung cấp trả danh tính về hệ thống;
+    if (Danh tính hợp lệ?) then (không)
+      :[A.E2] Về trang đăng nhập kèm thông báo lỗi dễ hiểu;
+      stop
+    else (có)
+    endif
+  else (chưa, môi trường phát triển)
+    :[A.A4] Màn giả lập: chọn tài khoản đã đăng ký,\nhoặc nhập tên GitHub/email và tên hiển thị;
+    if (Bấm "Hủy đăng ký"?) then (có)
+      :[A.A4] Về trang đăng nhập;
+      stop
+    else (không)
+    endif
+  endif
+  :(7) Lưu phiên trên trình duyệt 30 ngày;
+  if (Danh tính đã có tài khoản?) then (chưa)
+    :[A.A1] Tạo tài khoản kèm workspace riêng;\nmở màn nhập API key kèm lời chào (UC03);
+    stop
+  elseif (Có trang định mở?) then (có)
+    :[A.A2] Mở đúng trang định mở;
+    stop
+  else (không)
+    :(6) Đăng nhập, mở Trang chủ (UC02);
+    stop
+  endif
+}
+
+partition "Phần B. Đăng xuất" {
+  start
+  :(1) Người dùng chọn "Đăng xuất";
+  if (Còn kết nối?) then (còn)
+    :(2) Hệ thống xóa phiên, về trang đăng nhập;
+  else (mất kết nối)
+    :[B.E1] Vẫn xóa phiên trên trình duyệt,\nvề trang đăng nhập;
   endif
   stop
-endif
+}
 @enduml

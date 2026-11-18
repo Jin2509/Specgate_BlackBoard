@@ -1,0 +1,44 @@
+' Sequence diagram of UC12: posting a channel message, broadcasting it and dispatching a command.
+@startuml seq-uc12
+!include ../_style.iuml
+title Biểu đồ tuần tự UC12: Nhắn tin trong kênh
+autonumber
+
+actor "Thành viên" as A
+boundary "Kênh chat" as UI
+control "ChannelController" as C
+control "CommandService" as CMD
+control "Broker" as RT
+entity "Member" as M
+entity "Message" as MS
+boundary "Kênh chat\n(thành viên khác)" as O
+
+O -> C : GET /workspaces/{ws}/channels/{ch}/stream?after=seq
+note right of O : giữ kết nối SSE để nhận tin mới
+A -> UI : (1) soạn tin, (2) gửi
+UI -> C : POST /workspaces/{ws}/channels/{ch}/messages {text, replyToId}
+C -> M : kiểm là thành viên
+alt E1 - tin trống
+  C --> UI : 400 không gửi
+else
+  C -> MS : (3) lưu tin (seq mới)
+  C -> RT : phát tin
+  RT --> O : tin mới (dưới 2 giây)
+  opt tin do người gõ bắt đầu bằng lệnh
+    C -> CMD : run(lệnh, vai của người gửi)
+    alt A2 - không có quyền
+      CMD --> C : "đây là quyền của chủ workspace"
+    else E2 - sai cú pháp
+      CMD --> C : tin hướng dẫn cú pháp
+    else (4) hợp lệ
+      CMD --> C : kết quả lệnh (UC14, UC15)
+    end
+    C -> MS : lưu tin hệ thống
+    C -> RT : phát tin hệ thống
+  end
+  C --> UI : tin đã gửi
+end
+note over O, RT
+  A1: mất kết nối thì kênh nối lại với ?after=<seq cuối> và nhận bù tin đã lỡ.
+end note
+@enduml

@@ -1,8 +1,7 @@
 ' Shows the owner-only channel summary and the brief built from the idea board (UC15).
-@startuml uc15-summarize-brief
+@startuml seq-uc15-summarize-brief
 !include ../_style.iuml
 title Tuần tự UC15: Tóm tắt kênh (/summarize) và bản tổng hợp (/brief)
-autonumber
 
 actor "Chủ workspace" as Owner
 participant "Trình duyệt" as Web
@@ -39,9 +38,6 @@ Owner -> Web : gõ /brief hoặc bấm "Dựng lại"
 Web -> Server : dựng bản tổng hợp
 Server -> Db : kiểm là chủ
 Server -> Db : đề bài, ý chốt, ý loại, ý đang bàn, ghi chú
-opt workspace có số liệu
-  Server -> Db : lượt chạy làm căn cứ, tình trạng hợp lệ
-end
 Server -> Db : lưu bản mới: thời điểm, người dựng, số thành viên
 Server --> Web : trang Bản tổng hợp
 note over Web : Mọi thành viên xem, "Sao chép", "Tải Markdown"

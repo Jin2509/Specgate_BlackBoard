@@ -1,0 +1,41 @@
+' Sequence diagram of UC04 part C: renaming and deleting a conversation and its private highlights.
+@startuml seq-uc04c
+!include ../_style.iuml
+title Biểu đồ tuần tự UC04 - Phần C: Quản lý hội thoại
+autonumber
+
+actor "Người dùng" as A
+boundary "Màn hình chat" as UI
+control "ConversationController" as C
+entity "Conversation" as CV
+entity "PrivateHighlight" as PH
+
+alt đổi tên
+  A -> UI : nhập tên mới, Lưu
+  UI -> C : PATCH /conversations/{id} {title}
+  C -> CV : cập nhật tên
+  C --> UI : danh sách đã cập nhật
+else xóa
+  A -> UI : bấm xóa
+  UI -> C : GET /conversations/{id}
+  C -> PH : đếm highlight của hội thoại
+  C --> UI : N highlight
+  alt C.A1 - không có highlight
+    UI -> C : DELETE /conversations/{id}
+  else C.A2 - có highlight
+    UI --> A : "Hội thoại này có N highlight. Giữ lại hay xóa luôn?"
+    A -> UI : chọn
+    UI -> C : DELETE /conversations/{id}?highlights=keep|delete
+    alt giữ lại
+      C -> PH : đánh dấu conversation_deleted
+    else xóa luôn
+      C -> PH : xóa các highlight của hội thoại
+    end
+  end
+  C -> CV : xóa hội thoại và các lượt
+  C --> UI : 204
+end
+note over C, CV
+  C.E1: hội thoại của người khác trả 404 "không tìm thấy".
+end note
+@enduml

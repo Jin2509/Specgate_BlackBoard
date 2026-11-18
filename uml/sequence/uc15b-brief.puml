@@ -1,0 +1,36 @@
+' Sequence diagram of UC15 part B: building the brief from the idea board and downloading it.
+@startuml seq-uc15b
+!include ../_style.iuml
+title Biểu đồ tuần tự UC15 - Phần B: Dựng và tải bản tổng hợp (/brief)
+autonumber
+
+actor "Chủ workspace" as A
+boundary "Trang Bản tổng hợp" as UI
+control "WorkspaceController" as C
+control "BoardService" as BS
+entity "BoardItem" as B
+entity "Brief" as BR
+actor "Thành viên" as MB
+
+A -> UI : bấm "Dựng" (hoặc gõ /brief)
+UI -> C : POST /workspaces/{id}/brief
+alt B.E1 - không phải chủ
+  C --> UI : 403 quyền của chủ workspace
+else
+  C -> BS : snapshot_brief(workspace)
+  BS -> B : (1) ý đã chốt, đã loại, đang bàn, ghi chú
+  BS -> BR : (2) lưu(data, markdown, người dựng, thời điểm)
+  C --> UI : bản tổng hợp mới
+end
+MB -> UI : mở trang Bản tổng hợp
+UI -> C : GET /workspaces/{id}/brief
+alt B.A1 - chưa có
+  C --> UI : trống, hướng dẫn chủ bấm Dựng
+else
+  C -> BR : bản mới nhất
+  C --> UI : bản tổng hợp
+  MB -> UI : (3) "Tải Markdown"
+  UI -> C : GET /workspaces/{id}/brief.md
+  C --> UI : tệp .md
+end
+@enduml

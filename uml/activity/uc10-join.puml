@@ -1,0 +1,56 @@
+' Mirrors every flow of UC10: asking to join a shared workspace with a code (part A) or from Explore (part B).
+@startuml act-uc10
+!include ../_style.iuml
+title Hoạt động UC10: Xin tham gia workspace chung
+
+start
+partition "Phần A. Xin tham gia bằng mã" {
+  :(1) Một thành viên mở "Chia sẻ mã tham gia", chép mã 7 ký tự,\ngửi cho người dùng ngoài hệ thống;
+  :(2) Người dùng mở hộp thoại nhập mã, nhập mã\n(chữ thường, dấu cách, gạch nối đều được);
+  if (Mã sai, sai định dạng, hoặc đã đổi?) then (có)
+    :[A.E1] Báo mã không hợp lệ, gợi ý xin mã mới;
+    stop
+  elseif (Đã là thành viên?) then (có)
+    :[A.A3] Mở thẳng workspace;
+    stop
+  elseif (Đã có yêu cầu đang chờ?) then (có)
+    :[A.A2] Cập nhật yêu cầu cũ, không tạo mới;
+  else (chưa)
+    :(3) Tạo yêu cầu tham gia;
+  endif
+  :(3) Mở trang "Đang chờ duyệt";
+  :(4) Trên thanh bên, workspace đang chờ hiện mờ;
+  if (Diễn biến?) then (người dùng bấm "Hủy yêu cầu")
+    :[A.A1] Hủy yêu cầu;
+  elseif () then (chủ duyệt, UC11)
+    :(5) Trang chờ tự chuyển vào workspace, không cần tải lại;
+  else (chủ từ chối, UC11)
+    :[A.E2] Trang chờ hiện "Yêu cầu bị từ chối",\nnút về workspace riêng và tìm nhóm khác;
+  endif
+  note right
+  BR-18: cả hai đường đều chờ chủ duyệt.
+  end note
+}
+stop
+
+partition "Phần B. Xin tham gia qua trang Khám phá" {
+  start
+  if (Mở đường dẫn tới workspace chưa là thành viên?) then (có)
+    :[B.A1] Mở Khám phá, chọn sẵn workspace đó;
+  else (không)
+    :(1) Trang Khám phá liệt kê workspace "ai cũng tìm thấy";\n[B.E1] workspace ẩn không hiện, phải có mã;
+    :(2) Tìm theo tên hoặc đề bài;
+  endif
+  :(3) Mỗi workspace: đề bài, chủ, số thành viên,\nquan hệ (chưa tham gia, đang chờ, đã là thành viên);
+  if (Quan hệ?) then (đã là thành viên)
+    :[B.A3] Nút "Mở workspace";
+    stop
+  elseif () then (đang chờ duyệt)
+    :[B.A2] Sửa lời nhắn của yêu cầu;
+  else (chưa tham gia)
+    :(4) Chọn workspace, viết lời nhắn, bấm "Gửi yêu cầu";
+  endif
+  :(5) Tạo yêu cầu, mở trang "Đang chờ duyệt"\n(như phần A bước 3 tới 5);
+  stop
+}
+@enduml

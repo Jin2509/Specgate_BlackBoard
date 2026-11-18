@@ -1,4 +1,4 @@
-"""Tables of SpecGate Workspace (SRS v0.2). Separate from the ADOM tables in app/models.py, same metadata."""
+"""Defines the SpecGate Workspace tables (SRS v0.2)."""
 
 from datetime import datetime, timezone
 from uuid import uuid4
@@ -53,6 +53,9 @@ class Workspace(Base):
     join_code_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
     board_seq: Mapped[int] = mapped_column(Integer, default=0)
+    # Task board (flow §13): its own numbering ("việc 3", never mixed with "ý 3") and the owner's lock.
+    task_seq: Mapped[int] = mapped_column(Integer, default=0)
+    tasks_locked: Mapped[bool] = mapped_column(Boolean, default=False)
 
 
 class Member(Base):
@@ -178,7 +181,7 @@ class Message(Base):
     body: Mapped[list] = mapped_column(JSON, default=list)  # segments: text | mention | command
     reply_to_id: Mapped[str | None] = mapped_column(String, nullable=True)
     attachment: Mapped[dict | None] = mapped_column(JSON, nullable=True)
-    # Cards carried by the message (flow §6, §13): quote | conversation-summary | stats | task. Snapshots.
+    # Cards carried by the message (flow §6): quote | conversation-summary. Snapshots.
     cards: Mapped[list | None] = mapped_column(JSON, nullable=True)
     at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 
@@ -255,35 +258,6 @@ class ContextDigest(Base):
     at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 
 
-class PaperRun(Base):
-    """An ADOM run attached to a shared workspace (flow §13): imported from the ADOM team, or a small trial run."""
-
-    __tablename__ = "ws_runs"
-
-    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: new_id("r"))
-    workspace_id: Mapped[str] = mapped_column(ForeignKey("ws_workspaces.id"), index=True)
-    kind: Mapped[str] = mapped_column(String)                # import | trial
-    name: Mapped[str] = mapped_column(String(80))
-    dataset: Mapped[str] = mapped_column(String(80), default="HumanEval+")
-    variant: Mapped[str | None] = mapped_column(String, nullable=True)
-    task_count: Mapped[int] = mapped_column(Integer, default=0)
-    validity: Mapped[str] = mapped_column(String, default="valid")   # valid | invalidated
-    invalid_reason: Mapped[str | None] = mapped_column(Text, nullable=True)
-    status: Mapped[str] = mapped_column(String, default="done")      # running | done | failed
-    error: Mapped[str | None] = mapped_column(Text, nullable=True)
-    progress: Mapped[dict] = mapped_column(JSON, default=dict)
-    config: Mapped[dict] = mapped_column(JSON, default=dict)
-    models: Mapped[list] = mapped_column(JSON, default=list)          # [{role, model}]
-    criteria: Mapped[list] = mapped_column(JSON, default=list)        # six criteria
-    tasks: Mapped[list] = mapped_column(JSON, default=list)           # per-task results
-    repairs: Mapped[list] = mapped_column(JSON, default=list)         # repair methods vs baselines
-    meta: Mapped[dict] = mapped_column(JSON, default=dict)
-    pipeline_run_id: Mapped[str | None] = mapped_column(String, nullable=True)
-    created_by: Mapped[str] = mapped_column(String)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
-    finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-
-
 class BoardItem(Base):
     __tablename__ = "ws_board_items"
     __table_args__ = (UniqueConstraint("workspace_id", "number"),)
@@ -308,10 +282,28 @@ class BoardItem(Base):
     author_label: Mapped[str | None] = mapped_column(String, nullable=True)
     # "Ghim cả hai": one idea in parts, each with its own speaker [{speaker, text}]; never merged into one voice.
     parts: Mapped[list | None] = mapped_column(JSON, nullable=True)
-    # A pinned stats/task card: the run it was taken from, for the invalid/superseded notice (flow §13).
-    run_id: Mapped[str | None] = mapped_column(String, nullable=True)
-    run_validity: Mapped[str | None] = mapped_column(String, nullable=True)
     at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class Task(Base):
+    """One line of the task board (flow §13): a short description, who does it and "doing" or "done".
+    No deadline, priority or sub-task on purpose."""
+
+    __tablename__ = "ws_tasks"
+    __table_args__ = (UniqueConstraint("workspace_id", "number"),)
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: new_id("tk"))
+    workspace_id: Mapped[str] = mapped_column(ForeignKey("ws_workspaces.id"), index=True)
+    number: Mapped[int] = mapped_column(Integer)
+    body: Mapped[str] = mapped_column(String(200))
+    # None = "chưa có người phụ trách": anyone may claim it, the owner may assign it.
+    assignee_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
+    status: Mapped[str] = mapped_column(String, default="doing")   # doing | done
+    created_by: Mapped[str] = mapped_column(String)
+    # Who put the current assignee on the task: the assignee themself (claimed) or the owner (assigned).
+    assigned_by: Mapped[str | None] = mapped_column(String, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    done_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class Brief(Base):

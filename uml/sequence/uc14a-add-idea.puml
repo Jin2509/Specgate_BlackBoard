@@ -1,0 +1,40 @@
+' Sequence diagram of UC14 part A: adding ideas with /idea, /note, /pin or the board button.
+@startuml seq-uc14a
+!include ../_style.iuml
+title Biểu đồ tuần tự UC14 - Phần A: Đưa ý lên bảng ý tưởng
+autonumber
+
+actor "Thành viên" as A
+boundary "Kênh chat" as UI
+boundary "Trang Bảng ý tưởng" as BUI
+control "ChannelController" as C
+control "CommandService" as CMD
+control "BoardService" as BS
+entity "Message" as MS
+entity "BoardItem" as B
+entity "Workspace" as W
+
+alt (1) gõ lệnh trong kênh
+  A -> UI : /idea ‹nội dung› (hoặc /note, hoặc /pin khi trả lời)
+  UI -> C : POST …/messages {text, replyToId}
+  C -> MS : lưu tin
+  C -> CMD : run(lệnh)
+  alt A.E1 - nội dung trống
+    CMD --> C : tin hướng dẫn cú pháp
+  else A.E2 - /pin không trả lời tin nào
+    CMD --> C : "Trả lời một tin rồi gõ /pin"
+  else A.A3 - /pin
+    CMD -> MS : đọc tin được trả lời (lời người, thẻ)
+    CMD -> BS : add_item(phần đã chọn, người nói từng phần)
+  else /idea, A.A1 /note
+    CMD -> BS : add_item(kind = idea | note)
+  end
+else A.A2 - nút trên trang Bảng
+  A -> BUI : chọn loại, nhập nội dung, bấm Thêm
+  BUI -> BS : POST /workspaces/{id}/board {kind, body}
+end
+BS -> W : tăng board_seq
+BS -> B : (2) tạo(số, người đưa lên, tin nguồn, status = proposed)
+BS --> C : thẻ mới
+C -> MS : (3) tin hệ thống "Đã thêm #‹số›…"
+@enduml

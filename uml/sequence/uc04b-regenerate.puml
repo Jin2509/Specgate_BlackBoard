@@ -1,0 +1,35 @@
+' Sequence diagram of UC04 part B: regenerating an answer as a new version and switching versions.
+@startuml seq-uc04b
+!include ../_style.iuml
+title Biểu đồ tuần tự UC04 - Phần B: Tạo lại câu trả lời
+autonumber
+
+actor "Người dùng" as A
+boundary "Màn hình chat" as UI
+control "ConversationController" as C
+control "LlmGateway" as G
+participant "Nhà cung cấp AI" as AI
+entity "Turn" as T
+
+A -> UI : bấm "Tạo lại"
+UI -> C : POST /conversations/{id}/turns/{turnId}/regenerate
+C -> T : đặt câu cũ active = false (giữ làm phiên bản)
+C -> G : stream(cùng câu hỏi)
+G -> AI : gọi mô hình
+alt B.E1 - nhà cung cấp lỗi
+  AI --> G : lỗi
+  C -> T : khôi phục phiên bản cũ đang hiện
+  C --> UI : câu báo lỗi
+else
+  AI --> G : câu trả lời mới
+  C -> T : lưu phiên bản mới (cùng version_group, active)
+  C --> UI : câu mới, nút "‹ 1/2 ›"
+end
+A -> UI : bấm "‹" để xem phiên bản 1
+UI -> C : POST /conversations/{id}/turns/{turnId}/show
+C -> T : đổi phiên bản active
+C --> UI : phiên bản 1
+note over C, T
+  (4) Lần hỏi sau chỉ gửi phiên bản active.
+end note
+@enduml

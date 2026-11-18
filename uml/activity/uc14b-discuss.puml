@@ -1,0 +1,20 @@
+' Activity diagram of UC14 part B: the owner moves an idea to discussion.
+@startuml act-uc14b
+!include ../_style.iuml
+title Biểu đồ hoạt động UC14 - Phần B: Chuyển ý sang Đang bàn
+
+|Chủ workspace|
+start
+:(1) Bấm "Đưa vào bàn" trên thẻ ở cột Đề xuất;
+|Hệ thống|
+if (Người bấm là chủ?) then (không)
+  :[B.E1] Từ chối;
+  stop
+elseif (Ý đã chốt hoặc đã loại?) then (có)
+  :[B.E2] Không chuyển được;
+  stop
+else (hợp lệ)
+endif
+:(2) Chuyển thẻ sang cột Đang bàn;
+stop
+@enduml

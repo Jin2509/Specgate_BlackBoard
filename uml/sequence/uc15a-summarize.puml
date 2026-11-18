@@ -1,0 +1,45 @@
+' Sequence diagram of UC15 part A: the owner's agent summarizes the channel.
+@startuml seq-uc15a
+!include ../_style.iuml
+title Biểu đồ tuần tự UC15 - Phần A: Tóm tắt kênh (/summarize)
+autonumber
+
+actor "Chủ workspace" as A
+boundary "Kênh chat" as UI
+control "ChannelController" as C
+control "CommandService" as CMD
+control "LlmGateway" as G
+participant "Nhà cung cấp AI" as AI
+entity "ProviderKey" as K
+entity "Message" as MS
+control "Broker" as RT
+
+A -> UI : gõ /summarize
+UI -> C : POST …/messages {text: "/summarize"}
+C -> CMD : run("/summarize", vai)
+alt A.E1 - không phải chủ
+  CMD --> C : "đây là quyền của chủ workspace"
+  C -> RT : phát tin hệ thống
+else
+  C -> K : key của chủ
+  alt A.E2 - chưa có key
+    C -> RT : tin nhắc nhập key
+  else
+    C -> MS : (1) đề bài + tin gần đây của chính kênh
+    C -> G : complete(mỗi ý ghi của ai, không tự chốt)
+    G -> AI : gọi bằng key của chủ
+    alt A.E3 - key lỗi
+      AI --> G : lỗi
+      C -> RT : tin báo lỗi dễ hiểu
+    else
+      AI --> G : (2) bản tóm tắt
+      C -> MS : (3) lưu tin dưới tên agent của chủ
+      C -> RT : phát bản tóm tắt vào kênh
+    end
+  end
+end
+note over C, MS
+  BR-14, BR-24: không đọc hội thoại riêng, highlight, kênh khác;
+  bản tóm tắt không tự vào ngữ cảnh agent của ai.
+end note
+@enduml

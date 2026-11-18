@@ -1,25 +1,19 @@
-// Renders the cards of a channel message (quote, conversation summary, metrics, task), each a snapshot taken at send time.
-import { ChevronRight, ExternalLink, FlaskConical, ListCollapse, Quote, Table2, TriangleAlert } from "lucide-react";
-import Link from "next/link";
+// Renders the cards of a channel message (quote, conversation summary), each a snapshot taken at send time.
+import { ChevronRight, ListCollapse, Quote } from "lucide-react";
 
 import { ActorAvatar } from "@/components/ActorAvatar";
 import { Markdown } from "@/components/Markdown";
-import { ToneBadge } from "@/components/ToneBadge";
 import { format, t } from "@/lib/i18n";
 import type { Card } from "@/types/message";
-import type { Verdict } from "@/types/run";
 import { toAvatarColor } from "@/utils/avatar-color";
-import { cn } from "@/utils/cn";
-import { VERDICT_META } from "@/utils/status-meta";
-import { TONE_CLASSES } from "@/utils/tone";
 
-export function MessageCards({ cards, workspaceId, ownerColor }: { cards: Card[]; workspaceId: string; ownerColor?: number }) {
+export function MessageCards({ cards, ownerColor }: { cards: Card[]; ownerColor?: number }) {
   return (
     <div className="mt-1.5 space-y-2">
       {cards.map((card, index) => (
         // data-part tells the selection which card a passage came from, so the highlight keeps the right speaker.
         <div key={index} data-part={index} data-part-speaker={toPartSpeaker(card)}>
-          <CardView card={card} workspaceId={workspaceId} ownerColor={ownerColor} />
+          <CardView card={card} ownerColor={ownerColor} />
         </div>
       ))}
     </div>
@@ -29,8 +23,7 @@ export function MessageCards({ cards, workspaceId, ownerColor }: { cards: Card[]
 /** Speaker of a passage selected inside a card, as the backend records it; a summary is the agent's retelling. */
 export function toPartSpeaker(card: Card): string {
   if (card.kind === "quote") return card.speakerLabel;
-  if (card.kind === "conversation-summary") return format(t.channel.summarySpeaker, { speaker: card.speaker });
-  return format(t.channel.statsSpeaker, { run: card.run.name });
+  return format(t.channel.summarySpeaker, { speaker: card.speaker });
 }
 
 /** The "…" of a cut sits outside data-part-text so it never ends up inside the highlighted text. */
@@ -42,7 +35,7 @@ function CutMark({ isShown }: { isShown?: boolean }) {
   ) : null;
 }
 
-function CardView({ card, workspaceId, ownerColor }: { card: Card; workspaceId: string; ownerColor?: number }) {
+function CardView({ card, ownerColor }: { card: Card; ownerColor?: number }) {
   const tint = toAvatarColor(ownerColor);
   switch (card.kind) {
     case "quote":
@@ -105,84 +98,5 @@ function CardView({ card, workspaceId, ownerColor }: { card: Card; workspaceId: 
           ) : null}
         </section>
       );
-    case "stats":
-      return <StatsCard card={card} workspaceId={workspaceId} />;
-    case "task":
-      return (
-        <div className="max-w-lg rounded border-l-4 border-data bg-card p-3 text-[13px]">
-          <p className="flex items-center gap-1.5 text-xs font-medium text-data" data-no-select>
-            <Table2 className="size-3.5" /> {format(t.channel.taskCard, { task: card.task.taskId, run: card.run.name })}
-          </p>
-          <p data-part-text className="mt-1.5">
-            {card.line}
-          </p>
-          <CardNotice text={card.notice} />
-        </div>
-      );
   }
-}
-
-function CardNotice({ text }: { text?: string }) {
-  if (!text) return null;
-  return (
-    <p className="mt-2 flex items-center gap-1.5 text-xs font-medium text-rejected" data-no-select>
-      <TriangleAlert className="size-3.5" /> {text}
-    </p>
-  );
-}
-
-function StatsCard({ card, workspaceId }: { card: Extract<Card, { kind: "stats" }>; workspaceId: string }) {
-  const isInvalid = card.run.validity !== "valid";
-  const toVerdictCount = (verdict: Verdict) => card.criteria.filter((criterion) => criterion.verdict === verdict).length;
-  return (
-    <div className="max-w-2xl rounded border-l-4 border-data bg-card p-3">
-      <div className="flex flex-wrap items-center gap-2 text-xs" data-no-select>
-        <FlaskConical className="size-3.5 text-data" />
-        <span className="font-medium text-data">
-          {format(t.channel.statsHeading, { run: card.run.name, dataset: card.run.dataset, count: card.run.tasks })}
-        </span>
-        {card.run.kind === "trial" ? <ToneBadge tone="neutral">{t.channel.trial}</ToneBadge> : null}
-        {isInvalid ? (
-          <ToneBadge tone="rejected" className="ml-auto">
-            <TriangleAlert /> {t.channel.invalid}
-          </ToneBadge>
-        ) : (
-          <ToneBadge tone="decided" className="ml-auto">
-            {t.channel.valid}
-          </ToneBadge>
-        )}
-      </div>
-      {isInvalid && card.run.invalidReason ? (
-        <p className="mt-1 text-xs text-rejected" data-no-select>
-          {format(t.channel.doNotConclude, { reason: card.run.invalidReason })}
-        </p>
-      ) : null}
-      <ul data-part-text className="mt-2 grid gap-1.5 sm:grid-cols-2">
-        {card.criteria.map((criterion, index) => (
-          // data-snap="line": a selection inside a criterion line takes the whole line, value and verdict together.
-          <li key={criterion.number} data-snap="line" className="rounded bg-input px-2 py-1.5 text-[12.5px] leading-snug">
-            <span
-              className={cn("mr-1 inline-block size-2 rounded-full", TONE_CLASSES[VERDICT_META[criterion.verdict].tone].bar)}
-              aria-hidden
-            />
-            {card.lines[index]}
-          </li>
-        ))}
-      </ul>
-      <div className="mt-2 flex items-center text-xs text-subtle" data-no-select>
-        {format(t.channel.statsCounts, {
-          pass: toVerdictCount("PASS"),
-          insufficient: toVerdictCount("INSUFFICIENT_DATA"),
-          fail: toVerdictCount("FAIL"),
-        })}
-        <Link
-          href={`/w/${workspaceId}/metrics?run=${card.run.id}`}
-          className="ml-auto inline-flex items-center gap-1 font-medium text-primary-strong hover:underline"
-        >
-          <ExternalLink className="size-3" /> {t.channel.openMetrics}
-        </Link>
-      </div>
-      <CardNotice text={card.notice} />
-    </div>
-  );
 }

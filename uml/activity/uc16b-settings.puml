@@ -1,0 +1,38 @@
+' Activity diagram of UC16 part B: the owner's workspace settings.
+@startuml act-uc16b
+!include ../_style.iuml
+title Biểu đồ hoạt động UC16 - Phần B: Cấu hình workspace chung
+
+|Chủ workspace|
+start
+:Mở trang "Thành viên và agent";
+|Hệ thống|
+if (Là chủ?) then (không)
+  :[B.E3] Đề bài chỉ đọc,\nkhông có nút đổi mã, tạo kênh;
+  stop
+else (có)
+endif
+|Chủ workspace|
+:Chọn một việc, nhập thông tin;
+|Hệ thống|
+if (Việc?) then (sửa đề bài)
+  if (Đề bài trống?) then (có)
+    :[B.E1] Không cho lưu;
+    stop
+  else (không)
+    :(1)(2) Lưu đề bài, agent mọi\nthành viên đọc đề bài mới;
+  endif
+elseif () then ([B.A1] đổi mã)
+  :Sinh mã mới, mã cũ hết hiệu lực;
+elseif () then ([B.A2] tạo kênh)
+  if (Tên kênh hợp lệ và chưa có?) then (không)
+    :[B.E2] Báo lỗi;
+    stop
+  else (có)
+    :Tạo và mở kênh mới;
+  endif
+else ([B.A3] đổi tên, hiển thị)
+  :Lưu tên và chế độ hiển thị;
+endif
+stop
+@enduml

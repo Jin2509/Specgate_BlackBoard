@@ -1,8 +1,7 @@
 ' Shows a join request by code or Explore and the realtime hand-off when the owner decides (UC10, UC11).
-@startuml uc10-uc11-join
+@startuml seq-uc10-uc11-join
 !include ../_style.iuml
 title Tuần tự UC10, UC11: Xin tham gia và duyệt
-autonumber
 
 actor "Người xin" as Requester
 participant "Trình duyệt\nngười xin" as ReqWeb

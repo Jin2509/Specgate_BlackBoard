@@ -1,5 +1,5 @@
 // Renders the summary the backend builds from the idea board, or an empty state until the owner builds one.
-import { Check, FileText, FlaskConical, MessagesSquare, StickyNote, X } from "lucide-react";
+import { Check, FileText, MessagesSquare, StickyNote, X } from "lucide-react";
 
 import { PageBody } from "@/components/PageBody";
 import { PageHeader } from "@/components/PageHeader";
@@ -94,34 +94,8 @@ function BriefArticle({ brief, meta }: { brief: Brief; meta: string }) {
               {brief.notes.length ? brief.notes.map((note) => note.body).join(" ") : t.brief.noNotes}
             </p>
           </BriefSection>
-          {brief.evidence ? <EvidenceSection evidence={brief.evidence} /> : null}
         </div>
       </div>
     </article>
-  );
-}
-
-function EvidenceSection({ evidence }: { evidence: NonNullable<Brief["evidence"]> }) {
-  const isValid = evidence.run.validity === "valid";
-  const title = format(t.brief.evidenceRun, {
-    name: evidence.run.name,
-    dataset: evidence.run.dataset,
-    tasks: evidence.run.tasks,
-    trial: evidence.run.kind === "trial" ? t.brief.trialSuffix : "",
-    validity: isValid ? t.channel.valid : t.channel.invalid,
-  });
-  return (
-    <BriefSection icon={<FlaskConical />} title={t.brief.evidence} toneClassName="text-data">
-      <BriefRow title={title} isStrong>
-        {!isValid ? (
-          <p className="text-xs text-rejected">{format(t.brief.doNotConclude, { reason: evidence.run.invalidReason ?? "" })}</p>
-        ) : null}
-        <ul className="mt-1 space-y-0.5 text-xs text-muted-foreground">
-          {evidence.criteria.map((line) => (
-            <li key={line}>{line}</li>
-          ))}
-        </ul>
-      </BriefRow>
-    </BriefSection>
   );
 }

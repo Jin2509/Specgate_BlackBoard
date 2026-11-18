@@ -1,0 +1,26 @@
+' State diagram of a user's personal agent as defined by their API key (ProviderKey, UC03).
+@startuml st-provider-key
+!include ../_style.iuml
+title Biểu đồ trạng thái: Agent riêng theo API key (ProviderKey)
+
+state "Chưa có agent" as None
+state "Đang kiểm key" as Checking
+state "Agent sẵn sàng" as Ready
+
+[*] --> None : tạo tài khoản (UC01)
+None --> Checking : "Kiểm và lưu key"
+Checking --> None : key sai, hết tiền, mất kết nối\n/ báo lỗi, không lưu
+Checking --> Ready : key dùng được\n/ lưu mã hóa, chọn mô hình
+Ready --> Ready : đổi mô hình
+Ready --> Checking : "Đổi key"
+Ready --> None : xóa key
+
+None : không chat được, mở màn nhập key
+Ready : chỉ hiện 4 ký tự cuối của key
+Ready : tên agent "‹mô hình› của ‹tên›"
+
+note bottom of Ready
+  Đổi key hay đổi mô hình không xóa highlight riêng;
+  tin cũ trong kênh giữ tên mô hình lúc gửi.
+end note
+@enduml

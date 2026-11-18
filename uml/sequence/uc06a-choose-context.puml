@@ -1,0 +1,45 @@
+' Sequence diagram of UC06 part A: linking a conversation to a shared workspace and building the group context.
+@startuml seq-uc06a
+!include ../_style.iuml
+title Biểu đồ tuần tự UC06 - Phần A: Chọn ngữ cảnh nhóm cho hội thoại
+autonumber
+
+actor "Thành viên" as A
+boundary "Màn hình chat" as UI
+control "ConversationController" as C
+control "ContextBuilder" as CB
+entity "Conversation" as CV
+entity "Member" as M
+entity "Workspace" as W
+entity "BoardItem" as B
+entity "Message" as MS
+entity "Highlight" as H
+
+A -> UI : chọn workspace ở ô "Ngữ cảnh nhóm"
+UI -> C : PATCH /conversations/{id} {workspaceId}
+C -> M : kiểm là thành viên
+alt A.A1 - chọn "Không gắn"
+  C -> CV : workspace_id = null
+  C --> UI : ẩn khung "Agent đang đọc"
+else một workspace
+  C -> CV : workspace_id = W (A.A2: thay workspace cũ)
+  C --> UI : hội thoại có biểu tượng nhóm
+  UI -> C : GET /conversations/{id}/context
+  C -> CB : build(user, W)
+  alt A.E1 - không còn là thành viên
+    CB --> C : không có ngữ cảnh
+  else
+    CB -> W : đề bài
+    CB -> M : thành viên, vai, agent
+    CB -> B : ý đã chốt, đã loại kèm lý do
+    CB -> MS : tin của mình trong mọi kênh (~50 gần nhất)
+    CB -> H : highlight cho agent của mình
+    CB -> CB : xếp một dòng thời gian, ghi người nói
+    CB --> C : ngữ cảnh, số tin cũ chưa gửi
+  end
+  C --> UI : (3) nội dung khung "Agent đang đọc"
+  opt A.A5 - tin của mình vượt giới hạn
+    UI --> A : "N tin cũ không được gửi", nút "Tóm tắt tin cũ"
+  end
+end
+@enduml

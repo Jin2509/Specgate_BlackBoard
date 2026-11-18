@@ -1,5 +1,5 @@
 ' Details the private workspace use cases and how their parts include and extend each other.
-@startuml 01-private-workspace
+@startuml uc-01-private-workspace
 !include ../_style.iuml
 title Ca sử dụng chi tiết: workspace riêng và đường riêng sang chung
 left to right direction

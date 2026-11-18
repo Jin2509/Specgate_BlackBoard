@@ -1,27 +1,18 @@
-' Shows how the client behaves while the network connection drops and recovers (UC20).
-@startuml connection
+' State diagram of the browser's connection to the server (UC17).
+@startuml st-connection
 !include ../_style.iuml
-title Trạng thái: kết nối của trình duyệt
+title Biểu đồ trạng thái: Kết nối của trình duyệt
 
-state "Đang kết nối" as Online
+state "Đã kết nối" as Online
 state "Mất kết nối" as Offline
 state "Đang kết nối lại" as Reconnecting
 
 [*] --> Online
-Online --> Offline : mất Internet
+Online --> Offline : mất Internet\n/ hiện dải báo, khóa nút gửi
 Offline --> Reconnecting : tự thử lại
 Reconnecting --> Offline : thử lại thất bại
-Reconnecting --> Online : có mạng lại
+Reconnecting --> Online : có mạng\n/ ẩn dải báo, hiện bù tin đã lỡ
 
-Offline : hiện dải "Mất kết nối, đang thử kết nối lại"
-Offline : khóa nút gửi
 Offline : giữ chữ đang soạn trên trình duyệt
-Offline : giữ phần trả lời của agent đã nhận
-Online : ẩn dải báo
-Online : kênh hiện bù tin đã lỡ
-
-note right of Offline
-  Chạy thử vẫn tiếp tục trên máy chủ (UC17 A1).
-  Không có chế độ ngoại tuyến.
-end note
+Offline : giữ phần trả lời agent đã nhận
 @enduml

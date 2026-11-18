@@ -1,0 +1,46 @@
+' Sequence diagram of UC11: the owner approves or rejects a join request.
+@startuml seq-uc11
+!include ../_style.iuml
+title Biểu đồ tuần tự UC11: Duyệt yêu cầu tham gia
+autonumber
+
+actor "Chủ workspace" as A
+boundary "Trang Yêu cầu tham gia" as UI
+control "WorkspaceController" as WC
+control "JoinController" as C
+entity "JoinRequest" as J
+entity "Member" as M
+boundary "Trang Đang chờ duyệt\n(của người xin)" as WP
+
+A -> UI : mở "Yêu cầu tham gia"
+UI -> WC : GET /workspaces/{id}/join-requests
+alt E2 - không phải chủ
+  WC --> UI : 403, về kênh "chung"
+else
+  WC -> J : yêu cầu đang chờ và lịch sử
+  WC --> UI : (1)(2) danh sách
+  A -> UI : (3) bấm "Duyệt" hoặc "Từ chối"
+  UI -> C : PATCH /join-requests/{id} {status}
+  C -> J : kiểm còn pending
+  alt E1 - đã xử lý hoặc đã hủy
+    C --> UI : 409, làm mới danh sách
+  else duyệt
+    C -> M : tìm thành viên cũ của người xin
+    alt A2 - từng rời
+      C -> M : bỏ left_at, giữ tên cũ
+    else thành viên mới
+      C -> M : tạo(màu chưa ai dùng)
+      opt A1 - trùng tên
+        C -> M : nickname tạm "‹tên› 2", needs_nickname
+      end
+    end
+    C -> J : (5) approved, người xử lý, thời điểm
+    C --> UI : đã duyệt
+  else từ chối
+    C -> J : (5) rejected, người xử lý, thời điểm
+    C --> UI : đã từ chối
+  end
+end
+WP -> C : GET /join-requests/{id} (hỏi định kỳ)
+C --> WP : trạng thái mới
+@enduml

@@ -21,5 +21,4 @@ jobs:
           cache: pip
           cache-dependency-path: backend/pyproject.toml
       - run: pip install -e ".[dev]"
-      # test_judge.py kiểm engine Hỏi đáp đang làm dở (app/llm.py, app/routers/judge.py); bỏ --ignore khi engine xong.
-      - run: pytest -q -m "not slow" --ignore=tests/test_judge.py
+      - run: pytest -q

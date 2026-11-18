@@ -1,0 +1,29 @@
+' Activity diagram of UC09: creating a shared workspace.
+@startuml act-uc09
+!include ../_style.iuml
+title Biểu đồ hoạt động UC09: Tạo workspace chung
+
+|Người dùng|
+start
+:Bấm "Tạo mới" trên thanh bên;
+|Hệ thống|
+:(1) Mở hộp thoại tạo workspace;
+|Người dùng|
+:(2) Nhập tên, đề bài, chọn chế độ hiển thị;
+:(3) Bấm "Tạo workspace";
+|Hệ thống|
+if (Thiếu tên hoặc đề bài?) then (có)
+  :[E1] Chỉ rõ phần còn thiếu;
+  stop
+elseif (Trùng tên workspace mình làm chủ?) then (có)
+  :[E2] Không cho tạo;
+  stop
+elseif (Đã làm chủ ~10 workspace?) then (có)
+  :[E3] Báo đã đạt giới hạn;
+  stop
+else (hợp lệ)
+endif
+:(4) Tạo workspace, kênh "chung",\nmã tham gia; người tạo là chủ;
+:(4) Mở kênh "chung";
+stop
+@enduml

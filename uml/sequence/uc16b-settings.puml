@@ -1,0 +1,46 @@
+' Sequence diagram of UC16 part B: the owner edits the brief, rotates the join code and creates channels.
+@startuml seq-uc16b
+!include ../_style.iuml
+title Biểu đồ tuần tự UC16 - Phần B: Cấu hình workspace chung
+autonumber
+
+actor "Chủ workspace" as A
+boundary "Trang Thành viên và agent" as UI
+control "WorkspaceController" as C
+entity "Member" as M
+entity "Workspace" as W
+entity "Channel" as CH
+
+A -> UI : mở trang
+UI -> C : GET /workspaces/{id}
+C -> M : vai của người mở
+C --> UI : thông tin workspace, vai
+alt B.E3 - không phải chủ
+  UI --> A : đề bài chỉ đọc, không có nút đổi mã, tạo kênh
+else (1) sửa đề bài
+  A -> UI : sửa đề bài, "Lưu đề bài"
+  UI -> C : PATCH /workspaces/{id} {brief}
+  alt B.E1 - đề bài trống
+    C --> UI : 422 không cho lưu
+  else
+    C -> W : (1) lưu đề bài
+    C --> UI : (2) đã lưu
+  end
+else B.A1 - đổi mã
+  UI -> C : PUT /workspaces/{id}/join-code
+  C -> W : mã mới (mã cũ hết hiệu lực)
+  C --> UI : mã mới
+else B.A2 - tạo kênh
+  UI -> C : POST /workspaces/{id}/channels {name}
+  C -> CH : kiểm tên hợp lệ và chưa có
+  alt B.E2 - không hợp lệ hoặc trùng
+    C --> UI : 400 / 409
+  else
+    C -> CH : tạo kênh
+    C --> UI : mở kênh mới
+  end
+else B.A3 - đổi tên, hiển thị
+  UI -> C : PATCH /workspaces/{id} {name, visibility}
+  C -> W : lưu
+end
+@enduml

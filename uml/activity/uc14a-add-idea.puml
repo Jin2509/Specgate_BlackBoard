@@ -1,0 +1,40 @@
+' Activity diagram of UC14 part A: putting an idea or a note on the idea board.
+@startuml act-uc14a
+!include ../_style.iuml
+title Biểu đồ hoạt động UC14 - Phần A: Đưa ý lên bảng ý tưởng
+
+|Thành viên|
+start
+:(1) Gõ /idea, /note, /pin\nhoặc bấm nút "Thêm" trên trang Bảng;
+|Hệ thống|
+if (Cách đưa?) then (/idea)
+  :(2) Tạo ý ở cột Đề xuất;
+elseif () then ([A.A1] /note)
+  :Tạo ghi chú;
+elseif () then ([A.A2] nút Thêm)
+  :Tạo ý hoặc ghi chú theo loại đã chọn;
+else ([A.A3] /pin)
+  if (Đang trả lời một tin?) then (không)
+    :[A.E2] Nhắc cần trả lời một tin trước;
+    stop
+  else (có)
+  endif
+  if (Tin được trả lời gồm?) then (chỉ lời người)
+    :Ghim lời đó;
+  elseif () then (chỉ một thẻ)
+    :Ghim thẻ, giữ người nói và nhãn;
+  elseif () then (bản tóm tắt kênh)
+    :Ghi "Bản tóm tắt kênh do ‹agent› viết";
+  else (lời người và thẻ)
+    :Hỏi ghim lời, ghim thẻ hay cả hai;\ncả hai: một ý hai phần;
+  endif
+endif
+if (Nội dung trống?) then (có)
+  :[A.E1] Không thêm, hướng dẫn cú pháp;
+  stop
+else (không)
+endif
+:(2) Ghi số thứ tự, người đưa lên,\nthời điểm, tin nguồn;
+:(3) Tin hệ thống "Đã thêm #‹số›…";
+stop
+@enduml

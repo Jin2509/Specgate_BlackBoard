@@ -147,7 +147,7 @@
   --sidebar-ring: #8fb0ec;
   --sidebar-footer: #181817;
 
-  /* Status colours are only for ADOM metrics, pending states and errors; the idea board is not coloured by status.
+  /* Status colours are only for pending states, summaries and errors; the idea board is not coloured by status.
      On dark surfaces each keeps a light text tone, a dark tinted background and a mid-tone border. */
   --proposed: #e3b263;
   --proposed-soft: #352c1d;

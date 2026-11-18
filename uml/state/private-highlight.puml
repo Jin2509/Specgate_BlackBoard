@@ -1,0 +1,23 @@
+' State diagram of a PrivateHighlight entity (UC05, UC07, UC08).
+@startuml st-private-highlight
+!include ../_style.iuml
+title Biểu đồ trạng thái: Highlight riêng (PrivateHighlight)
+
+state "Chưa gửi" as Saved
+state "Đã gửi vào nhóm" as Sent
+state "Mất hội thoại gốc" as Orphan
+
+[*] --> Saved : bôi đen và Lưu (UC05-A)\n[dưới ~200 highlight]
+[*] --> Saved : "Tóm tắt cho nhóm" (UC08)
+Saved --> Saved : sửa chữ, màu, ghi chú
+Saved --> Sent : gửi vào kênh (UC07)\n/ tạo thẻ trích dẫn bản chụp
+Sent --> Sent : gửi thêm vào kênh khác\n/ ghi thêm một lần gửi
+Saved --> Orphan : xóa hội thoại, chọn "Giữ lại"
+Sent --> Orphan : xóa hội thoại, chọn "Giữ lại"
+Saved --> [*] : người dùng xóa, dọn dẹp
+Sent --> [*] : người dùng xóa, dọn dẹp\n/ thẻ trong kênh vẫn còn
+Orphan --> [*] : người dùng xóa, dọn dẹp
+
+Sent : danh sách ghi từng lần gửi
+Orphan : vẫn gửi được, không mở lại được chỗ gốc
+@enduml

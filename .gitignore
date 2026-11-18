@@ -1,10 +1,3 @@
-# Tài liệu nội bộ (spec, đề xuất, prototype) — không đưa lên repo,
-# trừ SRS, luồng UI và kế hoạch sprint để cả nhóm đọc
-/docs/*
-!/docs/SRS.md
-!/docs/UI_FLOW.md
-!/docs/SPRINT_PLAN.md
-
 # Node / Next.js
 node_modules/
 .next/

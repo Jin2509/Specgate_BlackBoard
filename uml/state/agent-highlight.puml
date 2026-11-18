@@ -1,0 +1,14 @@
+' State diagram of a highlight for one's agent (Highlight, UC13).
+@startuml st-agent-highlight
+!include ../_style.iuml
+title Biểu đồ trạng thái: Highlight cho agent (Highlight)
+
+state "Trong ngữ cảnh agent" as Active
+
+[*] --> Active : "Lưu highlight" (UC13)\n[dưới ~30 ở workspace, không sửa chữ]
+Active --> Active : sửa nhãn, ghi chú
+Active --> [*] : bỏ highlight
+
+Active : vệt phấn trong kênh, chỉ người tạo thấy
+Active : gửi kèm mọi câu hỏi có ngữ cảnh workspace này
+@enduml

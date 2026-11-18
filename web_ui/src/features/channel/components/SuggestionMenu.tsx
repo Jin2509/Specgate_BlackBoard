@@ -55,8 +55,6 @@ function MentionList({ items, activeIndex, onPick }: SuggestionListProps) {
 
 function CommandList({ items, activeIndex, onPick }: SuggestionListProps) {
   const commands = items.filter((suggestion): suggestion is CommandSuggestion => suggestion.kind === "command");
-  const coreCommands = commands.filter((suggestion) => !suggestion.command.module);
-  const moduleCommands = commands.filter((suggestion) => suggestion.command.module);
   const toRow = (suggestion: CommandSuggestion) => (
     <CommandRow
       key={suggestion.command.name}
@@ -69,9 +67,7 @@ function CommandList({ items, activeIndex, onPick }: SuggestionListProps) {
   return (
     <>
       <MenuLabel>{t.channel.commandsLabel}</MenuLabel>
-      {coreCommands.map(toRow)}
-      {moduleCommands.length > 0 ? <MenuLabel>{t.channel.adomCommands}</MenuLabel> : null}
-      {moduleCommands.map(toRow)}
+      {commands.map(toRow)}
     </>
   );
 }
@@ -86,16 +82,10 @@ function CommandRow({
   onPick: (suggestion: Suggestion) => void;
 }) {
   const Icon = suggestion.command.icon;
-  const isModule = Boolean(suggestion.command.module);
   return (
     <MenuRow isActive={isActive} onPick={() => onPick(suggestion)}>
-      <Icon className={cn("size-4", isModule ? "text-data" : "text-subtle")} />
-      <code
-        className={cn(
-          "rounded px-1 font-mono text-[12px]",
-          isModule ? "bg-data-soft text-data" : "bg-input text-sidebar-accent-foreground",
-        )}
-      >
+      <Icon className="size-4 text-subtle" />
+      <code className="rounded bg-input px-1 font-mono text-[12px] text-sidebar-accent-foreground">
         {suggestion.command.name}
       </code>
       <span className="ml-auto text-xs text-muted-foreground">{suggestion.command.description}</span>

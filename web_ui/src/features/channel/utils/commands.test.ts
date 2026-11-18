@@ -1,16 +1,11 @@
-// Tests that module commands appear only in workspaces with that module attached.
+// Tests that a channel offers exactly the channel commands of the flow.
 import { describe, expect, it } from "vitest";
 
-import { listCommands } from "./commands";
+import { COMMANDS } from "./commands";
 
-describe("listCommands", () => {
-  it("should list only the core commands when no module is attached", () => {
-    const names = listCommands([]).map((command) => command.name);
-    expect(names).toEqual(["/idea", "/pin", "/note", "/decide", "/summarize", "/brief", "/help"]);
-  });
-
-  it("should add /stats and /task when the paper metrics module is attached", () => {
-    const names = listCommands(["adom"]).map((command) => command.name);
-    expect(names).toEqual(expect.arrayContaining(["/stats", "/task"]));
+describe("COMMANDS", () => {
+  it("should list the channel commands in menu order", () => {
+    const names = COMMANDS.map((command) => command.name);
+    expect(names).toEqual(["/idea", "/note", "/pin", "/decide", "/summarize", "/brief", "/task", "/help"]);
   });
 });

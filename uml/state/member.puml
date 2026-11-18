@@ -1,0 +1,21 @@
+' State diagram of a workspace Member entity: nickname, active and left (UC11, UC16).
+@startuml st-member
+!include ../_style.iuml
+title Biểu đồ trạng thái: Thành viên workspace (Member)
+
+state "Cần đặt biệt danh" as NeedsName
+state "Đang hoạt động" as Active
+state "Đã rời" as Left
+
+[*] --> Active : chủ duyệt [tên không trùng]\n/ gán màu chưa ai dùng
+[*] --> NeedsName : chủ duyệt [tên trùng]\n/ tên tạm "‹tên› 2"
+NeedsName --> Active : đặt biệt danh [chưa ai dùng]
+NeedsName --> NeedsName : "Để sau"
+Active --> Active : đổi tên [chưa ai dùng], sửa vai
+Active --> Left : rời workspace [không phải chủ]\nhoặc chủ xóa
+Left --> Active : được duyệt vào lại\n/ lấy lại tên cũ
+
+Active : tên dùng ở kênh, tên agent, người nói
+Left : hiện "‹tên› (đã rời)" ở mọi nơi
+Left : tên vẫn giữ chỗ, người khác không lấy được
+@enduml

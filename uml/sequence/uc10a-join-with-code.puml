@@ -1,0 +1,51 @@
+' Sequence diagram of UC10 part A: a join request made with a code and the waiting page.
+@startuml seq-uc10a
+!include ../_style.iuml
+title Biểu đồ tuần tự UC10 - Phần A: Xin tham gia bằng mã
+autonumber
+
+actor "Người dùng" as A
+boundary "Hộp thoại Nhập mã" as UI
+boundary "Trang Đang chờ duyệt" as WP
+control "JoinController" as C
+entity "Workspace" as W
+entity "Member" as M
+entity "JoinRequest" as J
+
+A -> UI : (2) nhập mã
+UI -> C : POST /join-requests {code}
+C -> C : chuẩn hóa mã
+C -> W : tìm theo mã
+alt A.E1 - mã sai hoặc đã đổi
+  C --> UI : 404 mã không hợp lệ
+else
+  C -> M : kiểm đã là thành viên
+  alt A.A3 - đã là thành viên
+    C --> UI : 409, mở thẳng workspace
+  else
+    C -> J : tìm yêu cầu đang chờ
+    alt A.A2 - đã có
+      C -> J : cập nhật yêu cầu cũ
+    else
+      C -> J : (3) tạo yêu cầu (via = code)
+    end
+    C --> UI : 201 yêu cầu
+    UI -> WP : (3) mở trang chờ
+    loop tới khi có kết quả
+      WP -> C : GET /join-requests/{id}
+      C -> J : trạng thái
+      C --> WP : pending | approved | rejected
+    end
+    alt (5) approved
+      WP --> A : tự chuyển vào workspace
+    else A.E2 - rejected
+      WP --> A : "Yêu cầu bị từ chối"
+    end
+  end
+end
+opt A.A1 - hủy yêu cầu
+  A -> WP : bấm "Hủy yêu cầu"
+  WP -> C : PATCH /join-requests/{id} {status: cancelled}
+  C -> J : status = cancelled
+end
+@enduml

@@ -1,0 +1,42 @@
+' Sequence diagram of UC16 part A: listing members, setting names and roles, leaving and removal.
+@startuml seq-uc16a
+!include ../_style.iuml
+title Biểu đồ tuần tự UC16 - Phần A: Quản lý tên, vai và tư cách thành viên
+autonumber
+
+actor "Thành viên" as A
+boundary "Trang Thành viên và agent" as UI
+control "WorkspaceController" as C
+entity "Member" as M
+entity "ProviderKey" as K
+
+A -> UI : mở trang
+UI -> C : GET /workspaces/{id}/members
+C -> M : thành viên (kể cả đã rời)
+C -> K : mô hình đang dùng (không lấy key)
+C --> UI : (1)(2) danh sách
+alt A.A1, A.A3 - đặt biệt danh hoặc đổi tên
+  A -> UI : nhập tên mới
+  UI -> C : PUT /workspaces/{id}/members/me/nickname {nickname}
+  C -> M : kiểm trùng tên (kể cả người đã rời)
+  alt A.E1 - trùng
+    C --> UI : 409 không cho lưu
+  else
+    C -> M : lưu nickname, bỏ needs_nickname
+    C --> UI : tên mới
+  end
+else A.A2 - sửa vai
+  UI -> C : PUT /workspaces/{id}/members/me/team-role {teamRole}
+  C -> M : lưu vai
+else A.A4 - rời workspace
+  UI -> C : DELETE /workspaces/{id}/members/me
+  alt A.E2 - là chủ
+    C --> UI : 409 chủ không rời được
+  else
+    C -> M : left_at = bây giờ (giữ chỗ tên)
+  end
+else A.A5 - chủ xóa thành viên
+  UI -> C : DELETE /workspaces/{id}/members/{userId}
+  C -> M : left_at = bây giờ (giữ chỗ tên)
+end
+@enduml

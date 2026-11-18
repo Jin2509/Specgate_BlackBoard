@@ -1,8 +1,7 @@
 ' Shows a private highlight leaving the private workspace as a quoted card in a channel (UC07).
-@startuml uc07-send-highlight
+@startuml seq-uc07-send-highlight
 !include ../_style.iuml
 title Tuần tự UC07: Gửi highlight riêng vào kênh
-autonumber
 
 actor "Lan" as Lan
 participant "Trình duyệt của Lan" as LanWeb

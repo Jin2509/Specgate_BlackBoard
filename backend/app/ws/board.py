@@ -13,7 +13,7 @@ STATUS_TEXT = {"proposed": "Đề xuất", "discussing": "Đang bàn", "decided"
 
 def add_item(s: Session, ws: m.Workspace, *, kind: str, body: str, by_kind: str, by_id: str, by_model: str | None = None,
              channel_id: str | None = None, message_id: str | None = None, author_label: str | None = None,
-             parts: list[dict] | None = None, run: dict | None = None) -> m.BoardItem:
+             parts: list[dict] | None = None) -> m.BoardItem:
     body = body.strip()
     if not body:
         raise ApiError(400, "Nội dung thẻ đang trống.", "EMPTY")
@@ -25,7 +25,6 @@ def add_item(s: Session, ws: m.Workspace, *, kind: str, body: str, by_kind: str,
         status="proposed" if kind == "idea" else None, created_by_kind=by_kind, created_by_id=by_id,
         created_by_model=by_model, source_channel_id=channel_id, source_message_id=message_id,
         author_label=author_label, parts=parts or None,
-        run_id=(run or {}).get("id"), run_validity=(run or {}).get("validity"),
     )
     s.add(item)
     s.flush()
@@ -91,18 +90,7 @@ def build_brief(s: Session, ws: m.Workspace) -> dict:
         "rejected": [row(i) for i in ideas if i.status == "rejected"],
         "discussing": [row(i) for i in ideas if i.status in ("proposed", "discussing")],
         "notes": [row(i) for i in items if i.kind == "note"],
-        "evidence": _evidence(s, ws),
     }
-
-
-def _evidence(s: Session, ws: m.Workspace) -> dict | None:
-    """flow §12: "Số liệu dùng làm căn cứ", the run the team argued from and whether it is valid."""
-    from app.ws import runs as rn   # runs imports service, board is imported by commands: keep the import local
-
-    run = rn.current_run(s, ws.id)
-    if not run:
-        return None
-    return {"run": rn.run_brief(run), "criteria": [sv.criterion_line(c) for c in run.criteria]}
 
 
 def _lower_first(text: str | None) -> str:
@@ -120,16 +108,6 @@ def brief_markdown(b: dict, built_at: str, built_by: str) -> str:
     section("Đã loại", [f"- #{r['number']} {r['body']}. Vì {_lower_first(r['reason'])}" for r in b["rejected"]])
     section("Còn đang bàn", [f"- #{r['number']} {r['body']}" for r in b["discussing"]])
     section("Ghi chú", [f"- {r['body']}" for r in b["notes"]])
-    ev = b.get("evidence")
-    if ev:
-        r = ev["run"]
-        status = "hợp lệ" if r["validity"] == "valid" else f"KHÔNG hợp lệ ({r.get('invalidReason') or 'không rõ lý do'})"
-        rows = [f"- Lượt chạy **{r['name']}** ({r['dataset']}, {r['tasks']} tác vụ"
-                f"{', chạy thử' if r['kind'] == 'trial' else ''}): {status}"]
-        if r["validity"] != "valid":
-            rows.append("- Không dùng các con số dưới đây làm kết luận.")
-        rows += [f"- {line}" for line in ev["criteria"]]
-        section("Số liệu dùng làm căn cứ", rows)
     return "\n".join(lines).rstrip() + "\n"
 
 

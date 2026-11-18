@@ -1,0 +1,56 @@
+' Shows the Google/GitHub OAuth round trip, the signed state and the 30-day session cookie (UC01).
+@startuml seq-uc01-oauth-sign-in
+!include ../_style.iuml
+title Tuần tự UC01: Đăng nhập, đăng ký bằng Google/GitHub và đăng xuất
+
+actor "Khách" as Guest
+participant "Trình duyệt" as Web
+participant "web_ui" as Next
+participant "Máy chủ SpecGate" as Server
+participant "Google / GitHub" as Idp
+database "CSDL" as Db
+
+== Phần A: đăng nhập hoặc đăng ký ==
+Guest -> Web : mở /w/…/channels/chung
+Web -> Next : yêu cầu trang
+Next -> Next : không có cookie phiên
+Next --> Web : chuyển tới /login?next=…
+Guest -> Web : bấm "Tiếp tục với GitHub"
+Web -> Server : GET /auth/github/start?next=…
+Server -> Server : ký state (next, nonce, nhà cung cấp, hạn 10 phút)
+Server --> Web : chuyển tới trang chọn tài khoản
+Web -> Idp : chọn tài khoản, đồng ý
+alt hủy ở nhà cung cấp
+  Idp --> Web : callback?error=…
+  Web -> Server : GET /auth/github/callback
+  Server --> Web : /login?error=cancelled (A.E1)
+else đồng ý
+  Idp --> Web : callback?code=…&state=…
+  Web -> Server : GET /auth/github/callback
+  Server -> Server : kiểm chữ ký và hạn của state
+  Server -> Idp : đổi code lấy token, đọc danh tính
+  alt state sai hoặc nhà cung cấp lỗi
+    Server --> Web : /login?error=oauth (A.E2)
+  else danh tính hợp lệ
+    Server -> Db : tìm OAuthAccount(provider, subject)
+    alt chưa có (A.A1)
+      Server -> Db : tạo User, OAuthAccount,\nworkspace riêng và tư cách chủ
+      Server --> Web : Set-Cookie phiên 30 ngày,\nchuyển tới màn nhập key kèm lời chào
+    else đã có
+      Server --> Web : Set-Cookie phiên 30 ngày,\nchuyển tới trang "next" (A.A2) hoặc Trang chủ
+    end
+  end
+end
+note right of Server
+  Cookie sg_session: httpOnly, SameSite=Lax,
+  ký HMAC (NFR-03). Mỗi tài khoản Google/GitHub
+  ứng với đúng một User (BR-01).
+  Chưa cấu hình OAuth: màn giả lập (A.A4).
+end note
+
+== Phần B: đăng xuất ==
+Guest -> Web : chọn "Đăng xuất"
+Web -> Server : DELETE /auth/session
+Server --> Web : xóa cookie
+Web -> Next : về /login
+@enduml

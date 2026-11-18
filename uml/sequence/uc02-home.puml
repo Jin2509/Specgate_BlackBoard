@@ -1,0 +1,30 @@
+' Sequence diagram of UC02: loading the home page and refreshing the rail badges.
+@startuml seq-uc02
+!include ../_style.iuml
+title Biểu đồ tuần tự UC02: Dùng Trang chủ và dấu báo ở thanh bên
+autonumber
+
+actor "Người dùng" as A
+boundary "Trang chủ" as UI
+control "MeController" as C
+entity "ProviderKey" as K
+entity "Member" as M
+entity "ChannelRead" as R
+entity "JoinRequest" as J
+
+A -> UI : mở Trang chủ
+UI -> C : GET /me
+C -> K : lấy key của người dùng
+C -> M : danh sách workspace đã tham gia
+C --> UI : thông tin người dùng, agent, workspace
+UI --> A : hiện các nút [A1] [A2] theo trạng thái
+loop mỗi vài giây khi trang còn mở
+  UI -> C : GET /me/badges
+  C -> R : tin chưa đọc, tin nhắc @ mình
+  C -> J : số yêu cầu đang chờ (workspace mình làm chủ)
+  C --> UI : dấu báo từng workspace
+end
+A -> UI : bấm "Vào làm việc với nhóm"
+UI -> C : PUT /me/last-workspace
+UI --> A : mở workspace chung dùng gần nhất
+@enduml

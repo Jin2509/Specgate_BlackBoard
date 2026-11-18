@@ -1,0 +1,52 @@
+' Mirrors every flow of UC15: the channel summary (part A) and building and downloading the brief (part B).
+@startuml act-uc15
+!include ../_style.iuml
+title Hoạt động UC15: Tóm tắt kênh và bản tổng hợp
+
+start
+partition "Phần A. Tóm tắt kênh (/summarize)" {
+  :Chủ gõ /summarize trong kênh;
+  if (Người gõ là chủ?) then (không)
+    :[A.E1] Trả lời đây là quyền của chủ workspace;
+    stop
+  elseif (Chủ đã có key?) then (chưa)
+    :[A.E2] Nhắc nhập key trước;
+    stop
+  else (có)
+  endif
+  :(1) Agent của chủ, bằng key của chủ, đọc đúng hai thứ:\nđề bài và các tin gần đây của chính kênh này;
+  if (Key lỗi?) then (có)
+    :[A.E3] Tin báo lỗi dễ hiểu trong kênh;
+    stop
+  else (không)
+  endif
+  :(2) Agent viết bản tóm tắt: ý chính, ai đề xuất gì, điểm còn\ntranh luận; mỗi ý ghi của ai ("[Khang] cho rằng…");
+  :(3) Bản tóm tắt hiện trong kênh dưới tên agent của chủ;
+  note right
+  BR-14, BR-24: không đọc hội thoại riêng, highlight,
+  kênh hay workspace khác; không tự vào ngữ cảnh của ai.
+  end note
+}
+stop
+
+partition "Phần B. Dựng và tải bản tổng hợp (/brief)" {
+  start
+  if (Thao tác?) then (mở trang Bản tổng hợp)
+    if (Đã có bản tổng hợp?) then (chưa)
+      :[B.A1] Trạng thái rỗng: hướng dẫn chủ bấm Dựng hoặc gõ /brief;\nthành viên thường thấy lời giải thích chủ là người dựng;
+      stop
+    else (có)
+    endif
+  else (gõ /brief hoặc bấm "Dựng"/"Dựng lại")
+    if (Người gõ là chủ?) then (không)
+      :[B.E1] Trả lời đây là quyền của chủ workspace;
+      stop
+    else (có)
+    endif
+    :(1) Dựng từ bảng ý tưởng: đề bài; ý đã chốt kèm lý do và người chốt;\ný đã loại kèm lý do; ý còn đang bàn kèm người nêu; ghi chú;
+    :(2) Trang ghi thời điểm dựng, người dựng, số thành viên;
+  endif
+  :(3) Mọi thành viên xem bản mới nhất, "Sao chép" hoặc "Tải Markdown";
+  stop
+}
+@enduml

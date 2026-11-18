@@ -1,0 +1,37 @@
+' Activity diagram of UC04 part C: renaming and deleting conversations.
+@startuml act-uc04c
+!include ../_style.iuml
+title Biểu đồ hoạt động UC04 - Phần C: Quản lý hội thoại
+
+|Người dùng|
+start
+:Bấm sửa tên hoặc xóa ở đầu hội thoại;
+|Hệ thống|
+if (Thao tác?) then (đổi tên)
+  |Người dùng|
+  :(1) Nhập tên mới (≤ 80 ký tự), bấm Lưu;
+  |Hệ thống|
+  :(2) Cập nhật tên trong danh sách;
+  stop
+else (xóa)
+endif
+if (Hội thoại có highlight riêng?) then (không)
+  :[C.A1] Xóa hội thoại ngay;
+  stop
+else (có)
+endif
+:[C.A2] Hỏi "Hội thoại này có N highlight.\nGiữ lại hay xóa luôn?" (mặc định giữ lại);
+|Người dùng|
+:Chọn "Giữ lại" hoặc "Xóa luôn";
+|Hệ thống|
+if (Người dùng chọn?) then (giữ lại)
+  :Xóa hội thoại; highlight ghi\n"hội thoại gốc đã bị xóa";
+else (xóa luôn)
+  :Xóa hội thoại và các highlight riêng;
+endif
+stop
+note right
+  [C.E1] Mở hội thoại của người khác
+  bằng đường dẫn: chỉ báo "không tìm thấy".
+end note
+@enduml

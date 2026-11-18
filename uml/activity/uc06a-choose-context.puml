@@ -1,0 +1,43 @@
+' Activity diagram of UC06 part A: choosing a group context for a conversation.
+@startuml act-uc06a
+!include ../_style.iuml
+title Biểu đồ hoạt động UC06 - Phần A: Chọn ngữ cảnh nhóm cho hội thoại
+
+|Thành viên|
+start
+:(1) Chọn ở ô "Ngữ cảnh nhóm";
+|Hệ thống|
+if (Chọn gì?) then ("Không gắn")
+  :[A.A1] Ẩn khung "Agent đang đọc",\nagent chat như bình thường;
+  stop
+else (một workspace chung)
+endif
+:(2) Lưu lựa chọn, gắn biểu tượng nhóm\n[A.A2] mỗi lúc chỉ một workspace;
+:(3) Hiện khung "Agent đang đọc":\nđề bài, thành viên, ý chốt và loại,\ndòng thời gian tin của mình và highlight;
+if (Tin của mình vượt ~50?) then (có)
+  :[A.A5] Báo "N tin cũ không được gửi",\nhiện nút "Tóm tắt tin cũ" (phần B);
+else (không)
+endif
+|Thành viên|
+:Chỉnh trong khung (tùy chọn);
+|Hệ thống|
+if (Chỉnh gì?) then ([A.A3] sửa vai)
+  :Lưu vai mới (UC16);
+elseif () then ([A.A4] bỏ highlight)
+  :Bỏ highlight khỏi ngữ cảnh;
+else (không chỉnh)
+endif
+|Thành viên|
+:Gửi câu hỏi tiếp theo;
+|Hệ thống|
+if (Còn là thành viên workspace?) then (còn)
+  :(4) Dựng ngữ cảnh mới nhất,\ngửi kèm câu hỏi (UC04);
+else (không)
+  :[A.E1] Gửi câu hỏi\nkhông kèm thông tin nhóm;
+endif
+stop
+note right
+  [A.A6] Màn hình hẹp: khung "Agent đang đọc"
+  thành ngăn kéo ở mép phải.
+end note
+@enduml

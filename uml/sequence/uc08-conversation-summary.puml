@@ -1,0 +1,31 @@
+' Sequence diagram of UC08: writing a conversation summary and keeping it as a private highlight.
+@startuml seq-uc08
+!include ../_style.iuml
+title Biểu đồ tuần tự UC08: Tóm tắt hội thoại cho nhóm
+autonumber
+
+actor "Thành viên" as A
+boundary "Màn hình chat" as UI
+control "ConversationController" as C
+control "LlmGateway" as G
+participant "Nhà cung cấp AI" as AI
+entity "Turn" as T
+entity "PrivateHighlight" as PH
+
+A -> UI : bấm "Tóm tắt cho nhóm"
+UI -> C : POST /conversations/{id}/summary
+C -> T : các lượt đang hiển thị
+C -> G : complete(khung: vấn đề, hướng đã thử,\nđiểm chưa chắc, câu hỏi; mỗi ý ghi của ai)
+G -> AI : gọi bằng key của thành viên
+alt E1 - key lỗi
+  AI --> G : lỗi
+  C --> UI : câu báo lỗi, không lưu
+else
+  AI --> G : bản tóm tắt
+  C -> PH : lưu(kind = summary, ngữ cảnh lúc viết)
+  C --> UI : (3) "Đã lưu vào Highlight riêng"
+end
+A -> UI : (4) sửa, (5) đính kèm lượt gốc
+UI -> C : PATCH /private-highlights/{id}
+ref over UI, C : (6) Gửi như UC07 phần A
+@enduml

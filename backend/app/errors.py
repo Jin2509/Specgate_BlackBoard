@@ -8,7 +8,6 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 VALIDATION_STATUS = 400
-NOT_IMPLEMENTED_STATUS = 501
 
 
 class ApiError(Exception):
@@ -17,11 +16,6 @@ class ApiError(Exception):
     def __init__(self, status: int, error: str, code: str | None = None, details: list[Any] | None = None):
         super().__init__(error)
         self.status, self.error, self.code, self.details = status, error, code, details or []
-
-
-def engine_not_configured(reason: str) -> ApiError:
-    """Return 501 for features that need an engine (LLM, Z3, interactive pipeline) the backend does not have."""
-    return ApiError(NOT_IMPLEMENTED_STATUS, reason, "ENGINE_NOT_CONFIGURED")
 
 
 def to_error_body(message: str, code: str | None, details: list[Any] | None = None) -> dict[str, Any]:

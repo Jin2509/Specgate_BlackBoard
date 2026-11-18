@@ -1,0 +1,36 @@
+' Activity diagram of UC06 part B: summarizing one's old messages in blocks.
+@startuml act-uc06b
+!include ../_style.iuml
+title Biểu đồ hoạt động UC06 - Phần B: Tóm tắt tin cũ của tôi
+
+|Thành viên|
+start
+:Mở khung "Agent đang đọc";
+|Hệ thống|
+:(1) Báo trước số tin, số khối,\nsố khối cần gọi agent;
+|Thành viên|
+:(2) Bấm "Tóm tắt tin cũ";
+|Hệ thống|
+:(3) Chia tin cũ thành khối,\ncắt tại mốc giờ của từng highlight;
+:(4) Giữ nguyên văn khối dưới ~5 tin;
+|Nhà cung cấp AI|
+:(4) Tóm tắt các khối còn lại\ntrong một lần gọi;
+|Hệ thống|
+if (Key lỗi?) then (có)
+  :[B.E1] Báo lỗi, giữ bản tóm tắt cũ;
+  stop
+else (không)
+endif
+:(5) Đặt từng bản tóm tắt\nđúng chỗ trên dòng thời gian;
+:(6) Hiện trong khung, gửi kèm\ncác câu hỏi sau;
+|Thành viên|
+if (Chia sẻ cho nhóm?) then (có)
+  :[B.A2] Bấm "Lưu vào Highlight riêng",\nrồi gửi như UC07;
+else (không)
+endif
+stop
+note right
+  [B.A1] Khi lại có tin cũ vượt giới hạn,
+  khung báo lại số tin; người dùng tự quyết.
+end note
+@enduml

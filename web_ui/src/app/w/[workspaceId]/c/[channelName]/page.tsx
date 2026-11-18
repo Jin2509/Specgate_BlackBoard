@@ -55,7 +55,6 @@ async function ChannelPageContent({ params }: PageProps<"/w/[workspaceId]/c/[cha
       workspaceId={workspace.id}
       channelName={channel.name}
       topic={format(t.channel.topic, { people: people.length, agents: agentCount })}
-      hasAdom={workspace.modules?.includes("adom") ?? false}
       isViewerOwner={isOwner(workspace)}
       panel={<BoardPanel workspaceId={workspace.id} cards={toBoardCards(board)} />}
     >
@@ -73,7 +72,6 @@ async function ChannelPageContent({ params }: PageProps<"/w/[workspaceId]/c/[cha
         workspaceId={workspace.id}
         channelId={channel.id}
         people={people.filter((person) => person.id !== me.user.id)}
-        modules={workspace.modules ?? []}
         channelName={channel.name}
         highlights={privateHighlights.items}
         myName={workspace.myName ?? me.user.displayName}

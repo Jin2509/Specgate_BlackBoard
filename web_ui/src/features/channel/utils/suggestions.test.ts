@@ -45,15 +45,8 @@ describe("suggestion lists", () => {
     expect(toTextWithSuggestion("see @hi", { kind: "highlights" })).toBe("see ");
   });
 
-  it("should leave module commands out of a workspace without ADOM", () => {
-    const names = listCommandSuggestions([], "").map((suggestion) =>
-      suggestion.kind === "command" ? suggestion.command.name : "",
-    );
-    expect(names).not.toContain("/stats");
-  });
-
   it("should replace the trailing token and add a space", () => {
-    const [decide] = listCommandSuggestions([], "de");
+    const [decide] = listCommandSuggestions("de");
     expect(toTextWithSuggestion("Lan, /de", decide)).toBe("Lan, /decide ");
     const [long] = listMentionSuggestions(people, "lo");
     expect(toTextWithSuggestion("ask @lo", long)).toBe("ask @Long ");

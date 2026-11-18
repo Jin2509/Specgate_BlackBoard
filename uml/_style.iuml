@@ -1,58 +1,131 @@
-' Kiểu dùng chung cho mọi sơ đồ SpecGate. Gộp vào bằng !include _style.iuml (hoặc ../_style.iuml).
-skinparam defaultFontName "Be Vietnam Pro"
-skinparam defaultFontSize 13
+' Shared black-and-white Times New Roman style for every SpecGate diagram; include with !include ../_style.iuml.
+skinparam monochrome true
 skinparam shadowing false
-skinparam roundCorner 8
+skinparam roundCorner 6
 skinparam backgroundColor #FFFFFF
-skinparam ArrowColor #3B5BDB
-skinparam ArrowFontColor #343A40
-skinparam NoteBackgroundColor #F1F3F5
-skinparam NoteBorderColor #ADB5BD
+skinparam defaultFontName "Times New Roman"
+skinparam defaultFontSize 14
+skinparam defaultFontColor #000000
+skinparam titleFontName "Times New Roman"
+skinparam titleFontSize 18
+skinparam titleFontStyle bold
+skinparam captionFontName "Times New Roman"
+skinparam captionFontSize 13
+skinparam legendFontName "Times New Roman"
+skinparam legendFontSize 13
+skinparam legendBackgroundColor #FFFFFF
+skinparam legendBorderColor #000000
+skinparam ArrowColor #000000
+skinparam ArrowFontName "Times New Roman"
+skinparam ArrowFontSize 13
+skinparam ArrowFontColor #000000
+skinparam NoteBackgroundColor #FFFFFF
+skinparam NoteBorderColor #000000
+skinparam NoteFontName "Times New Roman"
+skinparam NoteFontSize 13
 
 skinparam sequence {
-  ParticipantBackgroundColor #EDF2FF
-  ParticipantBorderColor #3B5BDB
-  ActorBackgroundColor #EDF2FF
-  ActorBorderColor #3B5BDB
-  LifeLineBorderColor #ADB5BD
-  GroupBorderColor #868E96
-  GroupBackgroundColor #F8F9FA
-  BoxBorderColor #CED4DA
+  ParticipantBackgroundColor #FFFFFF
+  ParticipantBorderColor #000000
+  ParticipantFontName "Times New Roman"
+  ParticipantFontSize 14
+  ActorBackgroundColor #FFFFFF
+  ActorBorderColor #000000
+  ActorFontName "Times New Roman"
+  ActorFontSize 14
+  DatabaseBackgroundColor #FFFFFF
+  DatabaseBorderColor #000000
+  LifeLineBorderColor #000000
+  LifeLineBackgroundColor #FFFFFF
+  GroupBorderColor #000000
+  GroupBackgroundColor #FFFFFF
+  GroupHeaderFontName "Times New Roman"
+  GroupFontName "Times New Roman"
+  DividerBackgroundColor #FFFFFF
+  DividerBorderColor #000000
+  DividerFontName "Times New Roman"
+  ReferenceBackgroundColor #FFFFFF
+  ReferenceBorderColor #000000
+  BoxBorderColor #000000
+  BoxBackgroundColor #FFFFFF
 }
 
 skinparam class {
-  BackgroundColor #F8F9FF
-  BorderColor #3B5BDB
-  HeaderBackgroundColor #EDF2FF
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  HeaderBackgroundColor #FFFFFF
+  AttributeFontName "Times New Roman"
+  AttributeFontSize 13
+  StereotypeFontName "Times New Roman"
+  StereotypeFontSize 12
 }
+skinparam stereotypeCBackgroundColor #FFFFFF
+skinparam circledCharacterFontName "Times New Roman"
 
 skinparam activity {
-  BackgroundColor #F8F9FF
-  BorderColor #3B5BDB
-  DiamondBackgroundColor #FFF9DB
-  DiamondBorderColor #F08C00
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  DiamondBackgroundColor #FFFFFF
+  DiamondBorderColor #000000
+  DiamondFontName "Times New Roman"
+  DiamondFontSize 13
+  StartColor #000000
+  EndColor #000000
+  BarColor #000000
+}
+skinparam swimlane {
+  BorderColor #000000
+  TitleFontName "Times New Roman"
+  TitleFontSize 15
+  TitleFontStyle bold
 }
 skinparam partition {
-  BorderColor #868E96
+  BorderColor #000000
+  BackgroundColor #FFFFFF
+  FontName "Times New Roman"
 }
 
 skinparam usecase {
-  BackgroundColor #F8F9FF
-  BorderColor #3B5BDB
-  ActorBorderColor #3B5BDB
-  ActorBackgroundColor #EDF2FF
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  ActorBorderColor #000000
+  ActorBackgroundColor #FFFFFF
 }
-skinparam package {
-  BorderColor #868E96
+skinparam actor {
+  BorderColor #000000
   BackgroundColor #FFFFFF
 }
+skinparam package {
+  BorderColor #000000
+  BackgroundColor #FFFFFF
+  FontName "Times New Roman"
+  FontSize 15
+  FontStyle bold
+}
 skinparam rectangle {
-  BorderColor #868E96
+  BorderColor #000000
+  BackgroundColor #FFFFFF
+  FontName "Times New Roman"
+  FontStyle bold
 }
 
 skinparam state {
-  BackgroundColor #F8F9FF
-  BorderColor #3B5BDB
-  StartColor #3B5BDB
-  EndColor #3B5BDB
+  BackgroundColor #FFFFFF
+  BorderColor #000000
+  StartColor #000000
+  EndColor #000000
+  AttributeFontName "Times New Roman"
+  AttributeFontSize 13
 }
+
+skinparam databaseBackgroundColor #FFFFFF
+skinparam databaseBorderColor #000000
+skinparam sequenceReferenceHeaderBackgroundColor #FFFFFF
+skinparam sequenceGroupHeaderBackgroundColor #FFFFFF
+skinparam sequenceGroupHeaderFontColor #000000
+skinparam boundaryBackgroundColor #FFFFFF
+skinparam boundaryBorderColor #000000
+skinparam controlBackgroundColor #FFFFFF
+skinparam controlBorderColor #000000
+skinparam entityBackgroundColor #FFFFFF
+skinparam entityBorderColor #000000

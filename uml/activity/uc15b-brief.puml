@@ -1,0 +1,28 @@
+' Activity diagram of UC15 part B: building and downloading the brief.
+@startuml act-uc15b
+!include ../_style.iuml
+title Biểu đồ hoạt động UC15 - Phần B: Dựng và tải bản tổng hợp (/brief)
+
+|Thành viên|
+start
+:Gõ /brief, bấm "Dựng",\nhoặc mở trang Bản tổng hợp;
+|Hệ thống|
+if (Yêu cầu?) then (dựng bản mới)
+  if (Người yêu cầu là chủ?) then (không)
+    :[B.E1] Trả lời đây là quyền\ncủa chủ workspace;
+    stop
+  else (có)
+  endif
+  :(1) Dựng từ bảng ý tưởng: đề bài,\ný đã chốt, đã loại, đang bàn, ghi chú;
+  :(2) Ghi thời điểm, người dựng,\nsố thành viên;
+else (chỉ xem)
+  if (Đã có bản tổng hợp?) then (chưa)
+    :[B.A1] Trạng thái rỗng,\nhướng dẫn chủ bấm Dựng;
+    stop
+  else (có)
+  endif
+endif
+|Thành viên|
+:(3) Xem, "Sao chép" hoặc "Tải Markdown";
+stop
+@enduml

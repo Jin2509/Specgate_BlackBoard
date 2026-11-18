@@ -1,0 +1,38 @@
+' Activity diagram of UC04 part A: asking the personal agent and receiving a streamed answer.
+@startuml act-uc04a
+!include ../_style.iuml
+title Biểu đồ hoạt động UC04 - Phần A: Chat với agent riêng
+
+|Người dùng|
+start
+|Hệ thống|
+if (Đã có key hợp lệ?) then (chưa)
+  :[A.E2] Mở màn nhập key (UC03);
+  stop
+else (có)
+endif
+|Người dùng|
+:(1) Tạo hội thoại mới\nhoặc mở hội thoại cũ;
+if (Hội thoại mới?) then (có)
+  :[A.A1] Chọn ngữ cảnh nhóm (tùy chọn);
+else (không)
+endif
+:(2) Gõ câu hỏi, bấm Enter;
+|Hệ thống|
+:(3) Hiện và lưu câu hỏi;
+:(4) Ghép lượt trước và ngữ cảnh nhóm,\ngửi bằng key của người dùng;
+|Nhà cung cấp AI|
+:(5) Sinh câu trả lời từng phần;
+|Hệ thống|
+if (Kết quả?) then (người dùng bấm "Dừng")
+  :[A.A2] Giữ phần đã viết, ghi "Đã dừng";
+elseif () then (nhà cung cấp lỗi)
+  :[A.E1] Hiện câu báo lỗi thay câu trả lời;
+elseif () then (mất mạng)
+  :[A.E3] Xử lý theo UC17;
+else (trả lời xong)
+  :(5) Hiện dần câu trả lời có định dạng;
+  :(6) Lưu câu trả lời,\nhiện nút "Chép", "Tạo lại";
+endif
+stop
+@enduml

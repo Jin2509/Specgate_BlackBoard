@@ -1,0 +1,44 @@
+' Feature tree of SpecGate Workspace used by the Vision and Scope document.
+@startmindmap vs-feature-tree
+!include ../_style.iuml
+<style>
+mindmapDiagram {
+  node {
+    BackgroundColor #FFFFFF
+    LineColor #000000
+    FontName "Times New Roman"
+  }
+  rootNode {
+    FontStyle bold
+  }
+}
+</style>
+title Cây tính năng SpecGate Workspace
+
+* SpecGate Workspace
+** FE-1 Tài khoản và Trang chủ
+*** Đăng nhập Google/GitHub
+*** Trang chủ, dấu báo thanh bên
+** FE-2 Agent riêng
+*** API key và mô hình
+*** Chat, dừng, tạo lại
+** FE-3 Riêng sang chung
+*** Highlight riêng
+*** Gửi highlight vào kênh
+*** Tóm tắt hội thoại cho nhóm
+** FE-4 Ngữ cảnh cho agent
+*** Ngữ cảnh nhóm, tóm tắt tin cũ
+*** Highlight cho agent
+left side
+** FE-5 Workspace chung
+*** Tạo workspace
+*** Tham gia bằng mã, Khám phá
+*** Duyệt yêu cầu
+*** Thành viên và cài đặt
+** FE-6 Kênh thời gian thực
+*** Tin, @, lệnh
+*** Kết nối lại khi mất mạng
+** FE-7 Bảng ý tưởng và tổng hợp
+*** Đề xuất, Đang bàn, Chốt, Loại
+*** /summarize, /brief
+@endmindmap

@@ -1,0 +1,45 @@
+' Activity diagram of UC03: saving an API key, choosing, changing or deleting it.
+@startuml act-uc03
+!include ../_style.iuml
+title Biểu đồ hoạt động UC03: Thiết lập API key và chọn mô hình
+
+|Người dùng|
+start
+:Mở "Key và mô hình", chọn việc;
+|Hệ thống|
+if (Việc?) then ([A1] đổi mô hình)
+  :[A1] Lưu mô hình mới ngay;
+  stop
+elseif () then ([A3] xóa key)
+  :[A3] Hỏi xác nhận, xóa key,\ngiữ lịch sử chat;
+  stop
+else (nhập key, [A2] đổi key)
+endif
+|Người dùng|
+:(1) Chọn nhà cung cấp;
+if (Kiểu OpenAI?) then (có)
+  :(2) Nhập địa chỉ API;
+else (Anthropic)
+endif
+:(3) Dán key, bấm "Kiểm và lưu key";
+|Hệ thống|
+if (Địa chỉ API hợp lệ?) then (không)
+  :[E2] Báo lỗi ở ô địa chỉ;
+  stop
+else (có)
+endif
+|Nhà cung cấp AI|
+:(4) Kiểm key,\ntrả danh sách mô hình;
+|Hệ thống|
+if (Key dùng được?) then (không)
+  :[E1] Báo lỗi bằng câu dễ hiểu,\nkhông lưu key;
+  stop
+else (có)
+endif
+:(5) Lưu key đã mã hóa,\nchỉ hiện 4 ký tự cuối;
+|Người dùng|
+:(6) Chọn một mô hình;
+|Hệ thống|
+:(6) Lưu agent riêng;
+stop
+@enduml

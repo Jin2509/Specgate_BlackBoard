@@ -43,8 +43,6 @@ SpecGate bỏ vòng copy và dán đó bằng ba ý:
 2. Agent của mỗi người tự đọc mọi tin mà chủ của nó đã nhắn trong kênh nhóm.
 3. Tin của người khác chỉ đến được agent của mình khi mình highlight đoạn đó, và luôn kèm tên người đã nói.
 
-Nhiệm vụ thứ hai: đưa số liệu thí nghiệm của bài báo ADOM vào đúng những chỗ nhóm làm việc (kênh chat, highlight, bảng ý tưởng, ngữ cảnh agent, bản tổng hợp), như bằng chứng để tranh luận và ra quyết định.
-
 ### 1.3. Phạm vi
 
 Trong phạm vi:
@@ -52,7 +50,6 @@ Trong phạm vi:
 - Tài khoản bằng Google hoặc GitHub, Trang chủ, thông báo ở thanh bên.
 - Workspace riêng: API key, chat với agent, highlight riêng, ngữ cảnh nhóm, tóm tắt tin cũ, gửi kết quả vào kênh.
 - Workspace chung: tạo, tham gia, kênh chat thời gian thực, highlight cho agent, bảng ý tưởng, tóm tắt kênh, bản tổng hợp, thành viên và cài đặt.
-- Số liệu bài báo: nhập lượt chạy, chạy thử trên web, trang Số liệu, thẻ số liệu trong kênh, số liệu trong ngữ cảnh agent.
 - Hành vi khi mất kết nối mạng.
 
 Ngoài phạm vi: xem mục 8.
@@ -62,7 +59,7 @@ Ngoài phạm vi: xem mục 8.
 | Thuật ngữ | Nghĩa |
 | --- | --- |
 | Workspace riêng | Không gian chỉ một người thấy. Mỗi tài khoản có đúng một, tạo sẵn khi đăng ký. Chứa các hội thoại với agent riêng và danh sách Highlight riêng |
-| Workspace chung | Không gian nhiều người: đề bài, các kênh, bảng ý tưởng, bản tổng hợp, có thể có mục Số liệu. Không có agent của riêng nó |
+| Workspace chung | Không gian nhiều người: đề bài, các kênh, bảng ý tưởng, bản tổng hợp. Không có agent của riêng nó |
 | Chủ workspace | Người tạo workspace chung |
 | Thành viên | Người đã được chủ duyệt vào workspace chung (kể cả chủ) |
 | Agent riêng | Mô hình AI một người chọn sau khi nhập API key của mình. Mỗi người đúng một agent. Agent chat ở workspace riêng và agent mang tên người đó trong kênh là một |
@@ -75,7 +72,6 @@ Ngoài phạm vi: xem mục 8.
 | Highlight cho agent | Một hoặc nhiều đoạn người dùng bôi đen trong tin của người khác ở kênh chung, để agent của mình đọc. Có nhãn _Quan trọng_ hoặc _Cần xem xét_. Chỉ người tạo thấy |
 | Người nói | Tác giả của một đoạn: một người ("Lan"), agent của một người ("Claude của Lan"), hoặc một bản tóm tắt ("Bản tóm tắt do Claude của Lan viết (chưa lọc)") |
 | Thẻ trích dẫn | Thẻ trong kênh hiển thị một highlight riêng đã gửi, ghi rõ người nói của đoạn gốc |
-| Thẻ số liệu | Thẻ trong kênh do `/stats` hoặc `/task` tạo; là bản chụp số liệu tại lúc gửi |
 | Bản chụp | Bản sao nguyên văn tại một thời điểm; sửa hay xóa nguồn sau này không làm đổi bản chụp |
 | Trọn câu / trích một phần / đã chỉnh | Ba mức trung thực của một đoạn trích (xem BR-12) |
 | Bảng ý tưởng | Bảng bốn cột Đề xuất, Đang bàn, Đã chốt, Đã loại, cộng một mục ghi chú |
@@ -83,8 +79,6 @@ Ngoài phạm vi: xem mục 8.
 | Mã tham gia | Mã 7 ký tự chữ và số để xin vào một workspace chung |
 | Tên trong workspace | Tên dùng ở mọi nơi trong một workspace, duy nhất trong workspace đó; mặc định là tên hiển thị của tài khoản |
 | Vai trong nhóm | Một dòng tối đa 40 ký tự mỗi thành viên tự ghi về việc của mình, ví dụ "Dựng khung" |
-| Lượt chạy | Một lần chạy thí nghiệm ADOM gắn vào workspace; có tình trạng hợp lệ hoặc không hợp lệ |
-| Chạy thử | Lượt chạy nhỏ do chủ workspace chạy ngay trên web, luôn mang nhãn "chạy thử" |
 
 ---
 
@@ -96,7 +90,7 @@ Ngoài phạm vi: xem mục 8.
 | --- | --- | --- |
 | Số lượng | Đúng một cho mỗi người | Không giới hạn số workspace tham gia; làm chủ tối đa khoảng 10 |
 | Ai thấy | Chỉ chủ tài khoản | Các thành viên |
-| Nội dung | Hội thoại với agent, Highlight riêng, Highlight cho agent, Key và mô hình | Đề bài, kênh, bảng ý tưởng, bản tổng hợp, thành viên, (Số liệu) |
+| Nội dung | Hội thoại với agent, Highlight riêng, Highlight cho agent, Key và mô hình | Đề bài, kênh, bảng ý tưởng, bản tổng hợp, thành viên |
 | Agent | Agent riêng của người đó | Không có agent riêng của workspace; mỗi thành viên mang agent của mình |
 
 ### 2.2. Ngữ cảnh đi theo hai chiều
@@ -114,10 +108,8 @@ Hai chiều nối thành một vòng: đoạn Lan gửi vào kênh là tin của
 | Người dùng | Người | Đã đăng nhập; có workspace riêng; có agent riêng khi đã nhập key |
 | Thành viên | Người | Người dùng thuộc một workspace chung |
 | Chủ workspace | Người | Thành viên đã tạo workspace; có thêm quyền quản lý |
-| Người nhập số liệu | Người | Chủ workspace, hoặc người của nhóm ADOM được giao nhập lượt chạy |
 | Nhà cung cấp danh tính | Hệ thống ngoài | Google, GitHub (OAuth) |
 | Nhà cung cấp AI | Hệ thống ngoài | Anthropic, hoặc dịch vụ theo kiểu OpenAI (OpenAI, DeepSeek, OpenRouter, Groq, Ollama…) |
-| Pipeline ADOM | Hệ thống ngoài | Chạy thí nghiệm cho chạy thử; nhận key và cấu hình do nhóm ADOM cài trên máy chủ |
 | Hệ thống | Hệ thống | SpecGate Workspace |
 
 Một người có thể là chủ ở workspace này và là thành viên ở workspace khác.
@@ -135,7 +127,6 @@ Một người có thể là chủ ở workspace này và là thành viên ở w
 ### 2.5. Giả định
 
 - Người dùng tự có API key hợp lệ và tự chịu chi phí của key đó.
-- Chạy thử thí nghiệm dùng key và cấu hình do nhóm ADOM cài trên máy chủ; chi phí do phía ADOM chịu.
 
 ### 2.6. Các giới hạn số lượng
 
@@ -151,7 +142,6 @@ Một người có thể là chủ ở workspace này và là thành viên ở w
 | Lượt hỏi đáp đính kèm một bản tóm tắt hội thoại | 4 |
 | Độ dài vai trong nhóm, tên trong workspace | 40 ký tự |
 | Mã tham gia | 7 ký tự chữ và số, không dùng ký tự dễ nhầm (O và 0…) |
-| Số tác vụ mỗi lần chạy thử | do máy chủ cấu hình |
 
 Các con số "khoảng" là đề xuất, nhóm có thể điều chỉnh (mục 9).
 
@@ -176,11 +166,8 @@ Các con số "khoảng" là đề xuất, nhóm có thể điều chỉnh (mụ
 | UC13 | Highlight cho agent | Thành viên | Kênh |
 | UC14 | Quản lý bảng ý tưởng | Thành viên, Chủ workspace | Bảng ý tưởng |
 | UC15 | Tóm tắt kênh và bản tổng hợp | Chủ workspace | Tổng hợp |
-| UC16 | Nhập lượt chạy số liệu | Người nhập số liệu | Số liệu |
-| UC17 | Chạy thử thí nghiệm trên web | Chủ workspace | Số liệu |
-| UC18 | Xem số liệu và gọi thẻ số liệu trong kênh | Thành viên | Số liệu |
-| UC19 | Thành viên và cài đặt workspace | Thành viên, Chủ workspace | Thành viên |
-| UC20 | Tiếp tục làm việc khi mạng chập chờn | Người dùng | Kết nối |
+| UC16 | Thành viên và cài đặt workspace | Thành viên, Chủ workspace | Thành viên |
+| UC17 | Tiếp tục làm việc khi mạng chập chờn | Người dùng | Kết nối |
 
 ---
 
@@ -232,6 +219,18 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 
 **Quy tắc:** BR-01, BR-02.
 
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC01 - Phần A: Đăng ký hoặc đăng nhập](../uml/img/act-uc01a.svg)
+
+*Biểu đồ hoạt động UC01 - Phần A: Đăng ký hoặc đăng nhập. Mã nguồn: [uc01a-sign-in.puml](../uml/activity/uc01a-sign-in.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC01 - Phần A: Đăng ký hoặc đăng nhập](../uml/img/seq-uc01a.svg)
+
+*Biểu đồ tuần tự UC01 - Phần A: Đăng ký hoặc đăng nhập. Mã nguồn: [uc01a-sign-in.puml](../uml/sequence/uc01a-sign-in.puml)*
+
 ##### Phần B. Đăng xuất
 
 *Kích hoạt:* Người dùng mở menu tài khoản (Trang chủ) hoặc khung người dùng (cuối cột bên)  
@@ -245,6 +244,18 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 **Ngoại lệ**
 
 - **B.E1. Mất kết nối khi đăng xuất**: phiên trên trình duyệt vẫn bị xóa; người dùng vẫn về trang đăng nhập.
+
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC01 - Phần B: Đăng xuất](../uml/img/act-uc01b.svg)
+
+*Biểu đồ hoạt động UC01 - Phần B: Đăng xuất. Mã nguồn: [uc01b-sign-out.puml](../uml/activity/uc01b-sign-out.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC01 - Phần B: Đăng xuất](../uml/img/seq-uc01b.svg)
+
+*Biểu đồ tuần tự UC01 - Phần B: Đăng xuất. Mã nguồn: [uc01b-sign-out.puml](../uml/sequence/uc01b-sign-out.puml)*
 
 #### UC02. Dùng Trang chủ và dấu báo ở thanh bên
 
@@ -277,7 +288,19 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 - dấu báo tự mất khi người dùng đọc tin hoặc xử lý xong yêu cầu;
 - workspace đang chờ duyệt hiện mờ.
 
-**Quy tắc:** Trang chủ không hiện số liệu, số tin mới, danh sách hội thoại hay danh sách ý tưởng (BR-03).
+**Quy tắc:** Trang chủ không hiện thống kê, số tin mới, danh sách hội thoại hay danh sách ý tưởng (BR-03).
+
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC02: Dùng Trang chủ và dấu báo ở thanh bên](../uml/img/act-uc02.svg)
+
+*Biểu đồ hoạt động UC02: Dùng Trang chủ và dấu báo ở thanh bên. Mã nguồn: [uc02-home-badges.puml](../uml/activity/uc02-home-badges.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC02: Dùng Trang chủ và dấu báo ở thanh bên](../uml/img/seq-uc02.svg)
+
+*Biểu đồ tuần tự UC02: Dùng Trang chủ và dấu báo ở thanh bên. Mã nguồn: [uc02-home.puml](../uml/sequence/uc02-home.puml)*
 
 ### 4.2. Workspace riêng
 
@@ -316,6 +339,24 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 
 **Quy tắc:** BR-04, BR-05. Màn nhập key ghi rõ gói thuê bao không phải API key. Đổi key hay đổi mô hình không làm mất highlight riêng; các tin cũ trong kênh giữ tên mô hình lúc gửi.
 
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC03: Thiết lập API key và chọn mô hình](../uml/img/act-uc03.svg)
+
+*Biểu đồ hoạt động UC03: Thiết lập API key và chọn mô hình. Mã nguồn: [uc03-api-key.puml](../uml/activity/uc03-api-key.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC03: Thiết lập API key và chọn mô hình](../uml/img/seq-uc03.svg)
+
+*Biểu đồ tuần tự UC03: Thiết lập API key và chọn mô hình. Mã nguồn: [uc03-api-key.puml](../uml/sequence/uc03-api-key.puml)*
+
+**Biểu đồ trạng thái** (vòng đời của thực thể chính trong ca này)
+
+![Biểu đồ trạng thái: Agent riêng theo API key (ProviderKey)](../uml/img/st-provider-key.svg)
+
+*Biểu đồ trạng thái: Agent riêng theo API key (ProviderKey). Mã nguồn: [provider-key.puml](../uml/state/provider-key.puml)*
+
 #### UC04. Chat với agent riêng
 
 | Thuộc tính | Nội dung |
@@ -350,9 +391,21 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 
 - **A.E1. Nhà cung cấp lỗi giữa chừng** (key hết tiền, quá giới hạn, mất kết nối tới nhà cung cấp): câu hỏi vẫn còn; câu báo lỗi hiện ngay trong hội thoại thay cho câu trả lời; lượt lỗi không được gửi lại cho agent ở các lần hỏi sau.
 - **A.E2. Chưa có key**: hệ thống đưa người dùng tới màn nhập key (UC03).
-- **A.E3. Mất mạng khi đang trả lời**: xem UC20.
+- **A.E3. Mất mạng khi đang trả lời**: xem UC17.
 
 **Quy tắc:** BR-06, BR-07. Agent nhớ trong phạm vi một hội thoại; hai hội thoại của cùng một người không thấy nhau.
+
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC04 - Phần A: Chat với agent riêng](../uml/img/act-uc04a.svg)
+
+*Biểu đồ hoạt động UC04 - Phần A: Chat với agent riêng. Mã nguồn: [uc04a-chat.puml](../uml/activity/uc04a-chat.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC04 - Phần A: Chat với agent riêng](../uml/img/seq-uc04a.svg)
+
+*Biểu đồ tuần tự UC04 - Phần A: Chat với agent riêng. Mã nguồn: [uc04a-chat.puml](../uml/sequence/uc04a-chat.puml)*
 
 ##### Phần B. Tạo lại câu trả lời và chuyển phiên bản
 
@@ -376,6 +429,18 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 
 **Quy tắc:** Vì không có gì bị mất, hệ thống không hỏi giữ hay xóa highlight khi tạo lại.
 
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC04 - Phần B: Tạo lại câu trả lời](../uml/img/act-uc04b.svg)
+
+*Biểu đồ hoạt động UC04 - Phần B: Tạo lại câu trả lời. Mã nguồn: [uc04b-regenerate.puml](../uml/activity/uc04b-regenerate.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC04 - Phần B: Tạo lại câu trả lời](../uml/img/seq-uc04b.svg)
+
+*Biểu đồ tuần tự UC04 - Phần B: Tạo lại câu trả lời. Mã nguồn: [uc04b-regenerate.puml](../uml/sequence/uc04b-regenerate.puml)*
+
 ##### Phần C. Quản lý hội thoại
 
 *Kích hoạt:* Người dùng bấm biểu tượng sửa tên hoặc biểu tượng xóa ở đầu hội thoại  
@@ -398,6 +463,24 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 - **C.E1. Ai đó đoán đường dẫn hội thoại của người khác**: hệ thống chỉ báo "không tìm thấy".
 
 **Quy tắc:** Những gì đã gửi vào kênh vẫn còn vì là bản chụp (BR-13).
+
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC04 - Phần C: Quản lý hội thoại](../uml/img/act-uc04c.svg)
+
+*Biểu đồ hoạt động UC04 - Phần C: Quản lý hội thoại. Mã nguồn: [uc04c-manage-conversations.puml](../uml/activity/uc04c-manage-conversations.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC04 - Phần C: Quản lý hội thoại](../uml/img/seq-uc04c.svg)
+
+*Biểu đồ tuần tự UC04 - Phần C: Quản lý hội thoại. Mã nguồn: [uc04c-manage-conversations.puml](../uml/sequence/uc04c-manage-conversations.puml)*
+
+**Biểu đồ trạng thái** (vòng đời của thực thể chính trong ca này)
+
+![Biểu đồ trạng thái: Câu trả lời của agent (Turn)](../uml/img/st-answer-turn.svg)
+
+*Biểu đồ trạng thái: Câu trả lời của agent (Turn). Mã nguồn: [answer-turn.puml](../uml/state/answer-turn.puml)*
 
 #### UC05. Highlight riêng
 
@@ -434,6 +517,18 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 
 **Quy tắc:** BR-08, BR-09. Màu do người dùng tự đặt nghĩa, không đi theo khi gửi vào nhóm. Highlight riêng không gửi cho agent nên không tốn tiền key.
 
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC05 - Phần A: Tạo highlight riêng](../uml/img/act-uc05a.svg)
+
+*Biểu đồ hoạt động UC05 - Phần A: Tạo highlight riêng. Mã nguồn: [uc05a-create-private-highlight.puml](../uml/activity/uc05a-create-private-highlight.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC05 - Phần A: Tạo highlight riêng](../uml/img/seq-uc05a.svg)
+
+*Biểu đồ tuần tự UC05 - Phần A: Tạo highlight riêng. Mã nguồn: [uc05a-create-private-highlight.puml](../uml/sequence/uc05a-create-private-highlight.puml)*
+
 ##### Phần B. Quản lý danh sách Highlight riêng
 
 *Kích hoạt:* Người dùng mở "Highlight riêng" trong workspace riêng  
@@ -458,6 +553,24 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 - **B.E1. Gần đủ giới hạn**: danh sách hiện lời nhắc "Bạn đã dùng N/200 highlight riêng".
 
 **Quy tắc:** BR-09. Highlight riêng chỉ bị xóa khi chính người dùng xóa; hệ thống không bao giờ tự xóa.
+
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC05 - Phần B: Quản lý danh sách Highlight riêng](../uml/img/act-uc05b.svg)
+
+*Biểu đồ hoạt động UC05 - Phần B: Quản lý danh sách Highlight riêng. Mã nguồn: [uc05b-manage-private-highlights.puml](../uml/activity/uc05b-manage-private-highlights.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC05 - Phần B: Quản lý danh sách Highlight riêng](../uml/img/seq-uc05b.svg)
+
+*Biểu đồ tuần tự UC05 - Phần B: Quản lý danh sách Highlight riêng. Mã nguồn: [uc05b-manage-private-highlights.puml](../uml/sequence/uc05b-manage-private-highlights.puml)*
+
+**Biểu đồ trạng thái** (vòng đời của thực thể chính trong ca này)
+
+![Biểu đồ trạng thái: Highlight riêng (PrivateHighlight)](../uml/img/st-private-highlight.svg)
+
+*Biểu đồ trạng thái: Highlight riêng (PrivateHighlight). Mã nguồn: [private-highlight.puml](../uml/state/private-highlight.puml)*
 
 ### 4.3. Ngữ cảnh nhóm
 
@@ -486,15 +599,14 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
    - thành viên: tên trong workspace, ai là chủ, vai trong nhóm, agent đang dùng;
    - ý đã chốt và ý đã loại, kèm lý do; lời dặn không đề xuất lại ý đã loại;
    - một dòng thời gian chung gồm mọi tin của mình trong các kênh của workspace (kể cả thẻ trích dẫn và bản tóm tắt hội thoại mình đã gửi) và các highlight cho agent của mình; mỗi mục ghi giờ, kênh, người nói, đang trả lời tin của ai (nếu có);
-   - với mỗi highlight: người nói, nhãn, ghi chú của mình, lời nhắc "chưa phải quyết định của nhóm", và lời nhắc lượt chạy (nếu đoạn lấy từ số liệu đã bị đánh dấu không hợp lệ hoặc đã có lượt mới hơn);
-   - nếu workspace có số liệu: tên lượt chạy, tình trạng hợp lệ, sáu tiêu chí mỗi tiêu chí một dòng.
+   - với mỗi highlight: người nói, nhãn, ghi chú của mình, và lời nhắc "chưa phải quyết định của nhóm";
 4. Ở câu hỏi tiếp theo, hệ thống lấy ngữ cảnh mới nhất và gửi kèm.
 
 **Luồng thay thế**
 
 - **A.A1. Bỏ ngữ cảnh**: chọn "Không gắn"; khung "Agent đang đọc" biến mất và agent chat như bình thường.
 - **A.A2. Đổi sang workspace khác**: mỗi hội thoại chỉ lấy ngữ cảnh từ một workspace tại một thời điểm. Các câu trả lời đã có giữ nguyên ngữ cảnh lúc chúng được viết.
-- **A.A3. Sửa vai trong nhóm** ngay trong khung (UC19 A.A2).
+- **A.A3. Sửa vai trong nhóm** ngay trong khung (UC16 A.A2).
 - **A.A4. Bỏ một highlight** ngay trong khung: highlight bị bỏ khỏi danh sách Highlight cho agent và khỏi ngữ cảnh.
 - **A.A5. Tin của mình vượt giới hạn**: khung ghi "N tin cũ của bạn đang không được gửi cho agent", kèm nút "Tóm tắt tin cũ" (UC06 phần B).
 - **A.A6. Màn hình hẹp**: khung "Agent đang đọc" thành ngăn kéo, mở bằng nút ở mép phải.
@@ -503,7 +615,19 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 
 - **A.E1. Không còn là thành viên của workspace đã chọn**: hội thoại vẫn còn nhưng agent không nhận thông tin nhóm nữa.
 
-**Quy tắc:** BR-10, BR-11, BR-14. Ngoài các đoạn đã highlight, agent không đọc tin nào khác của người khác; việc ai đó nhắc tên mình cũng không làm tin đó lọt vào. Bản tóm tắt kênh (`/summarize`) không tính là tin của mình, kể cả khi mình là chủ. Agent được dặn nói rõ mình dựa vào ý của ai, và không dùng số liệu của lượt chạy không hợp lệ làm kết luận.
+**Quy tắc:** BR-10, BR-11, BR-14. Ngoài các đoạn đã highlight, agent không đọc tin nào khác của người khác; việc ai đó nhắc tên mình cũng không làm tin đó lọt vào. Bản tóm tắt kênh (`/summarize`) không tính là tin của mình, kể cả khi mình là chủ. Agent được dặn nói rõ mình dựa vào ý của ai.
+
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC06 - Phần A: Chọn ngữ cảnh nhóm cho hội thoại](../uml/img/act-uc06a.svg)
+
+*Biểu đồ hoạt động UC06 - Phần A: Chọn ngữ cảnh nhóm cho hội thoại. Mã nguồn: [uc06a-choose-context.puml](../uml/activity/uc06a-choose-context.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC06 - Phần A: Chọn ngữ cảnh nhóm cho hội thoại](../uml/img/seq-uc06a.svg)
+
+*Biểu đồ tuần tự UC06 - Phần A: Chọn ngữ cảnh nhóm cho hội thoại. Mã nguồn: [uc06a-choose-context.puml](../uml/sequence/uc06a-choose-context.puml)*
 
 ##### Phần B. Tóm tắt tin cũ của tôi
 
@@ -529,6 +653,18 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 - **B.E1. Key lỗi khi tóm tắt**: báo lỗi bằng câu dễ hiểu; giữ bản tóm tắt cũ.
 
 **Quy tắc:** Hệ thống không bao giờ tự tóm tắt khi người dùng chưa bấm (vì tốn tiền key). Highlight không bao giờ bị cắt hay bị tóm tắt. Số khối tối đa khoảng 31. Agent không tự đưa bản tóm tắt vào workspace chung.
+
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC06 - Phần B: Tóm tắt tin cũ của tôi](../uml/img/act-uc06b.svg)
+
+*Biểu đồ hoạt động UC06 - Phần B: Tóm tắt tin cũ của tôi. Mã nguồn: [uc06b-digest.puml](../uml/activity/uc06b-digest.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC06 - Phần B: Tóm tắt tin cũ của tôi](../uml/img/seq-uc06b.svg)
+
+*Biểu đồ tuần tự UC06 - Phần B: Tóm tắt tin cũ của tôi. Mã nguồn: [uc06b-digest.puml](../uml/sequence/uc06b-digest.puml)*
 
 ### 4.4. Đưa kết quả từ workspace riêng vào kênh
 
@@ -569,6 +705,18 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 
 **Quy tắc:** BR-12, BR-13, BR-15. Hội thoại chứa highlight không cần chọn ngữ cảnh nhóm. Thẻ là bản chụp; sửa hay xóa highlight sau đó không đổi thẻ. Tin giữ tên mô hình lúc gửi.
 
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC07 - Phần A: Gửi highlight riêng từ danh sách](../uml/img/act-uc07a.svg)
+
+*Biểu đồ hoạt động UC07 - Phần A: Gửi highlight riêng từ danh sách. Mã nguồn: [uc07a-send-from-list.puml](../uml/activity/uc07a-send-from-list.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC07 - Phần A: Gửi highlight riêng từ danh sách](../uml/img/seq-uc07a.svg)
+
+*Biểu đồ tuần tự UC07 - Phần A: Gửi highlight riêng từ danh sách. Mã nguồn: [uc07a-send-from-list.puml](../uml/sequence/uc07a-send-from-list.puml)*
+
 ##### Phần B. Chèn highlight riêng vào tin bằng `@`
 
 *Kích hoạt:* Người dùng gõ `@` và chọn mục "Highlight của tôi", hoặc bấm nút chèn highlight ở ô soạn  
@@ -590,6 +738,18 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 - **B.A4. Ngữ cảnh khác nhóm**: như UC07 A.A2, ô soạn hỏi xác nhận.
 
 **Quy tắc:** như UC07 phần A.
+
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC07 - Phần B: Chèn highlight riêng bằng @](../uml/img/act-uc07b.svg)
+
+*Biểu đồ hoạt động UC07 - Phần B: Chèn highlight riêng bằng @. Mã nguồn: [uc07b-insert-with-mention.puml](../uml/activity/uc07b-insert-with-mention.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC07 - Phần B: Chèn highlight riêng bằng @](../uml/img/seq-uc07b.svg)
+
+*Biểu đồ tuần tự UC07 - Phần B: Chèn highlight riêng bằng @. Mã nguồn: [uc07b-insert-with-mention.puml](../uml/sequence/uc07b-insert-with-mention.puml)*
 
 #### UC08. Tóm tắt hội thoại cho nhóm
 
@@ -623,6 +783,18 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 
 **Quy tắc:** BR-16. Không có cách gửi nguyên văn cả hội thoại. Khi ai đó highlight một đoạn trong phần tóm tắt, người nói là "Bản tóm tắt do Claude của Lan viết (chưa lọc)"; đoạn lấy từ lượt gốc giữ người nói của lượt đó. Cảnh báo gửi sang nhóm khác (UC07 A.A2) áp dụng như với highlight riêng.
 
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC08: Tóm tắt hội thoại cho nhóm](../uml/img/act-uc08.svg)
+
+*Biểu đồ hoạt động UC08: Tóm tắt hội thoại cho nhóm. Mã nguồn: [uc08-conversation-summary.puml](../uml/activity/uc08-conversation-summary.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC08: Tóm tắt hội thoại cho nhóm](../uml/img/seq-uc08.svg)
+
+*Biểu đồ tuần tự UC08: Tóm tắt hội thoại cho nhóm. Mã nguồn: [uc08-conversation-summary.puml](../uml/sequence/uc08-conversation-summary.puml)*
+
 ### 4.5. Workspace chung
 
 #### UC09. Tạo workspace chung
@@ -650,6 +822,18 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 - **E3. Đã làm chủ khoảng 10 workspace**: không cho tạo, báo đã đạt giới hạn.
 
 **Quy tắc:** BR-17. Workspace chung không có agent riêng và không có agent "trọng tài" tự động đọc kênh.
+
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC09: Tạo workspace chung](../uml/img/act-uc09.svg)
+
+*Biểu đồ hoạt động UC09: Tạo workspace chung. Mã nguồn: [uc09-create-workspace.puml](../uml/activity/uc09-create-workspace.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC09: Tạo workspace chung](../uml/img/seq-uc09.svg)
+
+*Biểu đồ tuần tự UC09: Tạo workspace chung. Mã nguồn: [uc09-create-workspace.puml](../uml/sequence/uc09-create-workspace.puml)*
 
 #### UC10. Xin tham gia workspace chung
 
@@ -687,6 +871,18 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 
 **Quy tắc:** BR-18.
 
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC10 - Phần A: Xin tham gia bằng mã](../uml/img/act-uc10a.svg)
+
+*Biểu đồ hoạt động UC10 - Phần A: Xin tham gia bằng mã. Mã nguồn: [uc10a-join-with-code.puml](../uml/activity/uc10a-join-with-code.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC10 - Phần A: Xin tham gia bằng mã](../uml/img/seq-uc10a.svg)
+
+*Biểu đồ tuần tự UC10 - Phần A: Xin tham gia bằng mã. Mã nguồn: [uc10a-join-with-code.puml](../uml/sequence/uc10a-join-with-code.puml)*
+
 ##### Phần B. Xin tham gia qua trang Khám phá
 
 *Kích hoạt:* Người dùng bấm "Khám phá" trên thanh bên, hoặc mở một workspace mình chưa là thành viên  
@@ -712,6 +908,18 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 
 **Quy tắc:** BR-18.
 
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC10 - Phần B: Xin tham gia qua trang Khám phá](../uml/img/act-uc10b.svg)
+
+*Biểu đồ hoạt động UC10 - Phần B: Xin tham gia qua trang Khám phá. Mã nguồn: [uc10b-join-from-explore.puml](../uml/activity/uc10b-join-from-explore.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC10 - Phần B: Xin tham gia qua trang Khám phá](../uml/img/seq-uc10b.svg)
+
+*Biểu đồ tuần tự UC10 - Phần B: Xin tham gia qua trang Khám phá. Mã nguồn: [uc10b-join-from-explore.puml](../uml/sequence/uc10b-join-from-explore.puml)*
+
 #### UC11. Duyệt yêu cầu tham gia
 
 | Thuộc tính | Nội dung |
@@ -733,7 +941,7 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 
 **Luồng thay thế**
 
-- **A1. Tên hiển thị trùng tên một thành viên** (kể cả người đã rời): người mới được tạm đặt tên kèm số (ví dụ "Lan 2") và được yêu cầu chọn biệt danh khi vào workspace (UC19 A.A1).
+- **A1. Tên hiển thị trùng tên một thành viên** (kể cả người đã rời): người mới được tạm đặt tên kèm số (ví dụ "Lan 2") và được yêu cầu chọn biệt danh khi vào workspace (UC16 A.A1).
 - **A2. Người đã từng rời xin vào lại**: được lấy lại tên cũ; tin cũ của họ hiện lại như bình thường.
 
 **Ngoại lệ**
@@ -742,6 +950,24 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 - **E2. Người không phải chủ mở trang**: hệ thống đưa về kênh "chung".
 
 **Quy tắc:** BR-18, BR-25.
+
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC11: Duyệt yêu cầu tham gia](../uml/img/act-uc11.svg)
+
+*Biểu đồ hoạt động UC11: Duyệt yêu cầu tham gia. Mã nguồn: [uc11-approve.puml](../uml/activity/uc11-approve.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC11: Duyệt yêu cầu tham gia](../uml/img/seq-uc11.svg)
+
+*Biểu đồ tuần tự UC11: Duyệt yêu cầu tham gia. Mã nguồn: [uc11-approve.puml](../uml/sequence/uc11-approve.puml)*
+
+**Biểu đồ trạng thái** (vòng đời của thực thể chính trong ca này)
+
+![Biểu đồ trạng thái: Yêu cầu tham gia (JoinRequest)](../uml/img/st-join-request.svg)
+
+*Biểu đồ trạng thái: Yêu cầu tham gia (JoinRequest). Mã nguồn: [join-request.puml](../uml/state/join-request.puml)*
 
 ### 4.6. Kênh
 
@@ -771,15 +997,13 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 | `/note ‹nội dung›` | Thêm ghi chú lên bảng | Mọi thành viên | UC14 phần A |
 | `/pin` | Khi đang trả lời một tin: đưa tin đó lên bảng | Mọi thành viên | UC14 phần A |
 | `/decide #‹số› chốt\|loại ‹lý do›` | Chốt hoặc loại một ý | Theo BR-21 | UC14 phần C |
-| `/stats` | Hiện thẻ số liệu | Mọi thành viên (workspace có số liệu) | UC18 |
-| `/task ‹mã tác vụ›` | Hiện thẻ kết quả một tác vụ | Mọi thành viên (workspace có số liệu) | UC18 |
 | `/summarize` | Tóm tắt kênh | Chủ workspace | UC15 phần A |
 | `/brief` | Dựng bản tổng hợp | Chủ workspace | UC15 phần B |
 | `/help` | Xem danh sách lệnh | Mọi thành viên | UC12 |
 
 **Hiển thị trong kênh**
 
-- Bốn loại tin phân biệt được bằng mắt: tin của người; thẻ trích dẫn (ghi người nói); thẻ đặc biệt (tóm tắt hội thoại, số liệu); tin hệ thống.
+- Bốn loại tin phân biệt được bằng mắt: tin của người; thẻ trích dẫn (ghi người nói); thẻ tóm tắt hội thoại; tin hệ thống.
 - Mỗi thành viên có ảnh đại diện màu riêng, không trùng trong workspace. Thẻ trích dẫn lời agent mang màu và chữ cái đầu của chủ agent.
 - Rê chuột vào tên thấy tài khoản gốc (tên GitHub, hoặc email đã che bớt).
 - Người đã rời hiện là "‹tên› (đã rời)".
@@ -787,7 +1011,7 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 
 **Luồng thay thế**
 
-- **A1. Kết nối chập chờn**: kênh tự kết nối lại và hiện bù những tin đã lỡ (UC20).
+- **A1. Kết nối chập chờn**: kênh tự kết nối lại và hiện bù những tin đã lỡ (UC17).
 - **A2. Lệnh của thành viên không có quyền**: hệ thống trả tin rằng đây là quyền của chủ workspace.
 
 **Ngoại lệ**
@@ -796,6 +1020,18 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 - **E2. Lệnh sai cú pháp**: hệ thống trả tin hướng dẫn cú pháp đúng.
 
 **Quy tắc:** BR-19, BR-20. Không agent nào tự trả lời trong kênh; nhắc tên người hay agent không làm agent nào lên tiếng.
+
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC12: Nhắn tin trong kênh](../uml/img/act-uc12.svg)
+
+*Biểu đồ hoạt động UC12: Nhắn tin trong kênh. Mã nguồn: [uc12-channel-command.puml](../uml/activity/uc12-channel-command.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC12: Nhắn tin trong kênh](../uml/img/seq-uc12.svg)
+
+*Biểu đồ tuần tự UC12: Nhắn tin trong kênh. Mã nguồn: [uc12-channel-command.puml](../uml/sequence/uc12-channel-command.puml)*
 
 #### UC13. Highlight cho agent
 
@@ -810,10 +1046,10 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 
 **Luồng chính**
 
-1. Thành viên bôi đen trong tin của người khác, trong thẻ trích dẫn hay thẻ tóm tắt của người khác, hoặc trong thẻ số liệu. Vùng chọn có thể trải qua nhiều tin liền nhau.
-2. Vùng chọn tự bắt theo loại nội dung: trọn từ (đoạn văn, danh sách), trọn dòng (khối code), trọn ô (bảng), trọn dòng tiêu chí (thẻ số liệu).
+1. Thành viên bôi đen trong tin của người khác, hoặc trong thẻ trích dẫn hay thẻ tóm tắt của người khác. Vùng chọn có thể trải qua nhiều tin liền nhau.
+2. Vùng chọn tự bắt theo loại nội dung: trọn từ (đoạn văn, danh sách), trọn dòng (khối code), trọn ô (bảng).
 3. Nút "Highlight cho agent của tôi" hiện cạnh vùng chọn. Thành viên bấm nút.
-4. Hộp thoại hiện từng đoạn, mỗi đoạn kèm người nói ("Long", "DeepSeek của Long", "Bản tóm tắt do DeepSeek của Long viết (chưa lọc)", "Thẻ số liệu lượt ‹tên›").
+4. Hộp thoại hiện từng đoạn, mỗi đoạn kèm người nói ("Long", "DeepSeek của Long", "Bản tóm tắt do DeepSeek của Long viết (chưa lọc)").
 5. Thành viên chỉ được thu hẹp hai đầu hoặc bỏ bớt đoạn; không được sửa chữ. Hộp thoại hiện trước chính xác câu agent sẽ đọc, kèm dấu "…" và ghi chú "trích một phần" nếu cắt giữa câu.
 6. Thành viên chọn nhãn _Quan trọng_ hoặc _Cần xem xét_, và ghi "Ghi chú của tôi" nếu muốn (tách riêng khỏi lời người nói).
 7. Thành viên bấm "Lưu highlight".
@@ -831,7 +1067,25 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 - **E1. Thành viên sửa chữ ở giữa đoạn**: hộp thoại báo chỉ được thu hẹp hai đầu; nút lưu bị khóa. Muốn bỏ một vế ở giữa thì bôi đen lại thành hai đoạn riêng.
 - **E2. Đã đủ khoảng 30 highlight trong workspace này**: không lưu; hệ thống nhắc tự bỏ bớt trước. Hệ thống không tự xóa highlight cũ.
 
-**Quy tắc:** BR-11, BR-12, BR-22, BR-28. Mỗi đoạn trong một highlight giữ người nói và tin gốc riêng; agent không gộp lời hai người. Highlight lưu nguyên văn tại lúc chọn; nếu nguồn bị xóa, highlight vẫn còn.
+**Quy tắc:** BR-11, BR-12, BR-22. Mỗi đoạn trong một highlight giữ người nói và tin gốc riêng; agent không gộp lời hai người. Highlight lưu nguyên văn tại lúc chọn; nếu nguồn bị xóa, highlight vẫn còn.
+
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC13: Highlight cho agent](../uml/img/act-uc13.svg)
+
+*Biểu đồ hoạt động UC13: Highlight cho agent. Mã nguồn: [uc13-agent-highlight.puml](../uml/activity/uc13-agent-highlight.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC13: Highlight cho agent](../uml/img/seq-uc13.svg)
+
+*Biểu đồ tuần tự UC13: Highlight cho agent. Mã nguồn: [uc13-agent-highlight.puml](../uml/sequence/uc13-agent-highlight.puml)*
+
+**Biểu đồ trạng thái** (vòng đời của thực thể chính trong ca này)
+
+![Biểu đồ trạng thái: Highlight cho agent (Highlight)](../uml/img/st-agent-highlight.svg)
+
+*Biểu đồ trạng thái: Highlight cho agent (Highlight). Mã nguồn: [agent-highlight.puml](../uml/state/agent-highlight.puml)*
 
 ### 4.7. Bảng ý tưởng
 
@@ -862,7 +1116,7 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 - **A.A2. Nút trên trang Bảng ý tưởng**: chọn loại (ý hoặc ghi chú), nhập nội dung, bấm Thêm.
 - **A.A3. `/pin` khi đang trả lời một tin**: hệ thống ghim theo nội dung tin được trả lời:
   - chỉ có lời của người: ghim lời đó;
-  - chỉ có một thẻ (trích dẫn, tóm tắt hội thoại, số liệu): ghim thẻ đó, giữ người nói và nhãn của thẻ;
+  - chỉ có một thẻ (trích dẫn hoặc tóm tắt hội thoại): ghim thẻ đó, giữ người nói và nhãn của thẻ;
   - có cả lời người lẫn thẻ: hệ thống hỏi "Ghim lời của ‹tên›", "Ghim đoạn của ‹agent›", hoặc "Ghim cả hai"; ghim cả hai tạo một ý gồm hai phần, mỗi phần ghi người nói riêng;
   - bản tóm tắt kênh: ghim được, thẻ ghi "Bản tóm tắt kênh do ‹agent› viết (chưa lọc)".
 
@@ -872,6 +1126,18 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 - **A.E2. `/pin` khi không trả lời tin nào**: hệ thống nhắc cần trả lời một tin trước.
 
 **Quy tắc:** BR-20. Ý mới luôn ở cột Đề xuất. Highlight không tự lên bảng.
+
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC14 - Phần A: Đưa ý lên bảng ý tưởng](../uml/img/act-uc14a.svg)
+
+*Biểu đồ hoạt động UC14 - Phần A: Đưa ý lên bảng ý tưởng. Mã nguồn: [uc14a-add-idea.puml](../uml/activity/uc14a-add-idea.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC14 - Phần A: Đưa ý lên bảng ý tưởng](../uml/img/seq-uc14a.svg)
+
+*Biểu đồ tuần tự UC14 - Phần A: Đưa ý lên bảng ý tưởng. Mã nguồn: [uc14a-add-idea.puml](../uml/sequence/uc14a-add-idea.puml)*
 
 ##### Phần B. Chuyển ý sang Đang bàn
 
@@ -890,6 +1156,18 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 
 **Quy tắc:** BR-21.
 
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC14 - Phần B: Chuyển ý sang Đang bàn](../uml/img/act-uc14b.svg)
+
+*Biểu đồ hoạt động UC14 - Phần B: Chuyển ý sang Đang bàn. Mã nguồn: [uc14b-discuss.puml](../uml/activity/uc14b-discuss.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC14 - Phần B: Chuyển ý sang Đang bàn](../uml/img/seq-uc14b.svg)
+
+*Biểu đồ tuần tự UC14 - Phần B: Chuyển ý sang Đang bàn. Mã nguồn: [uc14b-discuss.puml](../uml/sequence/uc14b-discuss.puml)*
+
 ##### Phần C. Chốt hoặc loại ý
 
 *Kích hoạt:* Bấm "Chốt" hoặc "Loại" trên thẻ, hoặc gõ `/decide #‹số› chốt|loại ‹lý do›` trong kênh  
@@ -899,7 +1177,7 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 
 1. Thành viên bấm "Chốt" hoặc "Loại" trên thẻ.
 2. Hộp thoại yêu cầu lý do; hộp thoại hiện lệnh `/decide` tương đương.
-3. Thành viên nhập lý do (có thể trỏ tới số liệu) và xác nhận.
+3. Thành viên nhập lý do và xác nhận.
 4. Thẻ chuyển sang cột tương ứng; kênh có tin hệ thống ghi quyết định.
 
 **Luồng thay thế**
@@ -915,6 +1193,24 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 
 **Quy tắc:** BR-20, BR-21, BR-23. Cột Đã loại luôn hiển thị, để nhóm và agent nhớ những gì đã bị gạt bỏ và vì sao.
 
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC14 - Phần C: Chốt hoặc loại ý](../uml/img/act-uc14c.svg)
+
+*Biểu đồ hoạt động UC14 - Phần C: Chốt hoặc loại ý. Mã nguồn: [uc14c-decide.puml](../uml/activity/uc14c-decide.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC14 - Phần C: Chốt hoặc loại ý](../uml/img/seq-uc14c.svg)
+
+*Biểu đồ tuần tự UC14 - Phần C: Chốt hoặc loại ý. Mã nguồn: [uc14c-decide.puml](../uml/sequence/uc14c-decide.puml)*
+
+**Biểu đồ trạng thái** (vòng đời của thực thể chính trong ca này)
+
+![Biểu đồ trạng thái: Ý trên bảng ý tưởng (BoardItem)](../uml/img/st-board-item.svg)
+
+*Biểu đồ trạng thái: Ý trên bảng ý tưởng (BoardItem). Mã nguồn: [board-item.puml](../uml/state/board-item.puml)*
+
 ### 4.8. Tổng hợp
 
 #### UC15. Tóm tắt kênh và bản tổng hợp
@@ -926,7 +1222,7 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 | Mục tiêu | Có bản tóm tắt các ý chính của kênh, và văn bản tổng kết các quyết định của nhóm |
 | Tiền điều kiện | Là chủ workspace để tạo; tóm tắt kênh cần API key |
 | Hậu điều kiện thành công | Bản tóm tắt hiện trong kênh dưới tên agent của chủ; bản tổng hợp mới nhất xem và tải được |
-| Yêu cầu | FR-93 – FR-98 |
+| Yêu cầu | FR-93 – FR-97 |
 
 ##### Phần A. Tóm tắt kênh (`/summarize`)
 
@@ -947,6 +1243,18 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 
 **Quy tắc:** BR-24. Agent không đọc hội thoại riêng, highlight, tin của kênh hay workspace khác. Bản tóm tắt không tự vào ngữ cảnh agent của chủ; ai muốn agent đọc phần nào thì highlight phần đó (người nói "Bản tóm tắt kênh do ‹agent› viết (chưa lọc)").
 
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC15 - Phần A: Tóm tắt kênh (/summarize)](../uml/img/act-uc15a.svg)
+
+*Biểu đồ hoạt động UC15 - Phần A: Tóm tắt kênh (/summarize). Mã nguồn: [uc15a-summarize.puml](../uml/activity/uc15a-summarize.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC15 - Phần A: Tóm tắt kênh (/summarize)](../uml/img/seq-uc15a.svg)
+
+*Biểu đồ tuần tự UC15 - Phần A: Tóm tắt kênh (/summarize). Mã nguồn: [uc15a-summarize.puml](../uml/sequence/uc15a-summarize.puml)*
+
 ##### Phần B. Dựng và tải bản tổng hợp (`/brief`)
 
 *Kích hoạt:* Chủ gõ `/brief` trong kênh, hoặc bấm "Dựng"/"Dựng lại" trên trang Bản tổng hợp  
@@ -955,9 +1263,8 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 **Luồng chính**
 
 1. Hệ thống dựng bản tổng hợp từ bảng ý tưởng: đề bài; ý đã chốt kèm lý do và người chốt; ý đã loại kèm lý do; ý còn đang bàn kèm người nêu; ghi chú.
-2. Nếu workspace có số liệu: thêm mục "Số liệu dùng làm căn cứ" ghi lượt chạy, dataset, số tác vụ, tình trạng hợp lệ và các dòng tiêu chí; lượt không hợp lệ có lời nhắc không dùng làm kết luận.
-3. Trang Bản tổng hợp ghi thời điểm dựng, người dựng, số thành viên.
-4. Mọi thành viên xem bản mới nhất, "Sao chép" hoặc "Tải Markdown".
+2. Trang Bản tổng hợp ghi thời điểm dựng, người dựng, số thành viên.
+3. Mọi thành viên xem bản mới nhất, "Sao chép" hoặc "Tải Markdown".
 
 **Luồng thay thế**
 
@@ -969,109 +1276,21 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 
 **Quy tắc:** BR-24.
 
-### 4.9. Số liệu bài báo
+**Biểu đồ hoạt động**
 
-#### UC16. Nhập lượt chạy số liệu
+![Biểu đồ hoạt động UC15 - Phần B: Dựng và tải bản tổng hợp (/brief)](../uml/img/act-uc15b.svg)
 
-| Thuộc tính | Nội dung |
-| --- | --- |
-| Tác nhân chính | Người nhập số liệu (chủ workspace hoặc người được giao) |
-| Mục tiêu | Gắn kết quả thí nghiệm do nhóm ADOM giao vào workspace |
-| Tiền điều kiện | Có quyền nhập số liệu trong workspace |
-| Kích hoạt | Mở trang "Lượt chạy" và chọn tệp kết quả |
-| Hậu điều kiện thành công | Lượt chạy gắn vào workspace; mục Số liệu xuất hiện; kênh "chung" có tin hệ thống |
-| Yêu cầu | FR-99 – FR-102 |
+*Biểu đồ hoạt động UC15 - Phần B: Dựng và tải bản tổng hợp (/brief). Mã nguồn: [uc15b-brief.puml](../uml/activity/uc15b-brief.puml)*
 
-**Luồng chính**
+**Biểu đồ tuần tự**
 
-1. Người nhập chọn tệp: ba tệp do `export_report.py` của ADOM sinh ra (`<RUN>_summary.csv`, `<RUN>_per_task.csv`, `<RUN>_run_meta.json`), hoặc một tệp JSON định dạng `specgate-run/1`.
-2. Hệ thống nhận diện từng tệp và hiện tệp nào đã đủ, tệp nào còn thiếu.
-3. Người nhập đặt tên lượt chạy (tùy chọn, mặc định lấy trong tệp) và chọn tình trạng: hợp lệ, hoặc không hợp lệ kèm lý do.
-4. Người nhập bấm "Nhập vào workspace".
-5. Hệ thống kiểm định dạng đã thống nhất với nhóm ADOM, rồi gắn lượt chạy vào workspace.
-6. Kênh "chung" nhận tin hệ thống, ví dụ "Đã có lượt chạy mới: MAIN, HumanEval+, 162 tác vụ".
-7. Hệ thống mở trang Số liệu của lượt chạy vừa nhập.
+![Biểu đồ tuần tự UC15 - Phần B: Dựng và tải bản tổng hợp (/brief)](../uml/img/seq-uc15b.svg)
 
-**Luồng thay thế**
+*Biểu đồ tuần tự UC15 - Phần B: Dựng và tải bản tổng hợp (/brief). Mã nguồn: [uc15b-brief.puml](../uml/sequence/uc15b-brief.puml)*
 
-- **A1. Đánh dấu không hợp lệ sau khi nhập**: trên bảng lượt chạy, bấm "Đánh dấu không hợp lệ" và nhập lý do; hoặc "Đánh dấu hợp lệ" để bỏ.
-- **A2. Gỡ lượt chạy**: bấm biểu tượng gỡ trên bảng lượt chạy.
+### 4.9. Thành viên và cài đặt
 
-**Ngoại lệ**
-
-- **E1. Tệp không nhận ra**: báo tên tệp không nhận ra.
-- **E2. Sai định dạng hoặc thiếu tệp**: báo lỗi, không gắn gì.
-- **E3. Chọn "không hợp lệ" mà không có lý do**: không cho nhập.
-
-**Quy tắc:** BR-26, BR-27.
-
-#### UC17. Chạy thử thí nghiệm trên web
-
-| Thuộc tính | Nội dung |
-| --- | --- |
-| Tác nhân chính | Chủ workspace |
-| Tác nhân phụ | Pipeline ADOM |
-| Mục tiêu | Thử nhanh một ý bằng số liệu thật mà không chờ nhóm ADOM |
-| Tiền điều kiện | Là chủ; workspace không có lượt chạy thử nào đang chạy |
-| Kích hoạt | Chủ bấm "Chạy thử" trên trang Lượt chạy |
-| Hậu điều kiện thành công | Lượt chạy thử gắn vào workspace với nhãn "chạy thử"; kênh "chung" có tin báo |
-| Yêu cầu | FR-103 – FR-106 |
-
-**Luồng chính**
-
-1. Chủ nhập danh sách tác vụ (ví dụ HumanEval/1, HumanEval/13) trong giới hạn số tác vụ mỗi lần, và chọn mức cấu hình (A1 hoặc A3).
-2. Chủ bấm "Chạy thử".
-3. Trang hiện tiến độ trực tiếp: bước hiện tại (xếp hàng, dựng tác vụ, duyệt đặc tả, chạy kiểm chứng), tác vụ nào đã có kết luận và số vi phạm.
-4. Chạy xong: kết quả tự lưu và gắn vào workspace như một lượt nhập, mang nhãn "chạy thử".
-5. Kênh "chung" nhận tin báo lượt chạy thử đã xong.
-
-**Luồng thay thế**
-
-- **A1. Đóng trang hoặc mất mạng giữa chừng**: lượt chạy vẫn tiếp tục trên máy chủ; khi mở lại, trang hiện đúng tình trạng hiện tại.
-
-**Ngoại lệ**
-
-- **E1. Vượt số tác vụ tối đa**: nút chạy bị khóa, hiện số đã vượt.
-- **E2. Đang có lượt chạy thử**: nút "Chạy thử" tạm khóa cho tới khi lượt đó xong.
-- **E3. Lượt chạy lỗi giữa chừng**: lượt chạy ở trạng thái lỗi kèm lý do ngắn; kênh nhận tin báo lỗi.
-
-**Quy tắc:** BR-26. Chạy thử dùng key và cấu hình do nhóm ADOM cài trên máy chủ; key của thành viên không bị dùng.
-
-#### UC18. Xem số liệu và gọi thẻ số liệu trong kênh
-
-| Thuộc tính | Nội dung |
-| --- | --- |
-| Tác nhân chính | Thành viên |
-| Mục tiêu | Dùng số liệu làm bằng chứng khi tranh luận |
-| Tiền điều kiện | Workspace đã có ít nhất một lượt chạy |
-| Kích hoạt | Mở mục "Số liệu", hoặc gõ `/stats`, `/task ‹mã›` trong kênh |
-| Hậu điều kiện thành công | Thành viên thấy số liệu; thẻ số liệu (nếu gọi) là tin thật trong kênh |
-| Yêu cầu | FR-107 – FR-112 |
-
-**Luồng chính (trang Số liệu)**
-
-1. Trên cùng là dải tình trạng: tên lượt chạy, dataset, số tác vụ, hợp lệ hay không (kèm lý do và lời nhắc không dùng làm kết quả chính thức nếu không hợp lệ), và liên kết sang các lượt khác.
-2. Thanh thông tin: biến thể, số tác vụ, số vi phạm, mô hình đóng từng vai.
-3. Thẻ "Tiêu chí": sáu thẻ, mỗi thẻ có tên tiêu chí bằng lời dễ hiểu, giá trị, khoảng tin cậy, ngưỡng, kết luận.
-4. Thẻ "Tác vụ và cách sửa": bảng vi phạm theo tác vụ (lọc, sắp xếp được), bảng so sánh các cách sửa với hai cách làm đối chứng, và thống kê đồng thuận của hai bản nháp A3.
-
-**Luồng thay thế**
-
-- **A1. `/stats`**: kênh hiện thẻ số liệu gồm sáu tiêu chí rút gọn và tình trạng lượt chạy, kèm liên kết mở mục Số liệu.
-- **A2. `/task ‹mã›`**: kênh hiện thẻ kết quả của tác vụ đó.
-- **A3. Dùng thẻ**: thành viên highlight một dòng tiêu chí cho agent (UC13, bắt trọn dòng) hoặc ghim thẻ lên bảng (UC14 phần A).
-- **A4. Lượt chạy về sau bị đánh dấu không hợp lệ hoặc có lượt mới hơn**: mọi bản chụp (thẻ trong kênh, highlight cho agent, thẻ bằng chứng trên bảng) hiện dòng nhắc tương ứng; ngữ cảnh agent gửi kèm cùng lời nhắc.
-
-**Ngoại lệ**
-
-- **E1. Workspace chưa có số liệu**: không có mục Số liệu; `/stats` và `/task` không có trong gợi ý lệnh.
-- **E2. Mã tác vụ không có trong lượt chạy**: tin báo không tìm thấy.
-
-**Quy tắc:** BR-27, BR-28. "Chưa đủ dữ liệu" không bao giờ được trình bày giống "Đạt".
-
-### 4.10. Thành viên và cài đặt
-
-#### UC19. Thành viên và cài đặt workspace
+#### UC16. Thành viên và cài đặt workspace
 
 | Thuộc tính | Nội dung |
 | --- | --- |
@@ -1079,7 +1298,7 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 | Mục tiêu | Giữ danh tính rõ ràng trong nhóm cho cả người lẫn agent, và giữ thông tin workspace đúng |
 | Tiền điều kiện | Là thành viên; một số thao tác yêu cầu là chủ |
 | Hậu điều kiện thành công | Thay đổi có hiệu lực ngay ở mọi nơi trong workspace và trong ngữ cảnh agent từ câu hỏi tiếp theo |
-| Yêu cầu | FR-113 – FR-121 |
+| Yêu cầu | FR-98 – FR-106 |
 
 ##### Phần A. Quản lý tên, vai và tư cách thành viên
 
@@ -1106,6 +1325,18 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 
 **Quy tắc:** BR-25. Mỗi người chỉ sửa được tên và vai của chính mình. Tên đã dùng được giữ chỗ mãi cho người đó; người đã rời hiện "‹tên› (đã rời)" ở mọi nơi.
 
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC16 - Phần A: Quản lý tên, vai và tư cách thành viên](../uml/img/act-uc16a.svg)
+
+*Biểu đồ hoạt động UC16 - Phần A: Quản lý tên, vai và tư cách thành viên. Mã nguồn: [uc16a-members.puml](../uml/activity/uc16a-members.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC16 - Phần A: Quản lý tên, vai và tư cách thành viên](../uml/img/seq-uc16a.svg)
+
+*Biểu đồ tuần tự UC16 - Phần A: Quản lý tên, vai và tư cách thành viên. Mã nguồn: [uc16a-members.puml](../uml/sequence/uc16a-members.puml)*
+
 ##### Phần B. Cấu hình workspace chung
 
 *Kích hoạt:* Mở trang "Thành viên và agent", hoặc nút "Tạo kênh" trên cột bên  
@@ -1130,9 +1361,27 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 
 **Quy tắc:** BR-17, BR-18.
 
-### 4.11. Kết nối
+**Biểu đồ hoạt động**
 
-#### UC20. Tiếp tục làm việc khi mạng chập chờn
+![Biểu đồ hoạt động UC16 - Phần B: Cấu hình workspace chung](../uml/img/act-uc16b.svg)
+
+*Biểu đồ hoạt động UC16 - Phần B: Cấu hình workspace chung. Mã nguồn: [uc16b-settings.puml](../uml/activity/uc16b-settings.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC16 - Phần B: Cấu hình workspace chung](../uml/img/seq-uc16b.svg)
+
+*Biểu đồ tuần tự UC16 - Phần B: Cấu hình workspace chung. Mã nguồn: [uc16b-settings.puml](../uml/sequence/uc16b-settings.puml)*
+
+**Biểu đồ trạng thái** (vòng đời của thực thể chính trong ca này)
+
+![Biểu đồ trạng thái: Thành viên workspace (Member)](../uml/img/st-member.svg)
+
+*Biểu đồ trạng thái: Thành viên workspace (Member). Mã nguồn: [member.puml](../uml/state/member.puml)*
+
+### 4.10. Kết nối
+
+#### UC17. Tiếp tục làm việc khi mạng chập chờn
 
 | Thuộc tính | Nội dung |
 | --- | --- |
@@ -1141,7 +1390,7 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 | Tiền điều kiện | Đang dùng website |
 | Kích hoạt | Trình duyệt mất kết nối Internet |
 | Hậu điều kiện thành công | Khi có mạng lại, người dùng tiếp tục đúng chỗ, không mất chữ đang soạn hay phần trả lời đã nhận |
-| Yêu cầu | FR-122 – FR-125 |
+| Yêu cầu | FR-107 – FR-110 |
 
 **Luồng chính**
 
@@ -1153,10 +1402,27 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 **Luồng thay thế**
 
 - **A1. Mất mạng khi agent đang trả lời**: phần đã viết được giữ lại trong hội thoại; người dùng bấm "Tạo lại" nếu muốn câu trả lời đầy đủ.
-- **A2. Mất mạng khi đang chạy thử**: lượt chạy tiếp tục trên máy chủ (UC17 A1).
-- **A3. Tải lại trang khi đang soạn**: chữ đang soạn hiện lại.
+- **A2. Tải lại trang khi đang soạn**: chữ đang soạn hiện lại.
 
 **Quy tắc:** Website không có chế độ ngoại tuyến (mục 2.4).
+
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC17: Tiếp tục làm việc khi mạng chập chờn](../uml/img/act-uc17.svg)
+
+*Biểu đồ hoạt động UC17: Tiếp tục làm việc khi mạng chập chờn. Mã nguồn: [uc17-connection.puml](../uml/activity/uc17-connection.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC17: Tiếp tục làm việc khi mạng chập chờn](../uml/img/seq-uc17.svg)
+
+*Biểu đồ tuần tự UC17: Tiếp tục làm việc khi mạng chập chờn. Mã nguồn: [uc17-connection.puml](../uml/sequence/uc17-connection.puml)*
+
+**Biểu đồ trạng thái** (vòng đời của thực thể chính trong ca này)
+
+![Biểu đồ trạng thái: Kết nối của trình duyệt](../uml/img/st-connection.svg)
+
+*Biểu đồ trạng thái: Kết nối của trình duyệt. Mã nguồn: [connection.puml](../uml/state/connection.puml)*
 
 ---
 
@@ -1210,7 +1476,7 @@ Mỗi yêu cầu kiểm được bằng ít nhất một ca kiểm thử. Mức:
 | --- | --- | --- |
 | FR-31 | Mỗi hội thoại có ô "Ngữ cảnh nhóm" chọn tối đa một workspace chung mình là thành viên; đổi hoặc bỏ bất cứ lúc nào; hội thoại mới chọn được trước câu hỏi đầu | M |
 | FR-32 | Hội thoại có ngữ cảnh nhóm có biểu tượng riêng trong danh sách | M |
-| FR-33 | Mỗi câu hỏi gửi kèm: đề bài; thành viên (tên, chủ, vai, agent); ý đã chốt và đã loại kèm lý do và lời dặn không đề xuất lại; tin của mình; highlight cho agent của mình; số liệu (nếu có). Không gửi tin nào khác của người khác | M |
+| FR-33 | Mỗi câu hỏi gửi kèm: đề bài; thành viên (tên, chủ, vai, agent); ý đã chốt và đã loại kèm lý do và lời dặn không đề xuất lại; tin của mình; highlight cho agent của mình. Không gửi tin nào khác của người khác | M |
 | FR-34 | Ngữ cảnh được lấy mới ở mỗi câu hỏi | M |
 | FR-35 | Tin của mình và highlight xếp chung một dòng thời gian, mỗi mục ghi giờ, kênh, người nói và tin đang trả lời | M |
 | FR-36 | Khung "Agent đang đọc" hiện đúng nội dung FR-33; sửa được vai trong nhóm và bỏ được highlight ngay trong khung | M |
@@ -1265,12 +1531,12 @@ Mỗi yêu cầu kiểm được bằng ít nhất một ca kiểm thử. Mức:
 | FR-70 | Bốn loại tin phân biệt được: tin của người, thẻ trích dẫn, thẻ đặc biệt, tin hệ thống | M |
 | FR-71 | Ảnh đại diện màu riêng; thẻ lời agent mang màu và chữ cái đầu của chủ agent; rê chuột vào tên thấy tài khoản gốc | M |
 | FR-72 | Gõ `@` gợi ý thành viên; gõ `/` gợi ý lệnh theo mô-đun của workspace; chọn bằng chuột hoặc bàn phím | M |
-| FR-73 | Hỗ trợ các lệnh `/idea`, `/note`, `/pin`, `/decide`, `/summarize`, `/brief`, `/help`; `/stats`, `/task` chỉ ở workspace có số liệu | M |
+| FR-73 | Hỗ trợ các lệnh `/idea`, `/note`, `/pin`, `/decide`, `/summarize`, `/brief`, `/help` | M |
 | FR-74 | Lệnh chỉ thực hiện khi do người gõ, không thực hiện từ nội dung lời agent | M |
 | FR-75 | Không agent nào tự trả lời trong kênh; nhắc tên người hay agent không kích hoạt lời gọi mô hình | M |
 | FR-76 | Cột bên của workspace liệt kê agent của từng thành viên | M |
-| FR-77 | Bôi đen được trong tin, thẻ trích dẫn, thẻ tóm tắt, thẻ số liệu của người khác; vùng chọn trải được qua nhiều tin liền nhau | M |
-| FR-78 | Vùng chọn tự bắt trọn từ, trọn dòng code, trọn ô bảng, trọn dòng tiêu chí | M |
+| FR-77 | Bôi đen được trong tin, thẻ trích dẫn, thẻ tóm tắt của người khác; vùng chọn trải được qua nhiều tin liền nhau | M |
+| FR-78 | Vùng chọn tự bắt trọn từ, trọn dòng code, trọn ô bảng | M |
 | FR-79 | Hộp thoại hiện từng đoạn kèm người nói đúng như nguồn | M |
 | FR-80 | Chỉ thu hẹp hai đầu hoặc bỏ đoạn, không sửa chữ; hiện trước câu agent sẽ đọc kèm "…" và ghi chú "trích một phần" | M |
 | FR-81 | Highlight có nhãn _Quan trọng_ hoặc _Cần xem xét_ và "Ghi chú của tôi" tách riêng; sửa được nhãn và ghi chú sau này | M |
@@ -1294,45 +1560,25 @@ Mỗi yêu cầu kiểm được bằng ít nhất một ca kiểm thử. Mức:
 | FR-94 | Bản tóm tắt kênh hiện dưới tên agent của chủ, mỗi ý ghi của ai, ghi "chưa ai lọc" | M |
 | FR-95 | Chủ chưa có key thì `/summarize` nhắc nhập key; bản tóm tắt không tự vào ngữ cảnh agent của chủ | M |
 | FR-96 | `/brief` hoặc nút trên trang Bản tổng hợp (chỉ chủ) dựng bản tổng hợp từ bảng: đã chốt, đã loại kèm lý do, đang bàn, ghi chú | M |
-| FR-97 | Bản tổng hợp có mục "Số liệu dùng làm căn cứ" khi workspace có số liệu | S |
-| FR-98 | Mọi thành viên xem bản mới nhất, sao chép, tải dạng Markdown | M |
+| FR-97 | Mọi thành viên xem bản mới nhất, sao chép, tải dạng Markdown | M |
 
-### 5.8. Số liệu bài báo (UC16–UC18)
-
-| Mã | Yêu cầu | Mức |
-| --- | --- | --- |
-| FR-99 | Nhập lượt chạy từ ba tệp `export_report.py` hoặc một tệp `specgate-run/1`; hệ thống nhận diện và hiện tệp còn thiếu | M |
-| FR-100 | Hệ thống kiểm định dạng trước khi gắn; sai định dạng thì báo lỗi và không gắn | M |
-| FR-101 | Nhập xong thì mục Số liệu xuất hiện và kênh "chung" nhận tin hệ thống | M |
-| FR-102 | Đánh dấu không hợp lệ (bắt buộc lý do), đánh dấu lại hợp lệ, gỡ lượt chạy | M |
-| FR-103 | Chỉ chủ thấy "Chạy thử"; chọn tác vụ trong giới hạn và mức cấu hình | T |
-| FR-104 | Trang hiện tiến độ trực tiếp theo bước và theo tác vụ | T |
-| FR-105 | Lượt chạy thử tự lưu với nhãn "chạy thử"; kênh nhận tin xong hoặc lỗi kèm lý do | T |
-| FR-106 | Mỗi workspace chỉ một lượt chạy thử tại một thời điểm | T |
-| FR-107 | Trang Số liệu có dải tình trạng lượt chạy luôn ở trên cùng | M |
-| FR-108 | Sáu thẻ tiêu chí có giá trị, khoảng tin cậy, ngưỡng, kết luận; "Chưa đủ dữ liệu" không trình bày giống "Đạt" | M |
-| FR-109 | Kết quả theo tác vụ và bảng so sánh cách sửa | M |
-| FR-110 | `/stats` hiện thẻ số liệu trong kênh | M |
-| FR-111 | `/task ‹mã›` hiện thẻ kết quả tác vụ | S |
-| FR-112 | Lượt chạy bị đánh dấu không hợp lệ hoặc có lượt mới hơn thì mọi bản chụp (thẻ kênh, highlight cho agent, thẻ trên bảng) hiện dòng nhắc, và ngữ cảnh agent gửi kèm lời nhắc | M |
-
-### 5.9. Thành viên, cài đặt và kết nối (UC19–UC20)
+### 5.8. Thành viên, cài đặt và kết nối (UC16–UC17)
 
 | Mã | Yêu cầu | Mức |
 | --- | --- | --- |
-| FR-113 | Mọi thành viên xem danh sách thành viên: màu, tên, quyền, vai, tài khoản gốc, agent hoặc "chưa nhập key"; không hiện key | M |
-| FR-114 | Tên trong workspace duy nhất, kể cả so với người đã rời; mỗi người tự đổi tên của mình | M |
-| FR-115 | Vai trong nhóm tối đa 40 ký tự, chỉ chủ của vai sửa được | M |
-| FR-116 | Thành viên (không phải chủ) rời được workspace; chủ xóa được thành viên; cả hai có hộp xác nhận | M |
-| FR-117 | Người đã rời hiện "‹tên› (đã rời)" ở mọi nơi; vào lại thì lấy lại tên cũ | M |
-| FR-118 | Chủ sửa đề bài; thành viên khác thấy đề bài dạng chỉ đọc | M |
-| FR-119 | Chủ đổi mã tham gia; mã cũ hết hiệu lực ngay | M |
-| FR-120 | Chủ tạo kênh mới với tên hợp lệ, không trùng | M |
-| FR-121 | Chủ đổi tên và chế độ hiển thị của workspace | M |
-| FR-122 | Mất kết nối thì hiện dải báo và khóa nút gửi | M |
-| FR-123 | Chữ đang soạn được giữ trên trình duyệt qua mất mạng và tải lại trang | M |
-| FR-124 | Tự kết nối lại khi có mạng; kênh hiện bù tin đã lỡ | M |
-| FR-125 | Phần câu trả lời đã nhận được giữ khi mất mạng; lượt chạy thử tiếp tục trên máy chủ | M |
+| FR-98 | Mọi thành viên xem danh sách thành viên: màu, tên, quyền, vai, tài khoản gốc, agent hoặc "chưa nhập key"; không hiện key | M |
+| FR-99 | Tên trong workspace duy nhất, kể cả so với người đã rời; mỗi người tự đổi tên của mình | M |
+| FR-100 | Vai trong nhóm tối đa 40 ký tự, chỉ chủ của vai sửa được | M |
+| FR-101 | Thành viên (không phải chủ) rời được workspace; chủ xóa được thành viên; cả hai có hộp xác nhận | M |
+| FR-102 | Người đã rời hiện "‹tên› (đã rời)" ở mọi nơi; vào lại thì lấy lại tên cũ | M |
+| FR-103 | Chủ sửa đề bài; thành viên khác thấy đề bài dạng chỉ đọc | M |
+| FR-104 | Chủ đổi mã tham gia; mã cũ hết hiệu lực ngay | M |
+| FR-105 | Chủ tạo kênh mới với tên hợp lệ, không trùng | M |
+| FR-106 | Chủ đổi tên và chế độ hiển thị của workspace | M |
+| FR-107 | Mất kết nối thì hiện dải báo và khóa nút gửi | M |
+| FR-108 | Chữ đang soạn được giữ trên trình duyệt qua mất mạng và tải lại trang | M |
+| FR-109 | Tự kết nối lại khi có mạng; kênh hiện bù tin đã lỡ | M |
+| FR-110 | Phần câu trả lời đã nhận được giữ khi mất mạng | M |
 
 ---
 
@@ -1345,7 +1591,7 @@ Mỗi yêu cầu kiểm được bằng ít nhất một ca kiểm thử. Mức:
 | BR-03 | Trang chủ giữ gọn; thông báo nằm ở thanh bên, không nằm ở Trang chủ |
 | BR-04 | Mỗi người một key và một agent; agent ở workspace riêng và agent mang tên người đó trong kênh là một |
 | BR-05 | Key lưu mã hóa, chỉ hiện 4 ký tự cuối, không ai xem lại được key đầy đủ, kể cả chủ key; không ai thấy key của người khác |
-| BR-06 | Mọi lời gọi mô hình chạy bằng key của chủ agent và tính tiền vào key đó; riêng chạy thử dùng key do nhóm ADOM cài trên máy chủ |
+| BR-06 | Mọi lời gọi mô hình chạy bằng key của chủ agent và tính tiền vào key đó |
 | BR-07 | Chỉ chủ hội thoại mở được hội thoại; đoán đường dẫn của người khác chỉ nhận "không tìm thấy" |
 | BR-08 | Highlight riêng chỉ người tạo thấy, không tự vào kênh hay ngữ cảnh agent; màu không đi theo khi gửi |
 | BR-09 | Highlight riêng chỉ bị xóa khi chính người dùng xóa; giữ nguyên khi đổi key, đổi mô hình, tạo lại câu trả lời |
@@ -1365,9 +1611,16 @@ Mỗi yêu cầu kiểm được bằng ít nhất một ca kiểm thử. Mức:
 | BR-23 | Chốt và loại bắt buộc lý do, chỉ con người làm, không quay ngược |
 | BR-24 | `/summarize` và `/brief` là quyền của chủ workspace; `/summarize` chỉ đọc đề bài và tin của chính kênh |
 | BR-25 | Tên trong workspace duy nhất và được giữ chỗ mãi cho người đã dùng; người đã rời hiện "(đã rời)"; mỗi tin, thẻ, highlight gắn với thành viên chứ không chỉ chuỗi tên |
-| BR-26 | Lượt chạy thử luôn mang nhãn "chạy thử"; mỗi workspace một lượt chạy thử tại một thời điểm |
-| BR-27 | Lượt chạy không hợp lệ phải ghi lý do và luôn hiện lời nhắc không dùng làm kết luận; "Chưa đủ dữ liệu" không bao giờ trình bày như "Đạt" |
-| BR-28 | Lời nhắc lượt chạy (không hợp lệ, đã có lượt mới hơn) đi theo mọi bản chụp số liệu và vào ngữ cảnh agent; chữ của bản chụp giữ nguyên |
+| BR-26 | Phiên đăng nhập nhớ 30 ngày, tính lại từ đầu mỗi lần quay lại |
+| BR-27 | Mã tham gia 7 ký tự chữ in hoa và số, không dùng ký tự dễ nhầm (O, 0, I, L, 1); chữ thường, dấu cách, gạch nối được chuẩn hóa trước khi so |
+| BR-28 | Giới hạn: khoảng 200 highlight riêng mỗi người, khoảng 30 highlight cho agent mỗi workspace, làm chủ khoảng 10 workspace; chạm giới hạn thì nhắc tự dọn, không tự xóa |
+| BR-29 | Ngữ cảnh gửi nguyên văn khoảng 50 tin gần nhất; tóm tắt tin cũ chia khối tại mốc highlight, khối dưới khoảng 5 tin giữ nguyên văn, một lần gọi agent, tối đa khoảng 31 khối |
+| BR-30 | Tên agent là "‹mô hình› của ‹tên trong workspace›"; tin cũ giữ tên mô hình lúc gửi |
+| BR-31 | Đoạn lấy từ bản tóm tắt có người nói "Bản tóm tắt (kênh) do ‹agent› viết (chưa lọc)"; đoạn từ lượt gốc đính kèm giữ người nói của lượt đó |
+| BR-32 | Vai và tên trong workspace tối đa 40 ký tự, mỗi người chỉ sửa của mình; màu ảnh đại diện không trùng trong workspace |
+| BR-33 | Bản tóm tắt hội thoại đính kèm tối đa 4 lượt gốc |
+
+Chi tiết loại, nguồn và truy vết của từng quy tắc: [business-rules.md](business-rules.md).
 
 ---
 
@@ -1389,7 +1642,7 @@ Mỗi yêu cầu kiểm được bằng ít nhất một ca kiểm thử. Mức:
 | NFR-12 | Truy cập | Thao tác chính dùng được bằng bàn phím; độ tương phản chữ đạt WCAG AA |
 | NFR-13 | Tương thích | Dùng được trên trình duyệt desktop phổ biến bản mới; bố cục co giãn theo độ rộng, cột bên thành ngăn kéo khi màn hình hẹp |
 | NFR-14 | Quốc tế hóa | Mọi chữ hiển thị nằm trong tệp ngôn ngữ (tiếng Việt mặc định, có tiếng Anh) |
-| NFR-15 | Kết nối | Cần Internet; xử lý mất kết nối theo UC20 |
+| NFR-15 | Kết nối | Cần Internet; xử lý mất kết nối theo UC17 |
 | NFR-16 | API | API có phiên bản trong đường dẫn (`/api/v1`); lỗi trả về dạng `{ "error": { "code", "message", "details" } }` |
 
 ---
@@ -1403,14 +1656,12 @@ Mỗi yêu cầu kiểm được bằng ít nhất một ca kiểm thử. Mức:
 - Agent tìm kiếm web, đọc tệp hay ảnh, chạy code; tải tệp hay ảnh vào chat.
 - Gửi nguyên văn cả hội thoại riêng vào kênh; xuất hội thoại riêng ra tệp.
 - Agent của riêng workspace chung, agent trọng tài tự động, agent tự trả lời khi được nhắc tên, agent gọi agent.
-- Chạy cả dataset lớn của bài báo trên web.
 - Nhiều key hoặc nhiều agent cho một người.
 - Chế độ dùng khi mất mạng.
 - Mật khẩu riêng, đăng nhập bằng email.
 
 ### 8.2. Làm sau
 
-- Phần số liệu làm sau: thẻ từng tác vụ (`/task`), gắn thẻ số liệu làm bằng chứng cho ý, mục số liệu trong bản tổng hợp, môi trường cô lập và hàng đợi bền cho chạy thử.
 - Lệnh `/check` do chủ chủ động gọi: agent của chủ đối chiếu ý mới với bảng ý tưởng và chỉ ra chỗ trùng hoặc mâu thuẫn; không tự chốt, không tự loại, không tự chạy.
 - Mời thành viên qua email hoặc GitHub.
 - Dùng gói thuê bao qua kết nối từ ứng dụng của nhà cung cấp.
@@ -1427,11 +1678,10 @@ Tài liệu ghi phương án đang áp dụng trong ngoặc; nhóm xác nhận h
 3. **Ai được chốt và loại ý** (mọi thành viên, ghi tên và lý do, BR-21). Phương án khác: chỉ chủ, cho trách nhiệm rõ ràng như việc chuyển sang Đang bàn.
 4. **Khi rời, bị xóa khỏi workspace, hoặc workspace bị xóa**: phần tên đã chốt (BR-25). Hội thoại có ngữ cảnh nhóm vẫn còn nhưng không nhận ngữ cảnh (FR-37); highlight cho agent của người đó trong workspace không còn được dùng. Chưa có chức năng xóa workspace.
 5. **Bản tóm tắt hội thoại làm trong đợt này hay để sau** (làm bản tối thiểu, FR-50 – FR-53 mức T).
-6. **Định dạng kết quả của nhóm ADOM và người nhập** (ba tệp `export_report.py` hoặc `specgate-run/1`; người nhập là chủ workspace). Cần xác nhận nhóm ADOM đồng ý cho website gọi pipeline để chạy thử.
-7. **Các giới hạn số lượng** ở mục 2.6 (200, 30, 10, 50, 5, 4, số tác vụ chạy thử).
-8. **Danh sách màu highlight riêng** (năm màu: vàng, xanh lá, xanh dương, hồng, tím).
-9. **Hội thoại mới tự chọn sẵn ngữ cảnh nhóm** (không, người dùng tự chọn).
-10. **Tin gốc bị sửa hoặc bị xóa thì highlight xử lý thế nào** (để sau, vì chưa có chức năng sửa và xóa tin).
+6. **Các giới hạn số lượng** ở mục 2.6 (200, 30, 10, 50, 5, 4).
+7. **Danh sách màu highlight riêng** (năm màu: vàng, xanh lá, xanh dương, hồng, tím).
+8. **Hội thoại mới tự chọn sẵn ngữ cảnh nhóm** (không, người dùng tự chọn).
+9. **Tin gốc bị sửa hoặc bị xóa thì highlight xử lý thế nào** (để sau, vì chưa có chức năng sửa và xóa tin).
 
 ---
 
@@ -1444,21 +1694,18 @@ Tài liệu ghi phương án đang áp dụng trong ngoặc; nhóm xác nhận h
 | UC03 | FR-10 – FR-14 | BR-04, BR-05 |
 | UC04 | FR-15 – FR-23 | BR-06, BR-07, BR-09, BR-13 |
 | UC05 | FR-24 – FR-30 | BR-08, BR-09, BR-12 |
-| UC06 | FR-31 – FR-41 | BR-06, BR-10, BR-11, BR-14, BR-28 |
+| UC06 | FR-31 – FR-41 | BR-06, BR-10, BR-11, BR-14 |
 | UC07 | FR-42 – FR-49 | BR-12, BR-13, BR-15 |
 | UC08 | FR-50 – FR-53 | BR-15, BR-16 |
 | UC09 | FR-54 – FR-56 | BR-17 |
 | UC10 | FR-57 – FR-64 | BR-18 |
 | UC11 | FR-65 – FR-68 | BR-18, BR-25 |
 | UC12 | FR-69 – FR-76 | BR-19, BR-20 |
-| UC13 | FR-77 – FR-84 | BR-11, BR-12, BR-22, BR-28 |
+| UC13 | FR-77 – FR-84 | BR-11, BR-12, BR-22 |
 | UC14 | FR-85 – FR-92 | BR-20, BR-21, BR-23 |
-| UC15 | FR-93 – FR-98 | BR-14, BR-24 |
-| UC16 | FR-99 – FR-102 | BR-26, BR-27 |
-| UC17 | FR-103 – FR-106 | BR-06, BR-26 |
-| UC18 | FR-107 – FR-112 | BR-27, BR-28 |
-| UC19 | FR-113 – FR-121 | BR-17, BR-18, BR-25 |
-| UC20 | FR-122 – FR-125 | |
+| UC15 | FR-93 – FR-97 | BR-14, BR-24 |
+| UC16 | FR-98 – FR-106 | BR-17, BR-18, BR-25 |
+| UC17 | FR-107 – FR-110 | |
 
 ---
 
@@ -1478,38 +1725,113 @@ Bản 0.3 viết lại theo `flow.md` đã chốt. Khi bản 0.2 khác flow, tà
 | Trang chủ và dấu báo | Không có | Thêm UC02 |
 | Bảng ý tưởng | Mọi thành viên chuyển cột | Chỉ chủ chuyển sang Đang bàn (UC14); `/pin` hỏi ghim phần nào |
 | `/summarize` | Agent của chủ đọc kênh | Chỉ đọc đề bài và tin của chính kênh; không tự vào ngữ cảnh của chủ (BR-14) |
-| Tên trong workspace | Không đặc tả | Duy nhất, giữ chỗ mãi, "(đã rời)" (BR-25, UC19) |
-| Số liệu bài báo | Ngoài phạm vi | Thêm UC16 – UC18 và các quy tắc BR-26 – BR-28 |
-| Kết nối mạng | Không đặc tả | Thêm UC20 |
-| Ca sử dụng | UC01 – UC15 | UC01 – UC20, các chức năng cùng mục tiêu được gộp thành phần A, B, C của một ca |
+| Tên trong workspace | Không đặc tả | Duy nhất, giữ chỗ mãi, "(đã rời)" (BR-25, UC16) |
+| Kết nối mạng | Không đặc tả | Thêm UC17 |
+| Ca sử dụng | UC01 – UC15 | UC01 – UC17, các chức năng cùng mục tiêu được gộp thành phần A, B, C của một ca |
 
 ---
 
 ## 12. Phụ lục: sơ đồ UML
 
-Mã nguồn PlantUML nằm trong thư mục [`uml/`](../uml/README.md), ảnh SVG trong `uml/img/`. Sơ đồ mô tả hành vi ở mức người dùng và hệ thống, không ràng buộc cách cài đặt. Khi đăng lên GitHub Gist, đường dẫn tương đối không mở được; hãy đăng kèm các tệp SVG hoặc thay bằng đường dẫn tuyệt đối tới kho mã.
+Mã nguồn PlantUML nằm trong thư mục [`uml/`](../uml/README.md), ảnh SVG trong `uml/img/`. Trong mục 4, mỗi phần luồng (mỗi ca không chia phần, hoặc mỗi Phần A, B, C của ca có chia phần) có ngay bên dưới một biểu đồ hoạt động và một biểu đồ tuần tự vẽ đúng luồng đó; ca có thực thể mang vòng đời có thêm biểu đồ trạng thái ở cuối ca. Phụ lục này gom lại mục lục và các biểu đồ dùng chung. Cách đọc ký hiệu: [diagram-reading-guide.md](diagram-reading-guide.md).
 
-| Loại | Nội dung | Ca sử dụng | Mã nguồn | Ảnh |
-| --- | --- | --- | --- | --- |
-| Ca sử dụng | Tổng quát 20 ca | UC01 – UC20 | [00-overview.puml](../uml/use-case/00-overview.puml) | [SVG](../uml/img/00-overview.svg) |
-| Ca sử dụng | Workspace riêng và đường riêng sang chung | UC03 – UC08 | [01-private-workspace.puml](../uml/use-case/01-private-workspace.puml) | [SVG](../uml/img/01-private-workspace.svg) |
-| Ca sử dụng | Workspace chung, kênh, bảng, số liệu | UC09 – UC19 | [02-shared-workspace.puml](../uml/use-case/02-shared-workspace.puml) | [SVG](../uml/img/02-shared-workspace.svg) |
-| Hoạt động | Đăng ký, đăng nhập | UC01 | [uc01-sign-in.puml](../uml/activity/uc01-sign-in.puml) | [SVG](../uml/img/uc01-sign-in.svg) |
-| Hoạt động | Chat, dừng, lỗi, tạo lại | UC04 | [uc04-chat.puml](../uml/activity/uc04-chat.puml) | [SVG](../uml/img/uc04-chat.svg) |
-| Hoạt động | Dựng ngữ cảnh nhóm, tóm tắt tin cũ | UC06 | [uc06-group-context.puml](../uml/activity/uc06-group-context.puml) | [SVG](../uml/img/uc06-group-context.svg) |
-| Hoạt động | Gửi highlight riêng vào kênh | UC07 | [uc07-send-highlight.puml](../uml/activity/uc07-send-highlight.puml) | [SVG](../uml/img/uc07-send-highlight.svg) |
-| Hoạt động | Xin tham gia và duyệt | UC10, UC11 | [uc10-uc11-join.puml](../uml/activity/uc10-uc11-join.puml) | [SVG](../uml/img/uc10-uc11-join.svg) |
-| Hoạt động | Gửi tin và xử lý lệnh | UC12 | [uc12-channel-command.puml](../uml/activity/uc12-channel-command.puml) | [SVG](../uml/img/uc12-channel-command.svg) |
-| Hoạt động | Highlight cho agent | UC13 | [uc13-agent-highlight.puml](../uml/activity/uc13-agent-highlight.puml) | [SVG](../uml/img/uc13-agent-highlight.svg) |
-| Hoạt động | Nhập lượt chạy | UC16 | [uc16-import-run.puml](../uml/activity/uc16-import-run.puml) | [SVG](../uml/img/uc16-import-run.svg) |
-| Tuần tự | Kiểm và lưu API key | UC03 | [uc03-api-key.puml](../uml/sequence/uc03-api-key.puml) | [SVG](../uml/img/uc03-api-key.svg) |
-| Tuần tự | Chat có ngữ cảnh nhóm | UC04, UC06 | [uc04-uc06-chat-with-context.puml](../uml/sequence/uc04-uc06-chat-with-context.puml) | [SVG](../uml/img/uc04-uc06-chat-with-context.svg) |
-| Tuần tự | Gửi highlight riêng vào kênh | UC07 | [uc07-send-highlight.puml](../uml/sequence/uc07-send-highlight.puml) | [SVG](../uml/img/uc07-send-highlight.svg) |
-| Tuần tự | Xin tham gia và duyệt | UC10, UC11 | [uc10-uc11-join.puml](../uml/sequence/uc10-uc11-join.puml) | [SVG](../uml/img/uc10-uc11-join.svg) |
-| Tuần tự | Highlight cho agent, agent đọc kèm người nói | UC13 | [uc13-agent-highlight.puml](../uml/sequence/uc13-agent-highlight.puml) | [SVG](../uml/img/uc13-agent-highlight.svg) |
-| Tuần tự | /summarize và /brief | UC15 | [uc15-summarize-brief.puml](../uml/sequence/uc15-summarize-brief.puml) | [SVG](../uml/img/uc15-summarize-brief.svg) |
-| Tuần tự | Chạy thử trên web | UC17 | [uc17-trial-run.puml](../uml/sequence/uc17-trial-run.puml) | [SVG](../uml/img/uc17-trial-run.svg) |
-| Trạng thái | Một ý trên bảng ý tưởng | UC14 | [board-item.puml](../uml/state/board-item.puml) | [SVG](../uml/img/board-item.svg) |
-| Trạng thái | Yêu cầu tham gia | UC10, UC11 | [join-request.puml](../uml/state/join-request.puml) | [SVG](../uml/img/join-request.svg) |
-| Trạng thái | Lượt chạy | UC16, UC17 | [trial-run.puml](../uml/state/trial-run.puml) | [SVG](../uml/img/trial-run.svg) |
-| Trạng thái | Kết nối của trình duyệt | UC20 | [connection.puml](../uml/state/connection.puml) | [SVG](../uml/img/connection.svg) |
+### 12.1. Mục lục sơ đồ
+
+| Loại | Tên biểu đồ | Mã nguồn | Ảnh |
+| --- | --- | --- | --- |
+| Ca sử dụng | Sơ đồ ca sử dụng tổng quát (SRS 0.3) | [00-overview.puml](../uml/use-case/00-overview.puml) | [SVG](../uml/img/uc-00-overview.svg) |
+| Ca sử dụng | Ca sử dụng chi tiết: workspace riêng và đường riêng sang chung | [01-private-workspace.puml](../uml/use-case/01-private-workspace.puml) | [SVG](../uml/img/uc-01-private-workspace.svg) |
+| Ca sử dụng | Ca sử dụng chi tiết: workspace chung, kênh và bảng | [02-shared-workspace.puml](../uml/use-case/02-shared-workspace.puml) | [SVG](../uml/img/uc-02-shared-workspace.svg) |
+| Hoạt động | Biểu đồ hoạt động UC01 - Phần A: Đăng ký hoặc đăng nhập | [uc01a-sign-in.puml](../uml/activity/uc01a-sign-in.puml) | [SVG](../uml/img/act-uc01a.svg) |
+| Hoạt động | Biểu đồ hoạt động UC01 - Phần B: Đăng xuất | [uc01b-sign-out.puml](../uml/activity/uc01b-sign-out.puml) | [SVG](../uml/img/act-uc01b.svg) |
+| Hoạt động | Biểu đồ hoạt động UC02: Dùng Trang chủ và dấu báo ở thanh bên | [uc02-home-badges.puml](../uml/activity/uc02-home-badges.puml) | [SVG](../uml/img/act-uc02.svg) |
+| Hoạt động | Biểu đồ hoạt động UC03: Thiết lập API key và chọn mô hình | [uc03-api-key.puml](../uml/activity/uc03-api-key.puml) | [SVG](../uml/img/act-uc03.svg) |
+| Hoạt động | Biểu đồ hoạt động UC04 - Phần A: Chat với agent riêng | [uc04a-chat.puml](../uml/activity/uc04a-chat.puml) | [SVG](../uml/img/act-uc04a.svg) |
+| Hoạt động | Biểu đồ hoạt động UC04 - Phần B: Tạo lại câu trả lời | [uc04b-regenerate.puml](../uml/activity/uc04b-regenerate.puml) | [SVG](../uml/img/act-uc04b.svg) |
+| Hoạt động | Biểu đồ hoạt động UC04 - Phần C: Quản lý hội thoại | [uc04c-manage-conversations.puml](../uml/activity/uc04c-manage-conversations.puml) | [SVG](../uml/img/act-uc04c.svg) |
+| Hoạt động | Biểu đồ hoạt động UC05 - Phần A: Tạo highlight riêng | [uc05a-create-private-highlight.puml](../uml/activity/uc05a-create-private-highlight.puml) | [SVG](../uml/img/act-uc05a.svg) |
+| Hoạt động | Biểu đồ hoạt động UC05 - Phần B: Quản lý danh sách Highlight riêng | [uc05b-manage-private-highlights.puml](../uml/activity/uc05b-manage-private-highlights.puml) | [SVG](../uml/img/act-uc05b.svg) |
+| Hoạt động | Biểu đồ hoạt động UC06 - Phần A: Chọn ngữ cảnh nhóm cho hội thoại | [uc06a-choose-context.puml](../uml/activity/uc06a-choose-context.puml) | [SVG](../uml/img/act-uc06a.svg) |
+| Hoạt động | Biểu đồ hoạt động UC06 - Phần B: Tóm tắt tin cũ của tôi | [uc06b-digest.puml](../uml/activity/uc06b-digest.puml) | [SVG](../uml/img/act-uc06b.svg) |
+| Hoạt động | Biểu đồ hoạt động UC07 - Phần A: Gửi highlight riêng từ danh sách | [uc07a-send-from-list.puml](../uml/activity/uc07a-send-from-list.puml) | [SVG](../uml/img/act-uc07a.svg) |
+| Hoạt động | Biểu đồ hoạt động UC07 - Phần B: Chèn highlight riêng bằng @ | [uc07b-insert-with-mention.puml](../uml/activity/uc07b-insert-with-mention.puml) | [SVG](../uml/img/act-uc07b.svg) |
+| Hoạt động | Biểu đồ hoạt động UC08: Tóm tắt hội thoại cho nhóm | [uc08-conversation-summary.puml](../uml/activity/uc08-conversation-summary.puml) | [SVG](../uml/img/act-uc08.svg) |
+| Hoạt động | Biểu đồ hoạt động UC09: Tạo workspace chung | [uc09-create-workspace.puml](../uml/activity/uc09-create-workspace.puml) | [SVG](../uml/img/act-uc09.svg) |
+| Hoạt động | Biểu đồ hoạt động UC10 - Phần A: Xin tham gia bằng mã | [uc10a-join-with-code.puml](../uml/activity/uc10a-join-with-code.puml) | [SVG](../uml/img/act-uc10a.svg) |
+| Hoạt động | Biểu đồ hoạt động UC10 - Phần B: Xin tham gia qua trang Khám phá | [uc10b-join-from-explore.puml](../uml/activity/uc10b-join-from-explore.puml) | [SVG](../uml/img/act-uc10b.svg) |
+| Hoạt động | Biểu đồ hoạt động UC11: Duyệt yêu cầu tham gia | [uc11-approve.puml](../uml/activity/uc11-approve.puml) | [SVG](../uml/img/act-uc11.svg) |
+| Hoạt động | Biểu đồ hoạt động UC12: Nhắn tin trong kênh | [uc12-channel-command.puml](../uml/activity/uc12-channel-command.puml) | [SVG](../uml/img/act-uc12.svg) |
+| Hoạt động | Biểu đồ hoạt động UC13: Highlight cho agent | [uc13-agent-highlight.puml](../uml/activity/uc13-agent-highlight.puml) | [SVG](../uml/img/act-uc13.svg) |
+| Hoạt động | Biểu đồ hoạt động UC14 - Phần A: Đưa ý lên bảng ý tưởng | [uc14a-add-idea.puml](../uml/activity/uc14a-add-idea.puml) | [SVG](../uml/img/act-uc14a.svg) |
+| Hoạt động | Biểu đồ hoạt động UC14 - Phần B: Chuyển ý sang Đang bàn | [uc14b-discuss.puml](../uml/activity/uc14b-discuss.puml) | [SVG](../uml/img/act-uc14b.svg) |
+| Hoạt động | Biểu đồ hoạt động UC14 - Phần C: Chốt hoặc loại ý | [uc14c-decide.puml](../uml/activity/uc14c-decide.puml) | [SVG](../uml/img/act-uc14c.svg) |
+| Hoạt động | Biểu đồ hoạt động UC15 - Phần A: Tóm tắt kênh (/summarize) | [uc15a-summarize.puml](../uml/activity/uc15a-summarize.puml) | [SVG](../uml/img/act-uc15a.svg) |
+| Hoạt động | Biểu đồ hoạt động UC15 - Phần B: Dựng và tải bản tổng hợp (/brief) | [uc15b-brief.puml](../uml/activity/uc15b-brief.puml) | [SVG](../uml/img/act-uc15b.svg) |
+| Hoạt động | Biểu đồ hoạt động UC16 - Phần A: Quản lý tên, vai và tư cách thành viên | [uc16a-members.puml](../uml/activity/uc16a-members.puml) | [SVG](../uml/img/act-uc16a.svg) |
+| Hoạt động | Biểu đồ hoạt động UC16 - Phần B: Cấu hình workspace chung | [uc16b-settings.puml](../uml/activity/uc16b-settings.puml) | [SVG](../uml/img/act-uc16b.svg) |
+| Hoạt động | Biểu đồ hoạt động UC17: Tiếp tục làm việc khi mạng chập chờn | [uc17-connection.puml](../uml/activity/uc17-connection.puml) | [SVG](../uml/img/act-uc17.svg) |
+| Tuần tự | Biểu đồ tuần tự UC01 - Phần A: Đăng ký hoặc đăng nhập | [uc01a-sign-in.puml](../uml/sequence/uc01a-sign-in.puml) | [SVG](../uml/img/seq-uc01a.svg) |
+| Tuần tự | Biểu đồ tuần tự UC01 - Phần B: Đăng xuất | [uc01b-sign-out.puml](../uml/sequence/uc01b-sign-out.puml) | [SVG](../uml/img/seq-uc01b.svg) |
+| Tuần tự | Biểu đồ tuần tự UC02: Dùng Trang chủ và dấu báo ở thanh bên | [uc02-home.puml](../uml/sequence/uc02-home.puml) | [SVG](../uml/img/seq-uc02.svg) |
+| Tuần tự | Biểu đồ tuần tự UC03: Thiết lập API key và chọn mô hình | [uc03-api-key.puml](../uml/sequence/uc03-api-key.puml) | [SVG](../uml/img/seq-uc03.svg) |
+| Tuần tự | Biểu đồ tuần tự UC04 - Phần A: Chat với agent riêng | [uc04a-chat.puml](../uml/sequence/uc04a-chat.puml) | [SVG](../uml/img/seq-uc04a.svg) |
+| Tuần tự | Biểu đồ tuần tự UC04 - Phần B: Tạo lại câu trả lời | [uc04b-regenerate.puml](../uml/sequence/uc04b-regenerate.puml) | [SVG](../uml/img/seq-uc04b.svg) |
+| Tuần tự | Biểu đồ tuần tự UC04 - Phần C: Quản lý hội thoại | [uc04c-manage-conversations.puml](../uml/sequence/uc04c-manage-conversations.puml) | [SVG](../uml/img/seq-uc04c.svg) |
+| Tuần tự | Biểu đồ tuần tự UC05 - Phần A: Tạo highlight riêng | [uc05a-create-private-highlight.puml](../uml/sequence/uc05a-create-private-highlight.puml) | [SVG](../uml/img/seq-uc05a.svg) |
+| Tuần tự | Biểu đồ tuần tự UC05 - Phần B: Quản lý danh sách Highlight riêng | [uc05b-manage-private-highlights.puml](../uml/sequence/uc05b-manage-private-highlights.puml) | [SVG](../uml/img/seq-uc05b.svg) |
+| Tuần tự | Biểu đồ tuần tự UC06 - Phần A: Chọn ngữ cảnh nhóm cho hội thoại | [uc06a-choose-context.puml](../uml/sequence/uc06a-choose-context.puml) | [SVG](../uml/img/seq-uc06a.svg) |
+| Tuần tự | Biểu đồ tuần tự UC06 - Phần B: Tóm tắt tin cũ của tôi | [uc06b-digest.puml](../uml/sequence/uc06b-digest.puml) | [SVG](../uml/img/seq-uc06b.svg) |
+| Tuần tự | Biểu đồ tuần tự UC07 - Phần A: Gửi highlight riêng từ danh sách | [uc07a-send-from-list.puml](../uml/sequence/uc07a-send-from-list.puml) | [SVG](../uml/img/seq-uc07a.svg) |
+| Tuần tự | Biểu đồ tuần tự UC07 - Phần B: Chèn highlight riêng bằng @ | [uc07b-insert-with-mention.puml](../uml/sequence/uc07b-insert-with-mention.puml) | [SVG](../uml/img/seq-uc07b.svg) |
+| Tuần tự | Biểu đồ tuần tự UC08: Tóm tắt hội thoại cho nhóm | [uc08-conversation-summary.puml](../uml/sequence/uc08-conversation-summary.puml) | [SVG](../uml/img/seq-uc08.svg) |
+| Tuần tự | Biểu đồ tuần tự UC09: Tạo workspace chung | [uc09-create-workspace.puml](../uml/sequence/uc09-create-workspace.puml) | [SVG](../uml/img/seq-uc09.svg) |
+| Tuần tự | Biểu đồ tuần tự UC10 - Phần A: Xin tham gia bằng mã | [uc10a-join-with-code.puml](../uml/sequence/uc10a-join-with-code.puml) | [SVG](../uml/img/seq-uc10a.svg) |
+| Tuần tự | Biểu đồ tuần tự UC10 - Phần B: Xin tham gia qua trang Khám phá | [uc10b-join-from-explore.puml](../uml/sequence/uc10b-join-from-explore.puml) | [SVG](../uml/img/seq-uc10b.svg) |
+| Tuần tự | Biểu đồ tuần tự UC11: Duyệt yêu cầu tham gia | [uc11-approve.puml](../uml/sequence/uc11-approve.puml) | [SVG](../uml/img/seq-uc11.svg) |
+| Tuần tự | Biểu đồ tuần tự UC12: Nhắn tin trong kênh | [uc12-channel-command.puml](../uml/sequence/uc12-channel-command.puml) | [SVG](../uml/img/seq-uc12.svg) |
+| Tuần tự | Biểu đồ tuần tự UC13: Highlight cho agent | [uc13-agent-highlight.puml](../uml/sequence/uc13-agent-highlight.puml) | [SVG](../uml/img/seq-uc13.svg) |
+| Tuần tự | Biểu đồ tuần tự UC14 - Phần A: Đưa ý lên bảng ý tưởng | [uc14a-add-idea.puml](../uml/sequence/uc14a-add-idea.puml) | [SVG](../uml/img/seq-uc14a.svg) |
+| Tuần tự | Biểu đồ tuần tự UC14 - Phần B: Chuyển ý sang Đang bàn | [uc14b-discuss.puml](../uml/sequence/uc14b-discuss.puml) | [SVG](../uml/img/seq-uc14b.svg) |
+| Tuần tự | Biểu đồ tuần tự UC14 - Phần C: Chốt hoặc loại ý | [uc14c-decide.puml](../uml/sequence/uc14c-decide.puml) | [SVG](../uml/img/seq-uc14c.svg) |
+| Tuần tự | Biểu đồ tuần tự UC15 - Phần A: Tóm tắt kênh (/summarize) | [uc15a-summarize.puml](../uml/sequence/uc15a-summarize.puml) | [SVG](../uml/img/seq-uc15a.svg) |
+| Tuần tự | Biểu đồ tuần tự UC15 - Phần B: Dựng và tải bản tổng hợp (/brief) | [uc15b-brief.puml](../uml/sequence/uc15b-brief.puml) | [SVG](../uml/img/seq-uc15b.svg) |
+| Tuần tự | Biểu đồ tuần tự UC16 - Phần A: Quản lý tên, vai và tư cách thành viên | [uc16a-members.puml](../uml/sequence/uc16a-members.puml) | [SVG](../uml/img/seq-uc16a.svg) |
+| Tuần tự | Biểu đồ tuần tự UC16 - Phần B: Cấu hình workspace chung | [uc16b-settings.puml](../uml/sequence/uc16b-settings.puml) | [SVG](../uml/img/seq-uc16b.svg) |
+| Tuần tự | Biểu đồ tuần tự UC17: Tiếp tục làm việc khi mạng chập chờn | [uc17-connection.puml](../uml/sequence/uc17-connection.puml) | [SVG](../uml/img/seq-uc17.svg) |
+| Trạng thái | Biểu đồ trạng thái: Highlight cho agent (Highlight) | [agent-highlight.puml](../uml/state/agent-highlight.puml) | [SVG](../uml/img/st-agent-highlight.svg) |
+| Trạng thái | Biểu đồ trạng thái: Câu trả lời của agent (Turn) | [answer-turn.puml](../uml/state/answer-turn.puml) | [SVG](../uml/img/st-answer-turn.svg) |
+| Trạng thái | Biểu đồ trạng thái: Ý trên bảng ý tưởng (BoardItem) | [board-item.puml](../uml/state/board-item.puml) | [SVG](../uml/img/st-board-item.svg) |
+| Trạng thái | Biểu đồ trạng thái: Kết nối của trình duyệt | [connection.puml](../uml/state/connection.puml) | [SVG](../uml/img/st-connection.svg) |
+| Trạng thái | Biểu đồ trạng thái: Yêu cầu tham gia (JoinRequest) | [join-request.puml](../uml/state/join-request.puml) | [SVG](../uml/img/st-join-request.svg) |
+| Trạng thái | Biểu đồ trạng thái: Thành viên workspace (Member) | [member.puml](../uml/state/member.puml) | [SVG](../uml/img/st-member.svg) |
+| Trạng thái | Biểu đồ trạng thái: Highlight riêng (PrivateHighlight) | [private-highlight.puml](../uml/state/private-highlight.puml) | [SVG](../uml/img/st-private-highlight.svg) |
+| Trạng thái | Biểu đồ trạng thái: Agent riêng theo API key (ProviderKey) | [provider-key.puml](../uml/state/provider-key.puml) | [SVG](../uml/img/st-provider-key.svg) |
+| Lớp | SpecGate: kiến trúc thành phần (web_ui → backend → CSDL) | [architecture.puml](../uml/class/architecture.puml) | [SVG](../uml/img/cls-architecture.svg) |
+| Lớp | SpecGate: sơ đồ lớp miền dữ liệu (bảng ws_* trong backend) | [domain.puml](../uml/class/domain.puml) | [SVG](../uml/img/cls-domain.svg) |
+| RBAC | Bảng RBAC SpecGate (✔ được, ✘ không, ◐ có điều kiện) | [rbac.puml](../uml/rbac/rbac.puml) | [SVG](../uml/img/rbac.svg) |
+
+### 12.2. Sơ đồ ca sử dụng
+
+![Sơ đồ ca sử dụng tổng quát](../uml/img/uc-00-overview.svg)
+
+![Ca sử dụng chi tiết: workspace riêng và đường riêng sang chung](../uml/img/uc-01-private-workspace.svg)
+
+![Ca sử dụng chi tiết: workspace chung, kênh và bảng](../uml/img/uc-02-shared-workspace.svg)
+
+### 12.3. Sơ đồ lớp miền dữ liệu
+
+Mỗi lớp là một bảng `ws_*` trong `backend/app/ws/models.py`. Các trường JSON (`cards`, `segments`, `sends`, `blocks`, `parts`) là bản chụp theo BR-13.
+
+![Sơ đồ lớp miền dữ liệu](../uml/img/cls-domain.svg)
+
+### 12.4. Sơ đồ thành phần
+
+Trình duyệt chỉ gọi `web_ui`; `web_ui` chuyển mọi đường `/api/*` sang backend (NFR-02). Kênh thời gian thực dùng Server-Sent Events, nối lại bằng `?after=<seq>` (UC17). CSDL là SQLite khi phát triển và Postgres (Supabase) khi triển khai, xem [supabase-setup.md](supabase-setup.md).
+
+![Sơ đồ thành phần](../uml/img/cls-architecture.svg)
+
+### 12.5. Sơ đồ phân quyền
+
+Bảng chữ của sơ đồ này nằm trong [uml/README.md](../uml/README.md#bảng-rbac).
+
+![Bảng RBAC](../uml/img/rbac.svg)

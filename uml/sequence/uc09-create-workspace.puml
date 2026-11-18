@@ -1,0 +1,33 @@
+' Sequence diagram of UC09: creating a shared workspace with its channel and join code.
+@startuml seq-uc09
+!include ../_style.iuml
+title Biểu đồ tuần tự UC09: Tạo workspace chung
+autonumber
+
+actor "Người dùng" as A
+boundary "Hộp thoại Tạo workspace" as UI
+control "WorkspaceController" as C
+entity "Workspace" as W
+entity "Member" as M
+entity "Channel" as CH
+
+A -> UI : nhập tên, đề bài, chế độ hiển thị
+A -> UI : bấm "Tạo workspace"
+UI -> C : POST /workspaces {name, brief, visibility}
+alt E1 - thiếu tên hoặc đề bài
+  C --> UI : 422 chỉ rõ ô còn thiếu
+else
+  C -> W : đếm workspace mình làm chủ, tìm tên trùng
+  alt E2 - trùng tên
+    C --> UI : 409 tên đã dùng
+  else E3 - đã làm chủ ~10
+    C --> UI : 409 đã đạt giới hạn
+  else hợp lệ
+    C -> W : tạo(tên, đề bài, mã tham gia 7 ký tự)
+    C -> M : tạo(chủ, màu ảnh đại diện)
+    C -> CH : tạo kênh "chung"
+    C --> UI : 201 workspace
+    UI --> A : mở kênh "chung"
+  end
+end
+@enduml

@@ -1,0 +1,79 @@
+' Mirrors every flow of UC16: names, roles and membership (part A) and the owner's workspace settings (part B).
+@startuml act-uc16
+!include ../_style.iuml
+title Hoạt động UC16: Thành viên và cài đặt workspace
+
+start
+partition "Phần A. Quản lý tên, vai và tư cách thành viên" {
+  :(1) Trang "Thành viên và agent" liệt kê mỗi người: ảnh đại diện màu,\ntên trong workspace, chủ hay thành viên, vai, tài khoản gốc,\nagent đang dùng hoặc "chưa nhập key";
+  :(2) Không ai thấy key của người khác;
+  switch (Thành viên muốn)
+  case (đặt biệt danh)
+    :[A.A1] Vào với tên tạm (UC11 A1): hộp nhắc đặt tên;\nnhập biệt danh hoặc để sau;
+    if (Trùng tên ai đã dùng, kể cả người đã rời?) then (có)
+      :[A.E1] Không cho lưu;
+      stop
+    else (không)
+    endif
+  case (sửa vai)
+    :[A.A2] Sửa vai (≤ 40 ký tự) trong khung "Agent đang đọc";
+  case (đổi tên)
+    :[A.A3] Menu "…" ở dòng của mình, "Đổi tên trong workspace";
+    if (Trùng tên ai đã dùng, kể cả người đã rời?) then (có)
+      :[A.E1] Không cho lưu;
+      stop
+    else (không)
+    endif
+  case (rời workspace)
+    if (Là chủ?) then (có)
+      :[A.E2] Không có lựa chọn này;
+      stop
+    else (không)
+      :[A.A4] "Rời workspace" trong menu "…", xác nhận;
+    endif
+  case (xóa thành viên, chủ)
+    :[A.A5] Chủ chọn "Xóa khỏi workspace", xác nhận;
+  endswitch
+  :Thay đổi có hiệu lực mọi nơi và trong ngữ cảnh agent từ câu hỏi sau;
+  note right
+  BR-25: tên giữ chỗ mãi cho người đã dùng;
+  người đã rời hiện "‹tên› (đã rời)".
+  end note
+}
+stop
+
+partition "Phần B. Cấu hình workspace chung" {
+  start
+  if (Là chủ?) then (không)
+    :[B.E3] Đề bài chỉ đọc; không có nút đổi mã, tạo kênh;
+    stop
+  else (có)
+  endif
+  switch (Chủ muốn)
+  case (sửa đề bài)
+    :(1) Sửa đề bài trong mục "Đề bài", bấm "Lưu đề bài";
+    if (Đề bài trống?) then (có)
+      :[B.E1] Không cho lưu;
+      stop
+    else (không)
+    endif
+    :(2) Báo đã lưu; agent mọi thành viên đọc đề bài mới từ câu hỏi sau;
+  case (đổi mã)
+    :[B.A1] Bấm "Đổi mã"; mã cũ hết hiệu lực ngay;\nmọi thành viên xem và "Chép mã" được;
+  case (tạo kênh)
+    :[B.A2] "Tạo kênh", nhập tên (chữ thường không dấu, số, gạch ngang);
+    if (Tên không hợp lệ hoặc trùng?) then (có)
+      :[B.E2] Báo lỗi;
+      stop
+    else (không)
+      :[B.A2] Tạo và mở kênh mới;
+    endif
+  case (đổi tên, hiển thị)
+    :[B.A3] Đổi tên và chế độ hiển thị của workspace;
+  endswitch
+  note right
+  BR-17, BR-18.
+  end note
+  stop
+}
+@enduml

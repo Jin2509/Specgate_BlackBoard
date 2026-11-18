@@ -1,5 +1,5 @@
 // Renders one card of the idea board: number, body, parts with their speakers, reason and who decided.
-import { FlaskConical, Terminal, TriangleAlert, User } from "lucide-react";
+import { Terminal, User } from "lucide-react";
 
 import { format, t } from "@/lib/i18n";
 import type { BoardCard } from "@/types/board";
@@ -19,7 +19,6 @@ export function toCardFooter(card: BoardCard, isCompact: boolean): string {
 
 function AuthorIcon({ kind }: { kind: BoardCard["createdBy"]["kind"] }) {
   if (kind === "agent") return <Terminal className="size-3" />;
-  if (kind === "data") return <FlaskConical className="size-3" />;
   return <User className="size-3" />;
 }
 
@@ -68,12 +67,6 @@ export function BoardItemCard({
             </li>
           ))}
         </ul>
-      ) : null}
-
-      {card.notice ? (
-        <p className="mt-1 flex items-center gap-1 text-[11px] font-medium text-rejected">
-          <TriangleAlert className="size-3" /> {card.notice}
-        </p>
       ) : null}
 
       {card.reason && status ? (

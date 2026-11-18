@@ -1,9 +1,7 @@
+' Renders the role and permission matrix of SRS 0.3 as an image.
 @startuml rbac
 !include ../_style.iuml
 title Bảng RBAC SpecGate (✔ được, ✘ không, ◐ có điều kiện)
-skinparam legendBackgroundColor #FFFFFF
-skinparam legendBorderColor #CED4DA
-skinparam legendFontSize 12
 
 legend top left
 |= Nhóm |= Quyền |= Khách |= Người dùng |= Người xin |= Thành viên |= Chủ WS |= Agent riêng |
@@ -11,44 +9,46 @@ legend top left
 | Tài khoản | Đăng xuất | ✘ | ✔ | ✔ | ✔ | ✔ | ✘ |
 | WS riêng | Lưu / đổi / xóa API key của mình (tạo agent riêng) | ✘ | ✔ | ✔ | ✔ | ✔ | ✘ |
 | WS riêng | Xem key gốc (chỉ thấy 4 ký tự cuối) | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ |
-| WS riêng | Chat, xem, xóa hội thoại của mình | ✘ | ✔ | ✔ | ✔ | ✔ | ✘ |
+| WS riêng | Chat, tạo lại, đổi tên, xóa hội thoại của mình | ✘ | ✔ | ✔ | ✔ | ✔ | ✘ |
 | WS riêng | Xem hội thoại riêng của người khác | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ |
-| WS riêng | Gắn hội thoại với workspace chung | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
-| WS riêng | Gửi câu trả lời của agent mình vào kênh | ✘ | ✘ | ✘ | ✔ | ✔ | ◐⁶ |
+| WS riêng | Tạo, sửa, dọn dẹp Highlight riêng của mình | ✘ | ✔ | ✔ | ✔ | ✔ | ✘ |
+| WS riêng | Chọn workspace chung làm ngữ cảnh nhóm | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
+| WS riêng | Tóm tắt tin cũ, Tóm tắt cho nhóm | ✘ | ✘ | ✘ | ✔ | ✔ | ◐⁷ |
+| Riêng sang chung | Gửi Highlight riêng / bản tóm tắt vào kênh | ✘ | ✘ | ✘ | ✔ | ✔ | ✘⁶ |
 | WS chung | Tạo workspace chung (thành chủ) | ✘ | ✔ | ✔ | ✔ | ✔ | ✘ |
 | WS chung | Xem kênh, bảng, bản tổng hợp | ✘ | ✘ | ✘ | ✔ | ✔ | ◐¹ |
 | WS chung | Xem thành viên, vai, agent riêng (không thấy key) | ✘ | ✘ | ✘ | ✔ | ✔ | ◐¹ |
-| WS chung | Đặt vai trong nhóm của mình | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
-| WS chung | Sửa vai của người khác | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ |
-| WS chung | Sửa đề bài, tên, hiển thị ở Khám phá | ✘ | ✘ | ✘ | ✘ | ✔ | ✘ |
+| WS chung | Đặt vai, đổi tên trong workspace của mình | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
+| WS chung | Sửa vai, tên của người khác | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ |
+| WS chung | Rời workspace | ✘ | ✘ | ✘ | ✔ | ✘ | ✘ |
+| WS chung | Sửa đề bài, tên, hiển thị ở Khám phá; tạo kênh | ✘ | ✘ | ✘ | ✘ | ✔ | ✘ |
 | WS chung | Xóa thành viên | ✘ | ✘ | ✘ | ✘ | ✔ | ✘ |
-| Tham gia | Xem và chia sẻ mã tham gia | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
+| Tham gia | Xem và chép mã tham gia | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
 | Tham gia | Đổi mã (mã cũ hết hiệu lực ngay) | ✘ | ✘ | ✘ | ✘ | ✔ | ✘ |
 | Tham gia | Nhập mã / gửi yêu cầu từ Khám phá | ✘ | ✔ | ✔² | ✘³ | ✘³ | ✘ |
 | Tham gia | Hủy yêu cầu của mình | ✘ | ✘ | ✔ | ✘ | ✘ | ✘ |
 | Tham gia | Xem, duyệt, từ chối yêu cầu | ✘ | ✘ | ✘ | ✘ | ✔ | ✘ |
 | Kênh | Gửi tin, @ nhắc người | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
-| Kênh | Highlight tin của người khác (chỉ mình thấy) | ✘ | ✘ | ✘ | ✔⁴ | ✔⁴ | ✘ |
+| Kênh | Highlight cho agent (chỉ mình thấy) | ✘ | ✘ | ✘ | ✔⁴ | ✔⁴ | ✘ |
 | Kênh | Xem highlight của người khác | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ |
 | Kênh | /idea /note /pin /help | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
 | Kênh | /summarize /brief | ✘ | ✘ | ✘ | ✘⁵ | ✔ | ✘ |
 | Bảng | Thêm ý lên bảng (cột Đề xuất) | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
-| Bảng | Chốt / loại (bắt buộc lý do) | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
+| Bảng | Chuyển ý sang Đang bàn | ✘ | ✘ | ✘ | ✘ | ✔ | ✘ |
+| Bảng | Chốt / loại (bắt buộc lý do) | ✘ | ✘ | ✘ | ✔⁸ | ✔ | ✘ |
 | Bảng | Mở lại ý đã chốt / loại | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ |
 | Tổng hợp | Dựng lại bản tổng hợp | ✘ | ✘ | ✘ | ✘ | ✔ | ✘ |
-| Tổng hợp | Tải bản tổng hợp Markdown | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
-| Chi phí | Gọi mô hình bằng key của chủ agent | – | – | – | – | – | ◐⁷ |
-| ADOM | Xem lượt chạy, chỉ số; /stats /task | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
-| ADOM | Nhập báo cáo, /run | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
+| Tổng hợp | Xem, tải bản tổng hợp Markdown | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
 endlegend
 
 caption
- ¹ Agent riêng chỉ "đọc" qua ContextBuilder khi chủ nó hỏi trong hội thoại gắn workspace: đề bài, đội và vai, ý chốt/loại, tin của chủ nó, highlight của chủ nó kèm người nói.
+ ¹ Agent riêng chỉ "đọc" qua bộ dựng ngữ cảnh khi chủ nó hỏi trong hội thoại chọn workspace: đề bài, thành viên và vai, ý chốt/loại, tin của chủ nó, highlight cho agent của chủ nó kèm người nói.
  ² Gửi lại thì cập nhật yêu cầu đang chờ, không tạo trùng.
  ³ Đã là thành viên thì mở thẳng workspace.
- ⁴ Chỉ trên tin của người khác hoặc agent người khác; tin của mình và agent mình đã tự vào ngữ cảnh.
- ⁵ Hệ thống trả tin từ chối kèm lý do.
- ⁶ Agent không tự đăng: tin chỉ vào kênh khi chủ của nó bấm "Gửi vào kênh"; lệnh trong tin của agent không thực thi; agent không chốt được.
- ⁷ Mọi lời gọi chạy bằng key của chủ agent; /summarize dùng agent và key của chủ workspace. Không có trần chi phí.
+ ⁴ Chỉ trên tin của người khác; tin của mình (kể cả thẻ trích dẫn lời agent mình) đã tự vào ngữ cảnh.
+ ⁵ Hệ thống trả tin "đây là quyền của chủ workspace".
+ ⁶ Agent không tự gửi: lời agent chỉ vào kênh khi chủ nó gửi một Highlight riêng hoặc bản tóm tắt (BR-15); lệnh trong lời agent không thực hiện.
+ ⁷ Chỉ chạy khi chủ agent bấm, bằng key của chủ agent; /summarize dùng agent và key của chủ workspace (BR-06).
+ ⁸ Phương án đang áp dụng của điểm mở 9.3 (BR-21).
 endcaption
 @enduml

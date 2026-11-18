@@ -45,7 +45,7 @@ if (Quyết định?) then (duyệt)
   |Hệ thống|
   :Thêm thành viên, gán màu ảnh đại diện chưa ai dùng;
   if (Tên trùng thành viên khác?) then (có)
-    :Đặt tên tạm kèm số, nhắc chọn biệt danh (UC19-A);
+    :Đặt tên tạm kèm số, nhắc chọn biệt danh (UC16-A);
   else (không)
   endif
   :Trang chờ tự chuyển người dùng vào workspace;

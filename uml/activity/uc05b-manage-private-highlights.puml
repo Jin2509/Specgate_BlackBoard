@@ -1,0 +1,33 @@
+' Activity diagram of UC05 part B: browsing, editing, deleting and cleaning up private highlights.
+@startuml act-uc05b
+!include ../_style.iuml
+title Biểu đồ hoạt động UC05 - Phần B: Quản lý danh sách Highlight riêng
+
+|Người dùng|
+start
+:Mở "Highlight riêng";
+|Hệ thống|
+:(1) Hiện danh sách theo thời gian;
+if (Gần đủ 200?) then (có)
+  :[B.E1] Nhắc "Bạn đã dùng N/200";
+else (không)
+endif
+|Người dùng|
+:(2) Lọc theo màu, hội thoại, loại,\nđã gửi; hoặc tìm chữ;
+:Chọn một thao tác trên mục;
+|Hệ thống|
+if (Thao tác?) then (mở)
+  :(3) Mở đúng hội thoại, đúng chỗ;
+elseif () then ([B.A1] sửa)
+  :Lưu chữ, màu, ghi chú; sửa chữ của agent\nthì báo thẻ sẽ ghi "(‹tên› đã chỉnh)";
+elseif () then ([B.A2] xóa)
+  :Xóa mục; thẻ đã gửi vẫn còn;
+elseif () then ([B.A3] dọn dẹp)
+  :Xóa các mục khớp điều kiện,\nbáo số đã xóa, số còn lại;
+elseif () then ([B.A4] gửi)
+  :Mở hộp thoại gửi (UC07);
+else ([B.A5] đính kèm)
+  :Lưu tối đa 4 lượt gốc\ncho bản tóm tắt (UC08);
+endif
+stop
+@enduml

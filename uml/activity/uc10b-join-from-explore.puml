@@ -1,0 +1,31 @@
+' Activity diagram of UC10 part B: asking to join from the Explore page.
+@startuml act-uc10b
+!include ../_style.iuml
+title Biểu đồ hoạt động UC10 - Phần B: Xin tham gia qua trang Khám phá
+
+|Người dùng|
+start
+:Bấm "Khám phá" hoặc mở đường dẫn\ntới workspace chưa tham gia;
+|Hệ thống|
+if (Vào bằng cách nào?) then (bấm "Khám phá")
+  :(1) Liệt kê workspace "ai cũng tìm thấy"\n[B.E1] workspace ẩn không hiện;
+  :(2) Lọc theo tên hoặc đề bài\nngười dùng gõ;
+else (đường dẫn)
+  :[B.A1] Mở Khám phá,\nchọn sẵn workspace đó;
+endif
+|Hệ thống|
+:(3) Hiện đề bài, chủ, số thành viên,\nquan hệ của người dùng;
+if (Quan hệ?) then (đã là thành viên)
+  :[B.A3] Nút "Mở workspace";
+  stop
+elseif () then (đang chờ duyệt)
+  :[B.A2] Hiện lời nhắn cũ để sửa;
+else (chưa tham gia)
+  :Hiện ô lời nhắn và nút "Gửi yêu cầu";
+endif
+|Người dùng|
+:(4) Viết lời nhắn, bấm "Gửi yêu cầu";
+|Hệ thống|
+:(5) Tạo hoặc cập nhật yêu cầu,\nmở trang "Đang chờ duyệt" (như phần A);
+stop
+@enduml

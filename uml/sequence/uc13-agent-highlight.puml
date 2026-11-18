@@ -1,36 +1,48 @@
-' Shows a member highlighting another member's text so that only their own agent reads it (UC13).
-@startuml uc13-agent-highlight
+' Sequence diagram of UC13: saving a highlight for one's own agent from other members' messages.
+@startuml seq-uc13
 !include ../_style.iuml
-title Tuần tự UC13: Highlight cho agent, rồi agent đọc kèm người nói
+title Biểu đồ tuần tự UC13: Highlight cho agent
 autonumber
 
-actor "Long" as Long
-participant "Trình duyệt" as Web
-participant "Máy chủ SpecGate" as Server
-database "CSDL" as Db
-participant "Nhà cung cấp AI" as Ai
+actor "Thành viên" as A
+boundary "Kênh chat" as UI
+boundary "Hộp thoại Highlight" as DLG
+control "HighlightController" as C
+entity "Member" as M
+entity "Message" as MS
+entity "Highlight" as H
 
-== Highlight trong kênh ==
-Long -> Web : bôi đen đoạn trong thẻ "Claude của Lan nói"
-Web -> Web : bắt vùng chọn theo loại nội dung,\nbỏ phần là tin của Long
-Long -> Web : bấm "Highlight cho agent của tôi"
-Long -> Web : thu hẹp hai đầu, chọn nhãn, ghi chú
-Web -> Server : lưu (các đoạn, tin gốc, nhãn, ghi chú)
-Server -> Db : kiểm thành viên, kiểm tin gốc không phải của Long
-Server -> Db : đếm highlight của Long trong workspace
-alt đã có ~30
-  Server --> Web : không lưu, nhắc bỏ bớt (E2)
+A -> UI : (1) bôi đen các đoạn
+UI -> UI : (2) bắt vùng chọn theo loại nội dung
+alt A1 - chỉ tin của mình
+  UI --> A : "Tin của bạn đã tự vào ngữ cảnh agent của bạn"
 else
-  Server -> Server : kiểm mỗi đoạn là chuỗi con liền của tin gốc (E1)
-  Server -> Db : lưu bản chụp, mỗi đoạn giữ người nói
-  Server --> Web : đã lưu
-  Web --> Long : vệt phấn vàng nhạt (chỉ Long thấy)
+  opt A2 - có lẫn tin của mình
+    UI --> A : bỏ phần đó, kèm lời nhắc
+  end
+  A -> UI : (3) bấm "Highlight cho agent của tôi"
+  UI -> DLG : (4) mở hộp thoại, từng đoạn kèm người nói
+  loop (5) tới khi ưng
+    A -> DLG : thu hẹp hoặc bỏ đoạn
+    opt E1 - sửa chữ ở giữa đoạn
+      DLG --> A : khóa nút lưu
+    end
+  end
+  A -> DLG : (6) chọn nhãn, ghi chú; (7) "Lưu highlight"
+  DLG -> C : POST /workspaces/{ws}/channels/{ch}/highlights {segments, label, note}
+  C -> M : kiểm là thành viên
+  C -> MS : kiểm tin gốc, không phải tin của mình,\nmỗi đoạn là chữ liền của tin gốc
+  C -> H : đếm highlight ở workspace
+  alt E2 - đã đủ ~30
+    C --> DLG : 409 nhắc bỏ bớt
+  else
+    C -> H : lưu bản chụp, mỗi đoạn giữ người nói
+    C --> DLG : 201
+    DLG --> UI : (8) vệt phấn (chỉ mình thấy)
+  end
 end
-
-== Lượt hỏi kế tiếp ở workspace riêng của Long ==
-Long -> Server : hỏi trong hội thoại chọn workspace này
-ref over Server, Db : Tuần tự UC04, UC06: dựng ngữ cảnh nhóm
-Server -> Ai : "[Claude của Lan nói, Long đánh dấu Quan trọng] …"\nbằng key của Long
-Ai --> Server : "Theo Claude của Lan…"
-Server --> Long : câu trả lời nói rõ dựa vào ý của ai
+opt A3, A4 - sửa hoặc bỏ về sau
+  A -> C : PATCH hoặc DELETE /highlights/{id}
+  C -> H : cập nhật hoặc xóa
+end
 @enduml

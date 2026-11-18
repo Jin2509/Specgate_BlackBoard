@@ -1,6 +1,5 @@
 // Defines the idea board, its cards and the brief built from it.
 import type { Profile } from "./profile";
-import type { CardRun, RunState } from "./run";
 
 export type BoardItemKind = "idea" | "note";
 export type IdeaStatus = "proposed" | "discussing" | "decided" | "rejected";
@@ -13,13 +12,10 @@ export interface BoardItem {
   body: string;
   status: IdeaStatus | null;
   reason: string | null;
-  createdBy: { kind: "human" | "agent" | "data"; id: string };
+  createdBy: { kind: "human" | "agent"; id: string };
   authorName: string;
   /** A pin of a message and its card: one idea in several parts, each with its own speaker. */
   parts?: Array<{ speaker: string; text: string }>;
-  /** A pinned stats card whose run was invalidated, superseded or removed since. */
-  notice?: string;
-  runState?: RunState;
   at: string;
   source: { channelId: string | null; messageId: string | null };
   decidedBy?: { id: string; at: string | null };
@@ -57,6 +53,5 @@ export interface Brief {
   rejected: BriefRow[];
   discussing: BriefRow[];
   notes: BriefRow[];
-  evidence?: { run: CardRun; criteria: string[] } | null;
   markdown: string;
 }

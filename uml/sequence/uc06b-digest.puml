@@ -1,0 +1,36 @@
+' Sequence diagram of UC06 part B: summarizing old own messages in one model call.
+@startuml seq-uc06b
+!include ../_style.iuml
+title Biểu đồ tuần tự UC06 - Phần B: Tóm tắt tin cũ của tôi
+autonumber
+
+actor "Thành viên" as A
+boundary "Khung Agent đang đọc" as UI
+control "ConversationController" as C
+control "ContextBuilder" as CB
+control "LlmGateway" as G
+participant "Nhà cung cấp AI" as AI
+entity "ContextDigest" as D
+entity "PrivateHighlight" as PH
+
+UI --> A : (1) "Sẽ tóm tắt N tin, K khối, gọi agent cho J khối"
+A -> UI : (2) bấm "Tóm tắt tin cũ"
+UI -> C : POST /conversations/{id}/context/digest
+C -> CB : chia khối(tin cũ, mốc giờ highlight)
+CB --> C : khối nguyên văn (< ~5 tin), khối cần tóm tắt
+C -> G : complete(các khối có đánh dấu ranh giới)
+G -> AI : một lần gọi bằng key của thành viên
+alt B.E1 - key lỗi
+  AI --> G : lỗi
+  C --> UI : câu báo lỗi; bản tóm tắt cũ giữ nguyên
+else
+  AI --> G : tóm tắt theo từng khối
+  C -> D : lưu(blocks, upto_seq)
+  C --> UI : (6) dòng thời gian mới có các khối tóm tắt
+end
+opt B.A2 - chia sẻ
+  A -> UI : "Lưu vào Highlight riêng"
+  UI -> C : POST /private-highlights/from-digest
+  C -> PH : lưu(kind = digest)
+end
+@enduml

@@ -1,0 +1,29 @@
+' Sequence diagram of UC10 part B: finding a discoverable workspace and sending a join request.
+@startuml seq-uc10b
+!include ../_style.iuml
+title Biểu đồ tuần tự UC10 - Phần B: Xin tham gia qua trang Khám phá
+autonumber
+
+actor "Người dùng" as A
+boundary "Trang Khám phá" as UI
+control "JoinController" as C
+entity "Workspace" as W
+entity "Member" as M
+entity "JoinRequest" as J
+
+A -> UI : mở Khám phá, gõ từ khóa
+UI -> C : GET /explore?q=…
+C -> W : workspace discoverable khớp từ khóa
+note right of W : B.E1: workspace ẩn không có trong kết quả
+C -> M : quan hệ của người dùng với từng workspace
+C --> UI : (3) danh sách: đề bài, chủ, số thành viên, quan hệ
+alt B.A3 - đã là thành viên
+  UI --> A : nút "Mở workspace"
+else B.A2 hoặc (4) chưa tham gia
+  A -> UI : viết lời nhắn, "Gửi yêu cầu"
+  UI -> C : POST /join-requests {workspaceId, message}
+  C -> J : tạo, hoặc cập nhật yêu cầu đang chờ
+  C --> UI : 201 yêu cầu
+  UI --> A : (5) mở trang "Đang chờ duyệt"
+end
+@enduml

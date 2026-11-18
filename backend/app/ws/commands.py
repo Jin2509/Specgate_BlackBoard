@@ -10,24 +10,21 @@ from sqlalchemy.orm import Session
 from app.errors import ApiError
 from app.ws import board as bd
 from app.ws import models as m
-from app.ws import runs as rn
 from app.ws import service as sv
+from app.ws import tasks as tk
 
+# Same order as the list of commands in flow §9.
 HELP = [
     ("/idea <nội dung>", "Ghi một ý lên bảng (cột Đề xuất)"),
-    ("/pin", "Trả lời một tin rồi gõ /pin để đưa tin đó lên bảng"),
     ("/note <nội dung>", "Thêm ghi chú"),
+    ("/pin", "Trả lời một tin rồi gõ /pin để đưa tin đó lên bảng"),
     ("/decide #<số> chốt|loại <lý do>", "Chốt hoặc loại một ý, bắt buộc lý do"),
     ("/summarize", "Tóm tắt kênh bằng agent và key của chủ workspace (chỉ chủ)"),
     ("/brief", "Dựng bản tổng hợp từ bảng (chỉ chủ)"),
+    ("/task [@tên] <mô tả>", "Tạo một việc đứng tên bạn trên bảng phân công; chủ thêm @tên để giao việc"),
     ("/help", "Danh sách lệnh"),
 ]
-ADOM_HELP = [
-    ("/stats", "Thẻ số liệu: tình trạng lượt chạy và sáu tiêu chí"),
-    ("/task <mã tác vụ>", "Thẻ kết quả của một tác vụ, ví dụ /task HumanEval/38"),
-]
 OWNER_ONLY = {"/summarize": "tóm tắt kênh", "/brief": "dựng bản tổng hợp"}
-ADOM = {"/stats", "/task"}
 _DECIDE = re.compile(r"^#?(\d+)\s+(chốt|chot|loại|loai)\b\s*(.*)$", re.IGNORECASE | re.DOTALL)
 
 
@@ -55,12 +52,7 @@ def pin_needs_choice(msg: m.Message) -> bool:
 
 def _card_part(s: Session, ws: m.Workspace, msg: m.Message, card: dict) -> dict:
     """One card as a part of a pinned idea: its words and its speaker, exactly as the card shows them."""
-    kind = card.get("kind")
-    if kind in ("stats", "task"):
-        run = card.get("run", {})
-        return {"speaker": f"Thẻ số liệu lượt {run.get('name')}", "text": sv.card_text(card), "kind": "data", "run": run,
-                "byId": msg.sender_id}
-    if kind == "conversation-summary":
+    if card.get("kind") == "conversation-summary":
         return {"speaker": f"Bản tóm tắt do {card.get('speaker') or card.get('speakerLabel')} viết (chưa lọc)",
                 "text": sv.card_text(card), "kind": "agent", "byId": card.get("ownerId") or msg.sender_id,
                 "model": card.get("model")}
@@ -77,15 +69,14 @@ def _pin(s: Session, ws: m.Workspace, ch: m.Channel, reply_to: m.Message, pin_pa
     if sv.is_channel_summary(reply_to):
         text_part["speaker"] = f"Bản tóm tắt kênh do {sv.speaker_label(s, reply_to)} viết (chưa lọc)"
     card_parts = [_card_part(s, ws, reply_to, c) for c in reply_to.cards or []]
-    # A system message's text is only the caption of its card ("Số liệu lượt MAIN").
+    # A system message's text is only the caption of its card.
     has_text = bool(text_part["text"]) and reply_to.sender_kind != "system"
     choice = pin_part or ("text" if has_text and not card_parts else "card" if card_parts and not has_text else "both")
     parts = ([text_part] if has_text and choice in ("text", "both") else []) + \
             (card_parts if choice in ("card", "both") else [])
     if not parts:
         raise ApiError(400, "Tin này không có phần nào để ghim.", "EMPTY")
-    run = next((p["run"] for p in parts if p.get("run")), None)
-    common = {"channel_id": ch.id, "message_id": reply_to.id, "run": run}
+    common = {"channel_id": ch.id, "message_id": reply_to.id}
     if len(parts) == 1:
         p = parts[0]
         label = None if p is text_part and not sv.is_channel_summary(reply_to) else p["speaker"].removesuffix(" nói")
@@ -106,28 +97,12 @@ def run(s: Session, ws: m.Workspace, ch: m.Channel, user: m.User, role: str, msg
         return out
     cmd, arg = parsed
 
-    run = rn.current_run(s, ws.id)
     if cmd == "/help":
-        rows = HELP + (ADOM_HELP if run else [])
-        return out.say("Các lệnh:\n" + "\n".join(f"{u}: {d}" for u, d in rows),
-                       {"type": "help", "commands": [{"usage": u, "description": d} for u, d in rows]})
+        return out.say("Các lệnh:\n" + "\n".join(f"{u}: {d}" for u, d in HELP),
+                       {"type": "help", "commands": [{"usage": u, "description": d} for u, d in HELP]})
     if cmd in OWNER_ONLY and role != "owner":
         # FR-54: refusal message with the reason.
         return out.say(f"Chỉ chủ workspace dùng được {cmd}: việc {OWNER_ONLY[cmd]} là quyền của chủ workspace.")
-    if cmd in ADOM:
-        if not run:
-            return out.say(f"Workspace này chưa có số liệu bài báo nên chưa dùng được {cmd}.")
-        if cmd == "/stats":
-            return out.say(f"Số liệu lượt {run.name}", None, [rn.stats_card(run)])
-        tid = arg.strip()
-        if tid.isdigit():
-            tid = f"HumanEval/{tid}"
-        if not tid:
-            return out.say("Cách dùng: /task <mã tác vụ>, ví dụ /task HumanEval/38.")
-        card = rn.task_card(run, tid)
-        if not card:
-            return out.say(f"Lượt {run.name} không có tác vụ {tid}.")
-        return out.say(f"Tác vụ {tid}, lượt {run.name}", None, [card])
 
     try:
         if cmd in ("/idea", "/note"):
@@ -163,10 +138,39 @@ def run(s: Session, ws: m.Workspace, ch: m.Channel, user: m.User, role: str, msg
         if cmd == "/summarize":
             out.summarize = True
             return out
+
+        if cmd == "/task":
+            return _task(s, ws, user, arg, out)
     except ApiError as e:
         return out.say(e.error)
 
     return out.say(f"Không có lệnh {cmd}. Gõ /help để xem danh sách lệnh.")
+
+
+def _split_assignee(s: Session, ws: m.Workspace, arg: str) -> tuple[str | None, str]:
+    """"@Lan B dựng runner" -> (Lan B's id, "dựng runner"). The longest member name wins, so names with spaces
+    work; an @ that names nobody stays part of the description."""
+    if not arg.startswith("@"):
+        return None, arg
+    rest = arg[1:]
+    names = sorted(((sv.base_name(s, mem.user_id, ws.id), mem.user_id)
+                    for mem in s.scalars(sv.active_members(s, ws.id))), key=lambda p: -len(p[0]))
+    for name, user_id in names:
+        if rest.casefold().startswith(name.casefold()) and rest[len(name):len(name) + 1] in ("", " "):
+            return user_id, rest[len(name):].strip()
+    return None, arg
+
+
+def _task(s: Session, ws: m.Workspace, user: m.User, arg: str, out: Outcome) -> Outcome:
+    """flow §13: a task in your own name; the owner adds @name to assign it. Never run from an agent's words."""
+    assignee_id, body = _split_assignee(s, ws, arg)
+    if not body:
+        return out.say("Cách dùng: /task <mô tả>. Chủ workspace gõ /task @tên <mô tả> để giao việc.")
+    actor = sv.membership_of(s, ws.id, user.id)
+    if assignee_id not in (None, user.id) and actor.role != "owner":
+        return out.say("Chỉ chủ workspace giao việc cho người khác. Gõ /task <mô tả> để tự nhận một việc.")
+    task = tk.create_task(s, ws, actor, body, assignee_id or user.id)
+    return out.say(tk.created_text(s, ws, task))
 
 
 def _receipt(item: m.BoardItem) -> dict:

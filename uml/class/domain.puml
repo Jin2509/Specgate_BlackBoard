@@ -1,275 +1,184 @@
-@startuml domain
+' Shows the workspace domain model as stored by backend/app/ws/models.py (tables ws_*).
+@startuml cls-domain
 !include ../_style.iuml
-title SpecGate: sơ đồ lớp miền dữ liệu
+hide circle
+title SpecGate: sơ đồ lớp miền dữ liệu (bảng ws_* trong backend)
 hide empty methods
-
+left to right direction
 
 package "Danh tính" {
-  class Profile {
-    id: string
-    displayName: string
-    initial: string
+  class User <<ws_users>> {
+    id: str
+    display_name: str[40]
+    last_workspace_id: str?
+    created_at: datetime
   }
-  class OAuthAccount {
-    provider: AuthProvider
-    userId: string
-    login: string
-  }
-  enum AuthProvider {
-    github
-    google
-  }
-}
-
-package "Không gian làm việc" {
-  class Workspace {
-    id: string
-    name: string
-    short: string
-    kind: WorkspaceKind
-    visibility: Visibility
-    ownerId: string
-    brief: string
-    modules: "adom"[]
+  class OAuthAccount <<ws_oauth_accounts>> {
+    provider: google | github
+    subject: str
+    login: str
     --
-    isMember(userId): bool
-    isOwner(userId): bool
-  }
-  class Membership <<members[]>> {
-    userId: string
-    role: MemberRole
-    teamRole?: string <<vai trong nhóm, tự ghi>>
-  }
-  class Channel {
-    id: string
-    name: string
-  }
-  enum WorkspaceKind {
-    personal
-    shared
-  }
-  enum Visibility {
-    hidden
-    discoverable
-  }
-  enum MemberRole {
-    owner
-    member
-  }
-}
-
-package "Tham gia" {
-  class JoinCode {
-    code: string <<7 ký tự>>
-    workspaceId: string
-    createdBy: string
-    createdAt: string
-  }
-  class JoinRequest {
-    id: string
-    workspaceId: string
-    userId: string
-    message: string
-    status: JoinStatus
-    via: "code" | "explore"
-    code?: string
-    at: string
-    decidedBy?: string
-  }
-  enum JoinStatus {
-    pending
-    approved
-    rejected
-    cancelled
-  }
-}
-
-package "Kênh chung" {
-  class Message {
-    id: string
-    channelId: string
-    senderKind: SenderKind
-    senderId: string <<agent: id chủ agent>>
-    agentModel?: string <<mô hình lúc gửi>>
-    at: string
-    body: Segment[]
-    list?: string[]
-    streaming?: bool
-  }
-  abstract class Segment <<union>> {
-    t: text | mention | command | flag | ref
-  }
-  abstract class Attachment <<union>> {
-    type: stats | run-progress | board-receipt
-  }
-  enum SenderKind {
-    human
-    agent
-    system
-  }
-}
-
-package "Bảng ý tưởng" {
-  class BoardItem {
-    id: string
-    number: number
-    kind: BoardItemKind
-    body: string
-    status?: IdeaStatus | QuestionStatus
-    reason?: string
-    createdBy: {kind: human | agent, id}
-    decidedBy?: {id, at}
-    at: string
-    critiques?: number
-  }
-  enum BoardItemKind {
-    idea
-    note
-    question
-    summary
-  }
-  enum IdeaStatus {
-    proposed
-    discussing
-    decided
-    rejected
-  }
-  enum QuestionStatus {
-    open
-    answered
+    unique(provider, subject)
   }
 }
 
 package "Workspace riêng" {
-  class ProviderKey {
-    userId: string
-    provider: ProviderKind
-    baseUrl?: string
-    keyLast4: string
-    model: string
-    models: string[]
-    savedAt: string
+  class ProviderKey <<ws_provider_keys>> {
+    provider: anthropic | openai-compatible
+    base_url: str?
+    secret: bytes <<Fernet, chỉ ghi>>
+    key_last4: str[4]
+    model: str
+    models: str[]
+  }
+  class Conversation <<ws_conversations>> {
+    id: str
+    title: str[80]
+    workspace_id: str? <<ngữ cảnh nhóm>>
+    updated_at: datetime
+  }
+  class Turn <<ws_turns>> {
+    seq: int
+    role: user | assistant
+    text: str
+    model: str?
+    error: str? <<lượt lỗi, không gửi lại>>
+    stopped: bool
+    version_group: str? <<"Tạo lại">>
+    active: bool <<phiên bản đang hiện>>
+    context_workspace_id: str?
+  }
+  class PrivateHighlight <<ws_private_highlights>> {
+    kind: passage | summary | digest
+    speaker_kind: agent | human
+    model: str? <<mô hình lúc tạo>>
+    original_text: str
+    text: str <<sửa được>>
+    source_text: str? <<cả lượt gốc>>
+    context_workspace_ids: str[]
+    color: str
+    note: str?
+    attached_turns: json[] <<tối đa 4>>
+    sends: json[] <<workspace, kênh, tin, lúc>>
+    conversation_deleted: bool
+  }
+  class ContextDigest <<ws_context_digests>> {
+    upto_seq: int
+    count: int
+    blocks: json[] <<cắt tại mốc highlight>>
+    model: str?
     --
-    <<key thật nằm trong Vault, chỉ ghi>>
+    unique(user_id, workspace_id)
   }
-  class PersonalAgent <<suy ra từ ProviderKey>> {
-    ownerId: string
-    ownerName: string
-    provider: ProviderKind
-    model: string
+}
+
+package "Workspace chung" {
+  class Workspace <<ws_workspaces>> {
+    id: str
+    kind: personal | shared
+    name: str[80]
+    brief: str <<đề bài>>
+    visibility: hidden | discoverable
+    join_code: str[7]? <<unique>>
+    board_seq: int
+  }
+  class Member <<ws_members>> {
+    role: owner | member
+    team_role: str[40]?
+    nickname: str[40]?
+    needs_nickname: bool
+    color: int <<không trùng trong ws>>
+    left_at: datetime? <<"(đã rời)">>
     --
-    label(): "model của ownerName"
+    unique(workspace_id, user_id)
   }
-  class Conversation {
-    id: string
-    ownerId: string
-    title: string
-    updatedAt: string
-    workspaceId?: string <<ngữ cảnh nhóm>>
+  class JoinRequest <<ws_join_requests>> {
+    via: code | explore
+    code: str?
+    message: str
+    status: pending | approved\n| rejected | cancelled
+    decided_by: str?
   }
-  class Turn {
-    id: string
-    role: "user" | "assistant"
-    text: string
-    at: string
-    model?: string
+  class Channel <<ws_channels>> {
+    name: str[40]
+    --
+    unique(workspace_id, name)
   }
-  class AgentContext <<dựng mỗi lời gọi>> {
-    ws: Workspace <<đề bài>>
-    team: {profile, role, teamRole, agent}[]
-    decided: BoardItem[]
-    rejected: BoardItem[]
-    ownMessages: Message[] <<tin của mình, tự đọc>>
-    highlights: Highlight[] <<kèm người nói>>
+  class ChannelRead <<ws_channel_reads>> {
+    last_seq: int <<chấm chưa đọc>>
   }
-  enum ProviderKind {
-    anthropic
-    openai-compatible
+  class Message <<ws_messages>> {
+    seq: int <<thứ tự, nối lại SSE>>
+    sender_kind: human | agent | system
+    sender_id: str
+    agent_model: str? <<mô hình lúc gửi>>
+    text: str
+    body: segment[]
+    reply_to_id: str?
+    cards: json[] <<quote | conversation-summary, bản chụp>>
   }
-}
-
-package "Highlight (trong kênh chung)" {
-  class Highlight {
-    id: string
-    ownerId: string <<người bôi đen, chỉ người này thấy>>
-    workspaceId: string
-    channelId: string
-    messageId: string
-    author: {kind: human | agent, userId, model?}
-    text: string <<bản chụp>>
-    label: HighlightLabel
-    at: string
+  class Highlight <<ws_highlights>> {
+    label: important | review
+    note: str? <<Ghi chú của tôi>>
+    segments: json[] <<mỗi đoạn: người nói, tin gốc>>
+    text: str <<bản chụp>>
+    source_at: datetime?
   }
-  enum HighlightLabel {
-    important
-    review
+  class BoardItem <<ws_board_items>> {
+    number: int
+    kind: idea | note
+    body: str
+    status: proposed | discussing\n| decided | rejected
+    reason: str?
+    created_by_kind: human | agent
+    author_label: str?
+    parts: json[]? <<"Ghim cả hai">>
+    decided_by, decided_at
   }
-}
-
-package "Mô-đun ADOM (nhóm khác)" #F8F9FA {
-  class Run {
-    id: string
-    workspaceId: string
-    name: string
-    dataset: string
-    validity: Validity
-    importedBy: string
+  class Brief <<ws_briefs>> {
+    built_by: str
+    built_at: datetime
+    data: json
+    markdown: str
   }
 }
 
-' ---- Quan hệ ----
-Profile "1" -- "1..*" OAuthAccount : đăng nhập bằng >
-OAuthAccount --> AuthProvider
-
-Profile "1" -- "0..*" Membership
-Workspace "1" *-- "1..*" Membership : members
-Membership --> MemberRole
-Workspace --> WorkspaceKind
-Workspace --> Visibility
-Profile "1" -- "1" Workspace : sở hữu workspace riêng >
-
-Workspace "1" *-- "0..*" Channel : chỉ khi shared
-Workspace "1" *-- "0..1" JoinCode : mã hiện hành
-Workspace "1" *-- "0..*" JoinRequest
-Profile "1" -- "0..*" JoinRequest : người xin >
-JoinRequest --> JoinStatus
-
-Channel "1" *-- "0..*" Message
-Message "1" *-- "0..*" Segment
-Message "1" *-- "0..1" Attachment
-Message --> SenderKind
-Attachment ..> Run : runId
-
-Workspace "1" *-- "0..*" BoardItem : bảng
-BoardItem --> BoardItemKind
-BoardItem --> IdeaStatus
-BoardItem --> QuestionStatus
-
-Profile "1" -- "0..1" ProviderKey
-ProviderKey --> ProviderKind
-ProviderKey ..> PersonalAgent : mô hình đang chọn
-Message ..> PersonalAgent : senderKind = agent
-Profile "1" -- "0..*" Conversation
+User "1" -- "1..*" OAuthAccount : đăng nhập bằng >
+User "1" -- "0..1" ProviderKey : agent riêng >
+User "1" -- "0..*" Conversation : chủ >
 Conversation "1" *-- "0..*" Turn
-Conversation "0..*" ..> "0..1" Workspace : workspaceId (shared)
-Conversation ..> AgentContext : gửi kèm mỗi lời gọi
-AgentContext ..> Highlight
-AgentContext ..> Message
-Profile "1" -- "0..*" Highlight : tạo >
-Highlight ..> Message : nguồn (bản chụp, không phụ thuộc vòng đời)
-Highlight --> HighlightLabel
-Workspace "1" *-- "0..*" Run : nếu bật mô-đun adom
+Conversation "0..*" ..> "0..1" Workspace : ngữ cảnh nhóm
+User "1" -- "0..*" PrivateHighlight : chủ >
+PrivateHighlight ..> Turn : nguồn (bản chụp)
+User "1" -- "0..*" ContextDigest
+ContextDigest ..> Workspace
+
+User "1" -- "1" Workspace : workspace riêng >
+Workspace "1" *-- "0..*" Member
+User "1" -- "0..*" Member
+Workspace "1" *-- "0..*" JoinRequest
+User "1" -- "0..*" JoinRequest : người xin >
+Workspace "1" *-- "0..*" Channel : chỉ khi shared
+Channel "1" *-- "0..*" Message
+User "1" -- "0..*" ChannelRead
+ChannelRead ..> Channel
+User "1" -- "0..*" Highlight : chủ >
+Highlight ..> Message : nguồn (bản chụp)
+Workspace "1" *-- "0..*" BoardItem
+BoardItem ..> Message : tin nguồn
+Workspace "1" *-- "0..*" Brief
+Message ..> PrivateHighlight : thẻ trích dẫn
 
 note bottom of Highlight
-  Chỉ tạo trên tin của người khác (hoặc agent người khác).
-  Lưu bản chụp và người nói, không lưu vị trí ký tự.
+  Chỉ trên tin của người khác (BR-11, BR-22).
+  Tối đa ~30 mỗi người mỗi workspace.
 end note
-note bottom of PersonalAgent
-  Mỗi người một agent. Agent ở workspace riêng
-  và agent gửi tin vào kênh là một, chạy bằng key của chủ nó.
+note bottom of PrivateHighlight
+  Chỉ người tạo thấy, không tự đi đâu (BR-08).
+  Chỉ bị xóa khi chủ xóa (BR-09). Tối đa ~200.
 end note
 note bottom of BoardItem
-  decided/rejected bắt buộc có reason,
-  không quay ngược. Agent không chốt được.
+  decided/rejected bắt buộc reason, không quay ngược,
+  chỉ con người làm (BR-20, BR-23).
 end note
 @enduml

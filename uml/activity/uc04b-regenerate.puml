@@ -1,0 +1,27 @@
+' Activity diagram of UC04 part B: regenerating an answer and switching versions.
+@startuml act-uc04b
+!include ../_style.iuml
+title Biểu đồ hoạt động UC04 - Phần B: Tạo lại câu trả lời
+
+|Người dùng|
+start
+if (Thao tác?) then (bấm "Tạo lại")
+  :(1) Bấm "Tạo lại";
+  |Hệ thống|
+  :Giữ câu trả lời cũ thành một phiên bản;
+  |Nhà cung cấp AI|
+  :(2) Sinh câu trả lời mới;
+  |Hệ thống|
+  if (Nhà cung cấp lỗi?) then (có)
+    :[B.E1] Báo lỗi,\nphiên bản cũ không đổi;
+    stop
+  else (không)
+  endif
+  :(3) Hiện câu mới và nút "‹ 1/2 ›";
+else (bấm highlight của phiên bản cũ)
+  |Hệ thống|
+  :[B.A1] Mở đúng phiên bản đó,\nđúng chỗ đã đánh dấu;
+endif
+:(4) Lần hỏi sau chỉ gửi\nphiên bản đang hiển thị;
+stop
+@enduml

@@ -1,5 +1,5 @@
 "use client";
-// Offers "Summarize for the team" and deleting the conversation, asking whether to keep its private highlights.
+// Offers "Summarize for the team" and deleting the conversation, always confirmed and asking whether to keep its highlights.
 import { ListCollapse, LoaderCircle, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -37,11 +37,6 @@ export function ConversationActions({
     });
   }
 
-  function handleDelete() {
-    if (highlightCount > 0) setIsConfirmOpen(true);
-    else startTransition(() => deleteConversation(id, "keep"));
-  }
-
   return (
     <>
       <button
@@ -58,7 +53,7 @@ export function ConversationActions({
         type="button"
         aria-label={t.personal.deleteConversation}
         title={t.personal.deleteConversationTitle}
-        onClick={handleDelete}
+        onClick={() => setIsConfirmOpen(true)}
         className={cn(ICON_BUTTON_CLASS_NAME, "hover:text-destructive")}
       >
         <Trash2 className="size-4.5" />
@@ -87,19 +82,37 @@ export function ConversationActions({
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>{t.personal.confirmDeleteTitle}</DialogTitle>
-            <DialogDescription>{format(t.personal.confirmDeleteBody, { count: highlightCount })}</DialogDescription>
+            <DialogDescription>{t.personal.confirmDeleteWarning}</DialogDescription>
           </DialogHeader>
+          <p className="text-sm text-muted-foreground">
+            {highlightCount > 0 ? format(t.personal.confirmDeleteBody, { count: highlightCount }) : t.personal.confirmDeleteEmpty}
+          </p>
           <DialogFooter>
-            <Button
-              variant="secondary"
-              disabled={isPending}
-              onClick={() => startTransition(() => deleteConversation(id, "delete"))}
-            >
-              {t.personal.deleteWithHighlights}
+            <Button variant="ghost" disabled={isPending} onClick={() => setIsConfirmOpen(false)}>
+              {t.common.cancel}
             </Button>
-            <Button disabled={isPending} onClick={() => startTransition(() => deleteConversation(id, "keep"))}>
-              {t.personal.keepHighlights}
-            </Button>
+            {highlightCount > 0 ? (
+              <>
+                <Button
+                  variant="destructive"
+                  disabled={isPending}
+                  onClick={() => startTransition(() => deleteConversation(id, "delete"))}
+                >
+                  {t.personal.deleteWithHighlights}
+                </Button>
+                <Button disabled={isPending} onClick={() => startTransition(() => deleteConversation(id, "keep"))}>
+                  {t.personal.keepHighlights}
+                </Button>
+              </>
+            ) : (
+              <Button
+                variant="destructive"
+                disabled={isPending}
+                onClick={() => startTransition(() => deleteConversation(id, "keep"))}
+              >
+                {t.personal.deleteConversation}
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>

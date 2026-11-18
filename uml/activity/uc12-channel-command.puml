@@ -1,48 +1,35 @@
-' Models how a channel message is delivered and how slash commands are dispatched with their permissions (UC12).
-@startuml uc12-channel-command
+' Activity diagram of UC12: sending a channel message and running its command.
+@startuml act-uc12
 !include ../_style.iuml
-title Hoạt động UC12: Gửi tin và xử lý lệnh trong kênh
+title Biểu đồ hoạt động UC12: Nhắn tin trong kênh
 
 |Thành viên|
 start
-:Soạn tin (gợi ý @ và /);
-:Gửi tin;
+:(1) Soạn tin (gợi ý @ và /);
+:(2) Gửi tin;
 |Hệ thống|
 if (Tin trống?) then (có)
-  :Không gửi (E1);
+  :[E1] Không gửi;
   stop
 else (không)
 endif
-:Lưu tin, phát ngay tới mọi người đang mở kênh;
-:Tin vào ngữ cảnh agent của người gửi;
-if (Tin bắt đầu bằng lệnh do người gõ?) then (không)
+:(3) Lưu tin, hiện ngay cho mọi người\nđang mở kênh; tin vào ngữ cảnh\nagent của người gửi;
+if (Mạng chập chờn?) then (có)
+  :[A1] Tự kết nối lại,\nhiện bù tin đã lỡ (UC17);
+else (không)
+endif
+if (Tin bắt đầu bằng lệnh?) then (không)
   stop
 else (có)
 endif
-if (Cú pháp đúng?) then (không)
-  :Trả tin hướng dẫn cú pháp (E2);
+if (Có quyền dùng lệnh?) then (không)
+  :[A2] Trả tin "đây là quyền\ncủa chủ workspace";
   stop
-else (đúng)
+elseif (Đúng cú pháp?) then (không)
+  :[E2] Trả tin hướng dẫn cú pháp;
+  stop
+else (có)
 endif
-switch (Lệnh)
-case (/idea, /note, /pin)
-  :Đưa lên bảng ý tưởng (UC14-A);
-case (/decide)
-  :Chốt hoặc loại ý (UC14-C);
-case (/stats, /task)
-  if (Workspace có số liệu?) then (có)
-    :Tạo thẻ số liệu (UC18);
-  else (không)
-    :Lệnh không có trong gợi ý (UC18 E1);
-  endif
-case (/summarize, /brief)
-  if (Người gõ là chủ?) then (có)
-    :Tóm tắt kênh hoặc dựng bản tổng hợp (UC15);
-  else (không)
-    :Trả tin "đây là quyền của chủ workspace" (A2);
-  endif
-case (/help)
-  :Trả danh sách lệnh;
-endswitch
+:(4) Thực hiện lệnh: /idea /note /pin /decide (UC14),\n/summarize /brief (UC15),\n/help (danh sách lệnh);
 stop
 @enduml

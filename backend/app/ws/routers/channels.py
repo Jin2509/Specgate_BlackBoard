@@ -251,12 +251,6 @@ def _source(s: Session, msg: m.Message, part: int | None, turn: int | None = Non
     if part < 0 or part >= len(cards):
         raise not_found("Không tìm thấy thẻ này trong tin.")
     card = cards[part]
-    if card.get("kind") in ("stats", "task"):
-        run = card.get("run", {})
-        who = f"Thẻ số liệu lượt {run.get('name')}" + (" (không hợp lệ)" if run.get("validity") != "valid" else "")
-        # flow §13: the line remembers its run, so a later "không hợp lệ" or newer run follows it into the context.
-        return sv.card_text(card), {"authorKind": "data", "authorUserId": msg.sender_id, "speaker": who,
-                                    "runId": run.get("id"), "runValidity": run.get("validity")}
     kind = "agent" if card.get("speakerKind") == "agent" else "human"
     owner = card.get("ownerId") or msg.sender_id
     if card.get("kind") == "conversation-summary":

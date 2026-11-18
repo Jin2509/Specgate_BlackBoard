@@ -1,0 +1,19 @@
+' Sequence diagram of UC01 part B: signing out.
+@startuml seq-uc01b
+!include ../_style.iuml
+title Biểu đồ tuần tự UC01 - Phần B: Đăng xuất
+autonumber
+
+actor "Người dùng" as A
+boundary "Menu tài khoản" as UI
+control "AuthController" as C
+
+A -> UI : chọn "Đăng xuất"
+UI -> C : DELETE /auth/session
+alt còn kết nối
+  C --> UI : xóa cookie phiên
+else B.E1 - mất kết nối
+  UI -> UI : xóa phiên trên trình duyệt
+end
+UI --> A : về trang đăng nhập
+@enduml

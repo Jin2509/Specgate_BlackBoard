@@ -1,0 +1,29 @@
+' Activity diagram of UC15 part A: the owner's channel summary.
+@startuml act-uc15a
+!include ../_style.iuml
+title Biểu đồ hoạt động UC15 - Phần A: Tóm tắt kênh (/summarize)
+
+|Chủ workspace|
+start
+:Gõ /summarize trong kênh;
+|Hệ thống|
+if (Người gõ là chủ?) then (không)
+  :[A.E1] Trả lời đây là quyền\ncủa chủ workspace;
+  stop
+elseif (Chủ đã có key?) then (chưa)
+  :[A.E2] Nhắc nhập key trước;
+  stop
+else (có)
+endif
+:(1) Lấy đề bài và tin gần đây\ncủa chính kênh này;
+|Nhà cung cấp AI|
+:(2) Viết bản tóm tắt,\nmỗi ý ghi của ai;
+|Hệ thống|
+if (Key lỗi?) then (có)
+  :[A.E3] Tin báo lỗi trong kênh;
+  stop
+else (không)
+endif
+:(3) Đăng bản tóm tắt dưới tên\nagent của chủ;
+stop
+@enduml

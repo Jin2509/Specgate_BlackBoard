@@ -1,0 +1,30 @@
+' State diagram of an agent answer (Turn) with streaming, stop, error and versions (UC04).
+@startuml st-answer-turn
+!include ../_style.iuml
+title Biểu đồ trạng thái: Câu trả lời của agent (Turn)
+
+state "Đang viết" as Streaming
+state "Hoàn tất" as Complete {
+  state "Đang hiển thị" as Active
+  state "Phiên bản ẩn" as Hidden
+  [*] --> Active
+  Active --> Hidden : "Tạo lại" / sinh phiên bản mới
+  Hidden --> Active : chọn phiên bản bằng "‹ ›"
+}
+state "Đã dừng" as Stopped
+state "Lỗi" as Failed
+
+[*] --> Streaming : người dùng gửi câu hỏi
+Streaming --> Complete : nhà cung cấp trả xong
+Streaming --> Stopped : bấm "Dừng" hoặc mất mạng\n/ giữ phần đã viết
+Streaming --> Failed : nhà cung cấp lỗi\n/ hiện câu báo lỗi
+Stopped --> Streaming : "Tạo lại"
+Failed --> Streaming : "Tạo lại"
+Complete --> [*] : xóa hội thoại
+Stopped --> [*] : xóa hội thoại
+Failed --> [*] : xóa hội thoại
+
+Active : được gửi lại cho agent ở câu hỏi sau
+Hidden : không gửi cho agent; highlight vẫn giữ
+Failed : không bao giờ gửi lại cho agent
+@enduml

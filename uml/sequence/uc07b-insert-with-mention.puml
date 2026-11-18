@@ -1,0 +1,40 @@
+' Sequence diagram of UC07 part B: inserting private highlights with @ and posting the message.
+@startuml seq-uc07b
+!include ../_style.iuml
+title Biểu đồ tuần tự UC07 - Phần B: Chèn highlight riêng bằng @
+autonumber
+
+actor "Thành viên" as A
+boundary "Ô soạn tin" as UI
+control "PrivateHighlightController" as PC
+control "ChannelController" as C
+control "Broker" as RT
+entity "PrivateHighlight" as PH
+entity "Message" as MS
+
+A -> UI : gõ @, chọn "Highlight của tôi"
+UI -> PC : GET /private-highlights?channelId
+PC -> PH : highlight của thành viên, lần đã gửi
+PC --> UI : danh sách (ghi "đã gửi vào kênh này")
+loop B.A2 - mỗi highlight chèn thêm
+  A -> UI : chọn highlight
+  UI --> A : thẻ trích dẫn trong ô soạn
+end
+opt B.A1 - bỏ thẻ
+  A -> UI : bấm nút bỏ trên thẻ
+end
+A -> UI : viết lời, gửi
+UI -> C : POST /workspaces/{ws}/channels/{ch}/messages {text, quoteIds}
+alt B.A3 - đã gửi vào kênh này
+  C --> UI : 409 cần xác nhận
+  A -> UI : "Vẫn gửi"
+  UI -> C : gửi lại với confirm = true
+end
+note over UI, C
+  B.A4: ngữ cảnh khác nhóm cũng hỏi xác nhận theo cách trên.
+end note
+C -> MS : tạo tin kèm thẻ (bản chụp)
+C -> PH : ghi lần gửi
+C -> RT : phát tin vào kênh
+C --> UI : tin đã gửi
+@enduml

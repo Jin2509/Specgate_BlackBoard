@@ -1,8 +1,7 @@
 ' Shows one streamed chat turn and how the group context is assembled on the server (UC04, UC06).
-@startuml uc04-uc06-chat-with-context
+@startuml seq-uc04-uc06-chat-with-context
 !include ../_style.iuml
 title Tuần tự UC04, UC06: Chat có ngữ cảnh nhóm
-autonumber
 
 actor "Thành viên" as User
 participant "Trình duyệt" as Web
@@ -26,9 +25,6 @@ opt hội thoại chọn workspace W
     Context -> Db : ý đã chốt, đã loại kèm lý do
     Context -> Db : tin của người hỏi trong mọi kênh W
     Context -> Db : highlight cho agent của người hỏi ở W
-    opt W có số liệu
-      Context -> Db : lượt chạy, tình trạng, sáu tiêu chí
-    end
     Context -> Context : xếp một dòng thời gian, ghi người nói,\ngiữ ~50 tin gần nhất cùng các bản tóm tắt
     Context --> Server : ngữ cảnh nhóm
   end

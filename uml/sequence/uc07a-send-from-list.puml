@@ -1,0 +1,41 @@
+' Sequence diagram of UC07 part A: sending private highlights as quote cards to a channel.
+@startuml seq-uc07a
+!include ../_style.iuml
+title Biểu đồ tuần tự UC07 - Phần A: Gửi highlight riêng từ danh sách
+autonumber
+
+actor "Thành viên" as A
+boundary "Hộp thoại Gửi vào nhóm" as UI
+control "PrivateHighlightController" as C
+control "Broker" as RT
+entity "Member" as M
+entity "PrivateHighlight" as PH
+entity "Message" as MS
+actor "Thành viên khác" as O
+
+A -> UI : chọn workspace, kênh, viết lời
+UI --> A : (4) nhãn người nói từng thẻ
+opt A.A1 - đã gửi vào kênh này
+  UI --> A : nhắc, hỏi "Vẫn gửi lại"
+end
+opt A.A2 - viết khi đọc ngữ cảnh nhóm khác
+  UI --> A : cảnh báo, hỏi xác nhận
+end
+A -> UI : (5) bấm Gửi
+UI -> C : POST /private-highlights/send {ids, workspaceId, channelId, text, confirm}
+alt A.E2 - nội dung trống
+  C --> UI : 400 không gửi
+else
+  C -> M : kiểm là thành viên workspace đích
+  alt A.E1 - không còn là thành viên
+    C --> UI : 403 không gửi
+  else
+    C -> PH : lấy highlight (kiểm chủ)
+    C -> MS : tạo tin kèm thẻ trích dẫn (bản chụp)
+    C -> PH : ghi lần gửi (workspace, kênh, tin, lúc)
+    C -> RT : phát tin vào kênh
+    RT --> O : tin mới, thẻ "Claude của Lan nói"
+    C --> UI : (7) đã gửi, nút mở kênh
+  end
+end
+@enduml

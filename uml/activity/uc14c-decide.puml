@@ -1,0 +1,35 @@
+' Activity diagram of UC14 part C: deciding or rejecting an idea with a reason.
+@startuml act-uc14c
+!include ../_style.iuml
+title Biểu đồ hoạt động UC14 - Phần C: Chốt hoặc loại ý
+
+|Thành viên|
+start
+if (Cách?) then (nút trên thẻ)
+  :(1) Bấm "Chốt" hoặc "Loại";
+  |Hệ thống|
+  :(2) Hộp thoại hỏi lý do,\nhiện lệnh /decide tương đương;
+  |Thành viên|
+  :(3) Nhập lý do, xác nhận;
+else ([C.A1] lệnh)
+  :Gõ /decide #‹số› chốt|loại ‹lý do›;
+endif
+|Hệ thống|
+if (Lệnh không do người gõ?) then (có)
+  :[C.E4] Không thực hiện;
+  stop
+elseif (Thiếu lý do?) then (có)
+  :[C.E1] Không cho xác nhận;
+  stop
+elseif (Ý đã chốt hoặc đã loại?) then (có)
+  :[C.E2] Báo không đổi được nữa;
+  stop
+elseif (Số thẻ sai hoặc là ghi chú?) then (có)
+  :[C.E3] Báo lỗi;
+  stop
+else (hợp lệ)
+endif
+:(4) Chuyển sang Đã chốt hoặc Đã loại,\nghi người, thời điểm, lý do;
+:(4) Tin hệ thống ghi quyết định;
+stop
+@enduml

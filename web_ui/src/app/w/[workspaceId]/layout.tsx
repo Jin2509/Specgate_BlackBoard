@@ -9,7 +9,8 @@ import { listHighlights } from "@/features/highlight/server";
 import { PersonalSidebar } from "@/features/personal";
 import { listConversations } from "@/features/personal/server";
 import { listJoinRequests } from "@/features/requests/server";
-import { listRuns } from "@/features/runs/server";
+import { toOpenTaskCount } from "@/features/tasks";
+import { getTaskBoard } from "@/features/tasks/server";
 import { isOwner, NicknamePrompt, ShellSkeleton, UserPanel, WorkspaceRail, WorkspaceSidebar } from "@/features/workspace";
 import { requireWorkspace } from "@/features/workspace/server";
 import { t } from "@/lib/i18n";
@@ -73,11 +74,10 @@ async function PersonalShellSidebar({ home, me }: { home: string; me: Me }) {
 
 async function SharedShellSidebar({ workspace, explorePath, me }: { workspace: SharedWorkspace; explorePath: string; me: Me }) {
   const isViewerOwner = isOwner(workspace);
-  const hasRuns = workspace.modules?.includes("adom") ?? false;
-  const [board, joinRequests, runs] = await Promise.all([
+  const [board, taskBoard, joinRequests] = await Promise.all([
     getBoard(workspace.id),
+    getTaskBoard(workspace.id),
     isViewerOwner ? listJoinRequests(workspace.id) : null,
-    hasRuns ? listRuns(workspace.id) : null,
   ]);
   return (
     <>
@@ -92,7 +92,7 @@ async function SharedShellSidebar({ workspace, explorePath, me }: { workspace: S
         explorePath={explorePath}
         counts={{
           ideas: toIdeaCount(board),
-          runs: runs?.runs.length ?? 0,
+          openTasks: toOpenTaskCount(taskBoard.tasks),
           pendingRequests: joinRequests?.pending.length ?? 0,
         }}
         footer={

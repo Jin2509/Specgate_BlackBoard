@@ -1,61 +1,73 @@
-' Models sending private highlights into a channel with fidelity labels and the safety prompts (UC07).
-@startuml uc07-send-highlight
+' Mirrors every flow of UC07: sending private highlights from the list (part A) or inserting them with @ (part B).
+@startuml act-uc07
 !include ../_style.iuml
 title Hoạt động UC07: Gửi highlight riêng vào kênh
 
-|Thành viên|
 start
-if (Gửi từ đâu?) then (danh sách Highlight riêng)
-  :Chọn một hoặc vài mục, bấm "Gửi vào nhóm";
-  :Chọn workspace chung và kênh;
-  :Viết thêm lời của mình (tùy chọn);
-else (ô soạn trong kênh)
-  :Gõ @ và chọn "Highlight của tôi";
-  :Lọc, chọn một hoặc nhiều highlight;
-  :Viết lời xung quanh các thẻ;
-endif
-|Hệ thống|
-:Hiện nội dung sẽ gửi và nhãn người nói;
-note right
-  BR-12:
-  trọn câu: "Claude của Lan nói"
-  cắt giữa câu: "… (trích một phần)"
-  sửa chữ: "(Lan đã chỉnh)"
-end note
-|Thành viên|
-:Bấm Gửi;
-|Hệ thống|
-if (Nội dung trống?) then (có)
-  :Không cho gửi (A.E2);
-  stop
-else (không)
-endif
-if (Còn là thành viên workspace đích?) then (không)
-  :Báo lỗi, không gửi (A.E1);
-  stop
-else (còn)
-endif
-if (Đã từng gửi vào kênh này?) then (có)
-  |Thành viên|
-  if (Xác nhận "Vẫn gửi lại"?) then (không)
-    stop
-  else (có)
+partition "Phần A. Gửi highlight riêng vào kênh từ danh sách" {
+  :Người dùng chọn một hoặc vài mục, bấm "Gửi vào nhóm";
+  :(1) Hộp thoại gửi mở ra;
+  :(2) Chọn workspace chung và kênh;
+  :(3) Viết thêm lời của mình (tùy chọn);
+  :(4) Mỗi highlight hiện nội dung sẽ gửi (sửa được) và nhãn người nói:\n"Claude của Lan nói", "… (trích một phần)", "… (Lan đã chỉnh)";
+  if (Đã từng gửi vào đúng kênh này?) then (có)
+    :[A.A1] Nhắc trước;
+    if (Xác nhận "Vẫn gửi lại"?) then (không)
+      stop
+    else (có)
+    endif
+  else (chưa)
   endif
-else (chưa)
-endif
-|Hệ thống|
-if (Viết khi đọc ngữ cảnh của nhóm khác?) then (có)
-  |Thành viên|
-  if (Xác nhận vẫn gửi sang nhóm này?) then (không)
-    stop
-  else (có)
+  if (Ngữ cảnh lúc agent viết là nhóm khác?) then (có)
+    :[A.A2] Cảnh báo "Đoạn này được viết khi agent đang đọc\nthông tin của nhóm ‹A›…"; phải xác nhận;
+    if (Xác nhận?) then (không)
+      stop
+    else (có)
+    endif
+  else (không)
   endif
-else (không)
-endif
-|Hệ thống|
-:Tạo một tin dưới tên thành viên,\nmỗi highlight là một thẻ trích dẫn (bản chụp);
-:Ghi lần gửi vào danh sách Highlight riêng;
-:Phát tin tới mọi người đang mở kênh;
-:Tin tự vào ngữ cảnh agent của người gửi;
+  :(5) Người dùng bấm Gửi;
+  if (Nội dung trống?) then (có)
+    :[A.E2] Không cho gửi;
+    stop
+  else (không)
+  endif
+  if (Còn là thành viên workspace đích?) then (không)
+    :[A.E1] Báo lỗi, không gửi;
+    stop
+  else (còn)
+  endif
+  :(6) Kênh hiện một tin dưới tên người dùng, kèm thẻ trích dẫn\nghi người nói của đoạn gốc, có "…" ở chỗ bị cắt;
+  :(7) Hộp thoại báo đã gửi, kèm nút mở kênh;
+  note right
+  BR-12, BR-13, BR-15: thẻ là bản chụp,
+  tin giữ tên mô hình lúc gửi.
+  end note
+}
 stop
+
+partition "Phần B. Chèn highlight riêng vào tin bằng @" {
+  start
+  :(1) Gõ @: danh sách gợi ý có "Highlight của tôi" đứng đầu;
+  :(2) Chọn mục đó; bảng chọn highlight hiện trên ô soạn;
+  repeat
+    :(3) Lọc theo màu hoặc gõ chữ, chọn một highlight\n(mục đã gửi vào kênh này ghi "đã gửi vào kênh này");
+    :(4) Highlight được chèn thành thẻ trích dẫn, hiện nhãn người nói;
+  repeat while ([B.A2] Chèn thêm highlight?) is (có) not (không)
+  if (Bỏ một thẻ?) then (có)
+    :[B.A1] Bấm nút bỏ trên thẻ;
+  else (không)
+  endif
+  :(5) Viết lời xung quanh và gửi;
+  if (Đã từng gửi vào kênh này?) then (có)
+    :[B.A3] Ô soạn hỏi "Vẫn gửi";
+  else (chưa)
+  endif
+  if (Ngữ cảnh khác nhóm?) then (có)
+    :[B.A4] Ô soạn hỏi xác nhận;
+  else (không)
+  endif
+  :Gửi như phần A từ bước (6);
+  stop
+}
 @enduml

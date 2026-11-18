@@ -16,6 +16,7 @@ from app.errors import ApiError
 from app.ws import board as bd
 from app.ws import models as m
 from app.ws import service as sv
+from app.ws import tasks as tk
 from app.ws.deps import current_user, db, require_member, require_owner
 
 router = APIRouter(prefix="/workspaces", tags=["workspaces"])
@@ -179,18 +180,24 @@ def set_nickname(ws_id: str, body: Nickname, user: m.User = Depends(current_user
     return {"nickname": mem.nickname, "name": name}
 
 
-def _leave(mem: m.Member) -> None:
-    """flow §14: the row stays, so the name stays reserved and old messages read "Lan (đã rời)"."""
+def _leave(s: Session, ws: m.Workspace, mem: m.Member, removed: bool) -> list[m.Message]:
+    """flow §14: the row stays, so the name stays reserved and old messages read "Lan (đã rời)". flow §13: the
+    person is taken off their unfinished tasks, locked board or not, and #chung says so."""
+    name = sv.base_name(s, mem.user_id, ws.id)
     mem.left_at = m.now()
+    released = tk.release_member(s, ws, mem.user_id)
+    notice = tk.post_notice(s, ws, tk.departure_text(name, removed, released))
+    return [notice] if notice else []
 
 
 @router.delete("/{ws_id}/members/me", status_code=204)
 def leave_workspace(ws_id: str, user: m.User = Depends(current_user), s: Session = Depends(db)) -> None:
-    _, mem = require_member(s, ws_id, user)
+    ws, mem = require_member(s, ws_id, user)
     if mem.role == "owner":
         raise ApiError(409, "Chủ workspace không rời workspace được.", "OWNER_CANNOT_LEAVE")
-    _leave(mem)
+    notices = _leave(s, ws, mem, removed=False)
     s.commit()
+    sv.publish(s, notices)
 
 
 @router.delete("/{ws_id}/members/{user_id}", status_code=204)
@@ -201,8 +208,9 @@ def remove_member(ws_id: str, user_id: str, user: m.User = Depends(current_user)
         raise ApiError(404, "Người này không còn là thành viên của workspace.", "NOT_FOUND")
     if mem.role == "owner":
         raise ApiError(409, "Không xóa được chủ workspace.", "OWNER_CANNOT_LEAVE")
-    _leave(mem)
+    notices = _leave(s, ws, mem, removed=True)
     s.commit()
+    sv.publish(s, notices)
 
 
 # ---------- join code ----------

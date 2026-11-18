@@ -1,0 +1,42 @@
+' Sequence diagram of UC01 part A: the Google/GitHub OAuth round trip between boundary, controller and entities.
+@startuml seq-uc01a
+!include ../_style.iuml
+title Biểu đồ tuần tự UC01 - Phần A: Đăng ký hoặc đăng nhập
+autonumber
+
+actor "Khách" as A
+boundary "Trang đăng nhập" as UI
+control "AuthController" as C
+participant "Google/GitHub" as IDP
+entity "OAuthAccount" as OA
+entity "User" as U
+entity "Workspace" as W
+
+A -> UI : bấm "Tiếp tục với GitHub"
+UI -> C : GET /auth/github/start?next=…
+C -> C : ký state (next, nonce)
+C --> UI : chuyển tới trang chọn tài khoản
+UI -> IDP : mở trang chọn tài khoản
+A -> IDP : chọn tài khoản, đồng ý
+alt A.E1 - khách hủy
+  IDP --> C : callback?error
+  C --> UI : /login?error=cancelled
+else đồng ý
+  IDP --> C : callback?code&state
+  C -> IDP : đổi code lấy danh tính
+  alt A.E2 - state sai hoặc lỗi nhà cung cấp
+    C --> UI : /login?error=oauth
+  else danh tính hợp lệ
+    C -> OA : tìm(provider, subject)
+    alt A.A1 - chưa có tài khoản
+      C -> U : tạo(tên hiển thị)
+      C -> OA : tạo(provider, subject, user)
+      C -> W : tạo workspace riêng(chủ = user)
+      C --> UI : đặt cookie phiên 30 ngày,\nmở màn nhập API key
+    else đã có
+      OA --> C : user
+      C --> UI : đặt cookie phiên 30 ngày,\nmở trang định mở [A.A2] hoặc Trang chủ
+    end
+  end
+end
+@enduml

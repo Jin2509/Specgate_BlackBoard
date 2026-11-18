@@ -60,7 +60,7 @@ export function MessageItem({
             ))}
           </p>
           {message.attachment ? <MessageAttachment attachment={message.attachment} workspaceId={workspaceId} /> : null}
-          {cards.length ? <MessageCards cards={cards} workspaceId={workspaceId} /> : null}
+          {cards.length ? <MessageCards cards={cards} /> : null}
         </div>
       </div>
     );
@@ -130,7 +130,7 @@ export function MessageItem({
         </p>
       ) : null}
 
-      {cards.length ? <MessageCards cards={cards} workspaceId={workspaceId} ownerColor={owner?.color} /> : null}
+      {cards.length ? <MessageCards cards={cards} ownerColor={owner?.color} /> : null}
       {message.attachment && !isChannelSummary ? (
         <MessageAttachment attachment={message.attachment} workspaceId={workspaceId} />
       ) : null}

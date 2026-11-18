@@ -1,0 +1,17 @@
+' Activity diagram of UC01 part B: signing out.
+@startuml act-uc01b
+!include ../_style.iuml
+title Biểu đồ hoạt động UC01 - Phần B: Đăng xuất
+
+|Người dùng|
+start
+:(1) Chọn "Đăng xuất";
+|Hệ thống|
+if (Còn kết nối máy chủ?) then (còn)
+  :(2) Xóa phiên trên máy chủ và trình duyệt;
+else (mất)
+  :[B.E1] Vẫn xóa phiên trên trình duyệt;
+endif
+:(2) Về trang đăng nhập;
+stop
+@enduml

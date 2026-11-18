@@ -1,56 +1,86 @@
-' Models one question and answer turn with streaming, stop, provider errors and regeneration (UC04).
-@startuml uc04-chat
+' Mirrors every flow of UC04: chatting (part A), regenerating answers (part B) and managing conversations (part C).
+@startuml act-uc04
 !include ../_style.iuml
-title Hoạt động UC04: Chat với agent riêng, tạo lại câu trả lời
+title Hoạt động UC04: Chat với agent riêng
 
-|Người dùng|
 start
-if (Đã có key hợp lệ?) then (chưa)
-  |Hệ thống|
-  :Mở màn nhập key (A.E2, UC03);
-  stop
-else (có)
-endif
-|Người dùng|
-:Tạo hội thoại mới hoặc mở hội thoại cũ;
-if (Hội thoại mới?) then (có)
-  :Có thể chọn ngữ cảnh nhóm (UC06-A);
-else (không)
-endif
-:Gõ câu hỏi, bấm Enter;
-|Hệ thống|
-:Hiện và lưu câu hỏi ngay;
-if (Hội thoại có ngữ cảnh nhóm?) then (có)
-  :Dựng ngữ cảnh nhóm mới nhất (UC06-A);
-else (không)
-endif
-:Ghép các lượt trước (bỏ lượt lỗi,\nchỉ lấy phiên bản đang hiện);
-|Nhà cung cấp AI|
-:Sinh câu trả lời bằng key của người dùng;
-|Hệ thống|
-repeat
-  :Hiện dần từng phần câu trả lời;
-  if (Người dùng bấm "Dừng"?) then (có)
-    :Giữ phần đã viết, ghi "Đã dừng" (A.A2);
-    break
+partition "Phần A. Chat với agent riêng" {
+  if (Đã có key hợp lệ?) then (chưa)
+    :[A.E2] Đưa người dùng tới màn nhập key (UC03);
+    stop
+  else (có)
   endif
-  if (Nhà cung cấp lỗi?) then (có)
-    :Hiện câu báo lỗi thay câu trả lời (A.E1);
-    break
+  :(1) Tạo hội thoại mới hoặc mở hội thoại cũ\n(danh sách mới nhất ở trên cùng);
+  if (Hội thoại mới?) then (có)
+    :[A.A1] Có thể chọn ngữ cảnh nhóm trước câu đầu (UC06 phần A);\ntên hội thoại lấy từ câu hỏi đầu tiên;
+  else (không)
   endif
-repeat while (Còn nội dung?) is (còn) not (hết)
-:Lưu câu trả lời, hiện nút "Chép" và "Tạo lại";
-|Người dùng|
-if (Bấm "Tạo lại"?) then (có)
-  |Hệ thống|
-  :Giữ câu trả lời cũ thành một phiên bản;
-  :Gọi lại mô hình cho cùng câu hỏi (UC04-B);
-  :Hiện nút chuyển phiên bản "‹ 1/2 ›";
-  note right
-    Ở câu hỏi sau, agent chỉ đọc
-    phiên bản đang hiển thị.
-  end note
-else (không)
-endif
+  :(2) Gõ câu hỏi, gửi (Enter gửi, Shift+Enter xuống dòng);
+  :(3) Câu hỏi hiện ngay, được lưu trước khi agent trả lời;
+  :(4) Gửi cho mô hình bằng key của người dùng: các lượt trước\n(lượt gần nhất nếu quá dài) và ngữ cảnh nhóm nếu có (UC06);
+  repeat
+    :(5) Câu trả lời hiện dần, có định dạng;
+    if (Người dùng bấm "Dừng"?) then (có)
+      :[A.A2] Giữ phần đã viết, ghi "Đã dừng";
+      break
+    endif
+    if (Nhà cung cấp lỗi giữa chừng?) then (có)
+      :[A.E1] Câu hỏi vẫn còn; câu báo lỗi thay câu trả lời;\nlượt lỗi không gửi lại cho agent;
+      break
+    endif
+    if (Mất mạng?) then (có)
+      :[A.E3] Xử lý theo UC17;
+      break
+    endif
+  repeat while (Còn nội dung?) is (còn) not (hết)
+  :(6) Lưu câu trả lời; nút "Chép", "Tạo lại";\nmỗi khối code có nút chép riêng;
+}
 stop
+
+partition "Phần B. Tạo lại câu trả lời và chuyển phiên bản" {
+  start
+  if (Bấm vào highlight của phiên bản cũ?) then (có)
+    :[B.A1] Mở đúng phiên bản đó, đúng chỗ đã đánh dấu;
+    stop
+  else (không)
+  endif
+  :(1) Người dùng bấm "Tạo lại";
+  :(2) Gọi lại mô hình cho cùng câu hỏi; câu mới hiện dần;
+  if (Lỗi nhà cung cấp?) then (có)
+    :[B.E1] Như A.E1; phiên bản cũ không bị ảnh hưởng;
+    stop
+  else (không)
+  endif
+  :(3) Câu cũ giữ thành một phiên bản; nút "‹ 1/2 ›";
+  :(4) Khi hỏi tiếp, agent chỉ đọc phiên bản đang hiển thị;
+  stop
+}
+
+partition "Phần C. Quản lý hội thoại" {
+  start
+  if (Đường dẫn là hội thoại của người khác?) then (có)
+    :[C.E1] Chỉ báo "không tìm thấy";
+    stop
+  else (không)
+  endif
+  if (Thao tác?) then (đổi tên)
+    :(1) Bấm sửa tên, nhập tên mới (≤ 80 ký tự), Lưu;
+    :(2) Danh sách hội thoại cập nhật tên;
+  else (xóa)
+    if (Hội thoại có highlight riêng?) then (không)
+      :[C.A1] Xóa hội thoại ngay;
+    else (có)
+      :[C.A2] Hỏi "Hội thoại này có N highlight.\nGiữ lại hay xóa luôn?", mặc định giữ lại;
+      if (Chọn?) then (giữ lại)
+        :[C.A2] Highlight ghi "hội thoại gốc đã bị xóa";
+      else (xóa luôn)
+        :[C.A2] Xóa cả các highlight riêng của hội thoại;
+      endif
+    endif
+  endif
+  note right
+  BR-06, BR-07. Những gì đã gửi vào kênh vẫn còn vì là bản chụp (BR-13).
+  end note
+  stop
+}
 @enduml

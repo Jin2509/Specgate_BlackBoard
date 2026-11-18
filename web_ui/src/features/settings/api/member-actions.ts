@@ -1,5 +1,5 @@
 "use server";
-// Updates a member's own name and team role, edits the brief, and handles leaving or removing members.
+// Updates a member's own name and team role, edits the brief, name and visibility, and handles leaving or removing members.
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -7,6 +7,7 @@ import { requireSession } from "@/features/auth/server";
 import { toErrorMessage } from "@/lib/api/http-client";
 import { callApi } from "@/lib/api/server-api";
 import { t } from "@/lib/i18n";
+import type { Visibility } from "@/types/workspace";
 
 export type ActionOutcome = { ok: true } | { ok: false; error: string };
 
@@ -31,6 +32,21 @@ export async function updateBrief(_previous: BriefFormState, formData: FormData)
   }
   revalidatePath("/", "layout");
   return { savedAt: Date.now() };
+}
+
+/** Owner only: rename the workspace and choose who can find it. */
+export async function updateWorkspaceDetails(
+  workspaceId: string,
+  details: { name: string; visibility: Visibility },
+): Promise<ActionOutcome> {
+  await requireSession();
+  try {
+    await callApi(toWorkspacePath(workspaceId), { method: "PATCH", body: details });
+  } catch (error) {
+    return { ok: false, error: toErrorMessage(error, t.settings.workspaceFailed) };
+  }
+  revalidatePath("/", "layout");
+  return { ok: true };
 }
 
 /** Set the caller's name in the workspace; names are unique there. */

@@ -82,13 +82,12 @@ export function toSegmentsText(segments: HighlightSegment[]): string {
   return segments.map((segment) => toEllipsizedText(segment.text, segment)).join(" ");
 }
 
-/** List what the agent is told about the passages: cut mid-sentence, retold from a summary, or from an unusable run. */
+/** List what the agent is told about the passages: cut mid-sentence or retold from a summary. */
 export function listSegmentNotices(segments: HighlightSegment[]): string[] {
   const notices = new Set<string>();
   for (const segment of segments) {
     if (segment.partial) notices.add(t.highlight.noticePartial);
     if (segment.relayed) notices.add(t.highlight.noticeRelayed);
-    if (segment.notice) notices.add(format(t.highlight.noticeRun, { notice: segment.notice }));
   }
   return [...notices];
 }

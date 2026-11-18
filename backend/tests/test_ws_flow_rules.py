@@ -1,10 +1,9 @@
 """SpecGate Workspace against the revised docs/flow.md: excerpt labels, answer versions, cross-workspace warning,
-departed members' names, summary speakers, run notices that follow every snapshot, /pin choices, unread dots.
+departed members' names, summary speakers, /pin choices, unread dots.
 Runs with the fake agent: no network, no cost."""
 
 from app.ws import service as sv
 from test_ws import add_member, api, ask, hl, keep, login, post, send_quote, shared, team, with_key  # noqa: F401
-from test_ws_flow import import_main
 
 ANSWER = "Không nên dùng phương pháp X vì tốn RAM. Hãy chạy thêm 40 tác vụ. Kết quả sẽ rõ hơn."
 
@@ -171,27 +170,15 @@ def test_attached_turn_of_a_summary_keeps_its_own_speaker(team):
     assert h["segments"][0]["speaker"] == "Long" and not h["segments"][0].get("relayed")
 
 
-# ---------- §13 run notices follow every snapshot ----------
+# ---------- §9 command list ----------
 
 
-def test_invalidated_run_flags_highlight_and_board_card(team):
-    api, lan, long, ws = team
-    run = import_main(api, lan, ws)
-    stats = post(api, lan, ws, "/stats")[-1]
-    line = stats["cards"][0]["lines"][0]
-    h = hl(api, long, ws, stats["id"], line, part=0).json()
-    assert h["segments"][0]["partial"] is False and "notice" not in h["segments"][0]
-    post(api, long, ws, "/pin", replyToId=stats["id"])
-    api.patch(f"/api/v1/workspaces/{ws['id']}/runs/{run['id']}", headers=lan,
-              json={"validity": "invalidated", "invalidReason": "Engine đọc sai nhãn"})
-    seg = api.get("/api/v1/highlights", headers=long).json()["groups"][0]["highlights"][0]["segments"][0]
-    assert seg["notice"] == "Lượt chạy này đã bị đánh dấu không hợp lệ."
-    conv = api.post("/api/v1/conversations", headers=long, json={"workspaceId": ws["id"]}).json()
-    out = api.get(f"/api/v1/conversations/{conv['id']}/context", headers=long).json()
-    assert out["context"]["highlights"][0]["segments"][0]["runState"] == "invalidated"
-    assert "đoạn này lấy từ lượt chạy đã bị đánh dấu không hợp lệ" in out["system"]
-    card = api.get(f"/api/v1/workspaces/{ws['id']}/board", headers=lan).json()["columns"][0]["items"][0]
-    assert card["notice"] == "Lượt chạy này đã bị đánh dấu không hợp lệ." and card["authorName"].startswith("Thẻ số liệu")
+def test_paper_commands_are_unknown_and_help_follows_the_flow_order(team):
+    api, lan, _, ws = team
+    assert "modules" not in api.get(f"/api/v1/workspaces/{ws['id']}", headers=lan).json()
+    assert post(api, lan, ws, "/stats")[-1]["text"] == "Không có lệnh /stats. Gõ /help để xem danh sách lệnh."
+    usages = [c["usage"].split()[0] for c in post(api, lan, ws, "/help")[-1]["attachment"]["commands"]]
+    assert usages == ["/idea", "/note", "/pin", "/decide", "/summarize", "/brief", "/task", "/help"]
 
 
 # ---------- §11 /pin ----------

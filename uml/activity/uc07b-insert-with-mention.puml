@@ -1,0 +1,35 @@
+' Activity diagram of UC07 part B: inserting private highlights into a channel message with @.
+@startuml act-uc07b
+!include ../_style.iuml
+title Biểu đồ hoạt động UC07 - Phần B: Chèn highlight riêng bằng @
+
+|Thành viên|
+start
+:Gõ @ trong ô soạn;
+|Hệ thống|
+:(1) Gợi ý "Highlight của tôi"\nvà tên các thành viên;
+|Thành viên|
+:(2) Chọn "Highlight của tôi";
+repeat
+  :(3) Lọc theo màu hoặc tìm chữ,\nchọn một highlight;
+  |Hệ thống|
+  :(4) Chèn thẻ trích dẫn vào tin,\nhiện nhãn người nói;
+  |Thành viên|
+repeat while ([B.A2] chèn thêm?) is (có) not (không)
+if (Bỏ một thẻ?) then (có)
+  :[B.A1] Bấm nút bỏ trên thẻ;
+else (không)
+endif
+:(5) Viết lời xung quanh, gửi;
+|Hệ thống|
+if (Đã gửi vào kênh này?) then (có)
+  :[B.A3] Hỏi "Vẫn gửi";
+else (chưa)
+endif
+if (Ngữ cảnh khác nhóm?) then (có)
+  :[B.A4] Hỏi xác nhận;
+else (không)
+endif
+:Đăng tin dưới tên thành viên,\nkèm các thẻ trích dẫn;
+stop
+@enduml

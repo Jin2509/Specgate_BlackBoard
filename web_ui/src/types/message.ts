@@ -2,7 +2,6 @@
 import type { BoardItemKind, IdeaStatus } from "./board";
 import type { Highlight } from "./highlight";
 import type { Profile } from "./profile";
-import type { CardRun, Criterion, TaskResult } from "./run";
 import type { Channel } from "./workspace";
 
 export type SenderKind = "human" | "agent" | "system";
@@ -13,8 +12,7 @@ export type Attachment =
   | { type: "board-receipt"; itemId: string; number: number; kind: BoardItemKind; text: string; status: IdeaStatus | null }
   | { type: "help"; commands: Array<{ usage: string; description: string }> }
   | { type: "brief"; briefId: string }
-  | { type: "summary" }
-  | { type: "run"; runId: string };
+  | { type: "summary" };
 
 export interface QuoteCardBase {
   highlightId: string;
@@ -35,22 +33,14 @@ export interface QuoteCardBase {
   ownerLeft?: boolean;
 }
 
-/** Cards are snapshots taken when sent; `notice` flags a run that was invalidated or superseded since. */
+/** Cards are snapshots taken when sent. */
 export type Card =
   | (QuoteCardBase & { kind: "quote"; digest?: boolean })
   | (QuoteCardBase & {
       kind: "conversation-summary";
       title: string;
       turns: Array<{ role: "user" | "assistant"; text: string; speaker: string }>;
-    })
-  | {
-      kind: "stats";
-      run: CardRun;
-      criteria: Array<Pick<Criterion, "number" | "title" | "display" | "verdict" | "ciLow" | "ciHigh" | "threshold">>;
-      lines: string[];
-      notice?: string;
-    }
-  | { kind: "task"; run: CardRun; task: TaskResult; line: string; notice?: string };
+    });
 
 /** For an agent message, `senderId` is the agent's owner and `agentModel` the model at send time. */
 export interface Message {

@@ -1,6 +1,6 @@
 "use client";
-// Renders the channel column of a shared workspace: menu, brief, channels, board, paper results, management and agents.
-import { Database, FileText, FlaskConical, Hash, KanbanSquare, Plus, Settings, UserPlus } from "lucide-react";
+// Renders the channel column of a shared workspace: menu, brief, channels, boards, management and agents.
+import { ClipboardList, FileText, Hash, KanbanSquare, Plus, Settings, UserPlus } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useState, type ReactNode } from "react";
 
@@ -14,10 +14,12 @@ import type { SharedWorkspace } from "@/types/workspace";
 
 import { CreateChannelDialog } from "./CreateChannelDialog";
 import { WorkspaceMenu } from "./WorkspaceMenu";
+import { useWorkspaceBadges } from "../hooks/use-workspace-badges";
+import { toChannelDot } from "../utils/channel-dot";
 
 export interface SidebarCounts {
   ideas: number;
-  runs: number;
+  openTasks: number;
   pendingRequests: number;
 }
 
@@ -42,7 +44,7 @@ export function WorkspaceSidebar({
   const basePath = `/w/${workspace.id}`;
   const isAt = (path: string) => pathname === `${basePath}${path}`;
   const [isNewChannelOpen, setIsNewChannelOpen] = useState(false);
-  const hasRuns = workspace.modules?.includes("adom") ?? false;
+  const liveChannels = useWorkspaceBadges()?.get(workspace.id)?.channels;
 
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
@@ -75,16 +77,22 @@ export function WorkspaceSidebar({
             ) : undefined
           }
         >
-          {workspace.channels.map((channel) => (
-            <NavItem
-              key={channel.id}
-              href={`${basePath}/c/${channel.name}`}
-              isActive={isAt(`/c/${channel.name}`) || isAt(`/c/${channel.id}`)}
-              icon={<Hash />}
-            >
-              {channel.name}
-            </NavItem>
-          ))}
+          {workspace.channels.map((channel) => {
+            const isActive = isAt(`/c/${channel.name}`) || isAt(`/c/${channel.id}`);
+            const dot = toChannelDot(channel, liveChannels, isActive);
+            return (
+              <NavItem
+                key={channel.id}
+                href={`${basePath}/c/${channel.name}`}
+                isActive={isActive}
+                icon={<Hash />}
+                dot={dot}
+                dotLabel={dot === "mention" ? t.workspace.mentionDot : t.workspace.unreadDot}
+              >
+                {channel.name}
+              </NavItem>
+            );
+          })}
           {isViewerOwner ? (
             <button
               type="button"
@@ -100,36 +108,18 @@ export function WorkspaceSidebar({
           <NavItem href={`${basePath}/board`} isActive={isAt("/board")} icon={<KanbanSquare />} count={counts.ideas}>
             {t.workspace.board}
           </NavItem>
+          <NavItem href={`${basePath}/tasks`} isActive={isAt("/tasks")} icon={<ClipboardList />} count={counts.openTasks}>
+            {t.workspace.taskBoard}
+          </NavItem>
           <NavItem href={`${basePath}/brief`} isActive={isAt("/brief")} icon={<FileText />}>
             {t.workspace.briefPage}
           </NavItem>
         </NavGroup>
 
-        {hasRuns ? (
-          <NavGroup label={t.workspace.paperData}>
-            <NavItem
-              href={`${basePath}/metrics`}
-              isActive={pathname.startsWith(`${basePath}/metrics`)}
-              icon={<FlaskConical />}
-              tone="data"
-            >
-              {t.workspace.metrics}
-            </NavItem>
-            <NavItem href={`${basePath}/runs`} isActive={isAt("/runs")} icon={<Database />} count={counts.runs} tone="data">
-              {t.workspace.runs}
-            </NavItem>
-          </NavGroup>
-        ) : null}
-
         <NavGroup label={t.workspace.management}>
           <NavItem href={`${basePath}/settings`} isActive={isAt("/settings")} icon={<Settings />}>
             {t.workspace.membersAndAgents}
           </NavItem>
-          {isViewerOwner && !hasRuns ? (
-            <NavItem href={`${basePath}/runs`} isActive={isAt("/runs")} icon={<FlaskConical />}>
-              {t.workspace.attachData}
-            </NavItem>
-          ) : null}
           {isViewerOwner ? (
             <NavItem
               href={`${basePath}/requests`}

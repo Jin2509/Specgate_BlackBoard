@@ -1,0 +1,37 @@
+' Activity diagram of UC11: the owner approves or rejects join requests.
+@startuml act-uc11
+!include ../_style.iuml
+title Biểu đồ hoạt động UC11: Duyệt yêu cầu tham gia
+
+|Chủ workspace|
+start
+:Mở "Yêu cầu tham gia";
+|Hệ thống|
+if (Là chủ workspace?) then (không)
+  :[E2] Đưa về kênh "chung";
+  stop
+else (có)
+endif
+:(1) Hiện yêu cầu đang chờ, tự cập nhật;
+:(2) Mỗi yêu cầu: ai xin, bằng mã\nhay Khám phá, lời nhắn, thời điểm;
+|Chủ workspace|
+:(3) Bấm "Duyệt" hoặc "Từ chối";
+|Hệ thống|
+if (Yêu cầu còn chờ?) then (không)
+  :[E1] Không xử lý lại,\nlàm mới danh sách;
+  stop
+else (còn)
+endif
+if (Quyết định?) then (duyệt)
+  :(4) Thêm thành viên,\ngán màu ảnh đại diện chưa ai dùng;
+  if (Tên?) then (từng rời, vào lại)
+    :[A2] Lấy lại tên cũ;
+  elseif () then (trùng tên thành viên)
+    :[A1] Đặt tên tạm "‹tên› 2",\nnhắc chọn biệt danh;
+  else (không trùng)
+  endif
+else (từ chối)
+endif
+:(5) Chuyển yêu cầu vào lịch sử,\nghi kết quả và người xử lý;
+stop
+@enduml

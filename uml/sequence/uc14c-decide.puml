@@ -1,0 +1,39 @@
+' Sequence diagram of UC14 part C: deciding or rejecting an idea with a reason.
+@startuml seq-uc14c
+!include ../_style.iuml
+title Biểu đồ tuần tự UC14 - Phần C: Chốt hoặc loại ý
+autonumber
+
+actor "Thành viên" as A
+boundary "Trang Bảng ý tưởng" as UI
+control "WorkspaceController" as C
+control "BoardService" as BS
+entity "BoardItem" as B
+entity "Message" as MS
+
+A -> UI : (1) bấm "Chốt" hoặc "Loại"
+UI --> A : (2) hộp thoại hỏi lý do, lệnh /decide tương đương
+A -> UI : (3) nhập lý do, xác nhận
+alt C.E1 - thiếu lý do
+  UI --> A : khóa nút xác nhận
+else
+  UI -> C : PUT /workspaces/{id}/board/{number}/decision {decision, reason}
+  C -> BS : decide(thẻ, người quyết định, lý do)
+  BS -> B : tìm thẻ theo số
+  alt C.E3 - không có thẻ hoặc là ghi chú
+    BS --> C : lỗi
+    C --> UI : 404 / 400
+  else C.E2 - đã chốt hoặc đã loại
+    BS --> C : lỗi
+    C --> UI : 409 không đổi được nữa
+  else
+    BS -> B : (4) status = decided | rejected,\nlý do, decided_by, decided_at
+    C -> MS : tin hệ thống ghi quyết định
+    C --> UI : bảng đã cập nhật
+  end
+end
+note over C, BS
+  C.A1: lệnh /decide trong kênh đi qua CommandService rồi gọi cùng BoardService.decide.
+  C.E4: lệnh nằm trong thẻ trích dẫn lời agent không được gửi tới CommandService.
+end note
+@enduml

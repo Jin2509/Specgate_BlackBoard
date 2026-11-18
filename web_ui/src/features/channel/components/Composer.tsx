@@ -39,7 +39,6 @@ export function Composer({
   workspaceId,
   channelId,
   people,
-  modules,
   channelName,
   highlights,
   myName,
@@ -47,7 +46,6 @@ export function Composer({
   workspaceId: string;
   channelId: string;
   people: Profile[];
-  modules: string[];
   channelName: string;
   highlights: PrivateHighlight[];
   myName: string;
@@ -79,7 +77,7 @@ export function Composer({
   }
 
   const mentionItems = listMentionSuggestionsWithHighlights(people, trigger?.mode === "@" ? trigger.query : "");
-  const commandItems = listCommandSuggestions(modules, trigger?.mode === "/" ? trigger.query : "");
+  const commandItems = listCommandSuggestions(trigger?.mode === "/" ? trigger.query : "");
   const isMentionMenuShown = isDemoMenus || trigger?.mode === "@";
   const isCommandMenuShown = isDemoMenus || trigger?.mode === "/";
   const items = trigger?.mode === "/" ? commandItems : mentionItems;

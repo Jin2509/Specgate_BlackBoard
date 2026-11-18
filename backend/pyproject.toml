@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "spec-gate-backend"
 version = "0.1.0"
-description = "SpecGate API server between web_ui and the ADOM pipeline (spec-gate)"
+description = "SpecGate Workspace API: accounts, personal agents, shared channels and the idea blackboard"
 requires-python = ">=3.10"
 dependencies = [
     "fastapi>=0.110",
@@ -25,4 +25,3 @@ include = ["app*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-markers = ["slow: drives the real ADOM pipeline (about 15 s)"]

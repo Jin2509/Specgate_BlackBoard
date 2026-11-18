@@ -1,0 +1,31 @@
+' Activity diagram of UC02: the home page choices and the rail badges.
+@startuml act-uc02
+!include ../_style.iuml
+title Biểu đồ hoạt động UC02: Dùng Trang chủ và dấu báo ở thanh bên
+
+|Người dùng|
+start
+:Đăng nhập xong hoặc bấm logo;
+|Hệ thống|
+:(1) Hiện Trang chủ: thanh bên,\nrobot kèm câu chào, các nút;
+:Hiện dấu báo trên thanh bên:\nchấm tin chưa đọc, chấm nhắc @,\nsố yêu cầu đang chờ (nếu là chủ);
+|Người dùng|
+:(2) Chọn một nút hoặc một mục;
+|Hệ thống|
+if (Chọn gì?) then ("Chat với agent")
+  if (Đã có API key?) then (có)
+    :(2) Mở workspace riêng;
+  else (chưa)
+    :[A1] Mở màn nhập API key;
+  endif
+elseif () then ("Vào làm việc với nhóm")
+  if (Đã tham gia nhóm?) then (có)
+    :(2) Mở workspace chung\ndùng gần nhất;
+  else (chưa)
+    :[A2] Mở trang Khám phá;
+  endif
+else (mục trên thanh bên)
+  :[A3] Mở workspace, Tạo mới,\nNhập mã hoặc Khám phá;
+endif
+stop
+@enduml

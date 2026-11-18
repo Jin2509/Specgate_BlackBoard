@@ -1,0 +1,39 @@
+' Activity diagram of UC07 part A: sending private highlights to a channel from the list.
+@startuml act-uc07a
+!include ../_style.iuml
+title Biểu đồ hoạt động UC07 - Phần A: Gửi highlight riêng từ danh sách
+
+|Thành viên|
+start
+:Chọn highlight, bấm "Gửi vào nhóm";
+|Hệ thống|
+:(1) Mở hộp thoại gửi;
+|Thành viên|
+:(2) Chọn workspace và kênh;
+:(3) Viết thêm lời (tùy chọn);
+|Hệ thống|
+:(4) Hiện nội dung và nhãn người nói:\ntrọn câu, "trích một phần" hoặc "đã chỉnh";
+if (Đã gửi vào kênh này?) then (có)
+  :[A.A1] Nhắc, yêu cầu "Vẫn gửi lại";
+else (chưa)
+endif
+if (Viết khi đọc ngữ cảnh nhóm khác?) then (có)
+  :[A.A2] Cảnh báo có thể chứa\nthông tin của nhóm khác;
+else (không)
+endif
+|Thành viên|
+:(5) Xác nhận, bấm Gửi;
+|Hệ thống|
+if (Nội dung trống?) then (có)
+  :[A.E2] Không cho gửi;
+  stop
+elseif (Còn là thành viên?) then (không)
+  :[A.E1] Báo lỗi, không gửi;
+  stop
+else (hợp lệ)
+endif
+:(6) Đăng tin kèm thẻ trích dẫn\n(bản chụp, ghi người nói);
+:Ghi lần gửi vào highlight;
+:(7) Báo đã gửi, nút mở kênh;
+stop
+@enduml

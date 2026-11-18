@@ -2,7 +2,7 @@
 import { t } from "@/lib/i18n";
 import type { Profile } from "@/types/profile";
 
-import { listCommands, type CommandSpec } from "./commands";
+import { COMMANDS, type CommandSpec } from "./commands";
 
 export type Suggestion = { kind: "person"; person: Profile } | { kind: "command"; command: CommandSpec } | { kind: "highlights" };
 
@@ -35,10 +35,11 @@ export function listMentionSuggestionsWithHighlights(people: Profile[], query: s
   return matchesHighlights ? [{ kind: "highlights" }, ...persons] : persons;
 }
 
-export function listCommandSuggestions(modules: readonly string[], query: string): Suggestion[] {
-  return listCommands(modules)
-    .filter((command) => command.name.slice(1).startsWith(query))
-    .map((command) => ({ kind: "command" as const, command }));
+export function listCommandSuggestions(query: string): Suggestion[] {
+  return COMMANDS.filter((command) => command.name.slice(1).startsWith(query)).map((command) => ({
+    kind: "command" as const,
+    command,
+  }));
 }
 
 export function toSuggestionToken(suggestion: Suggestion): string {

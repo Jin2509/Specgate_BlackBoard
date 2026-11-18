@@ -1,0 +1,30 @@
+' Sequence diagram of UC14 part B: the owner moves an idea to discussion.
+@startuml seq-uc14b
+!include ../_style.iuml
+title Biểu đồ tuần tự UC14 - Phần B: Chuyển ý sang Đang bàn
+autonumber
+
+actor "Chủ workspace" as A
+boundary "Trang Bảng ý tưởng" as UI
+control "WorkspaceController" as C
+control "BoardService" as BS
+entity "Member" as M
+entity "BoardItem" as B
+
+A -> UI : (1) bấm "Đưa vào bàn"
+UI -> C : PUT /workspaces/{id}/board/{number}/status {discussing}
+C -> M : vai của người bấm
+alt B.E1 - không phải chủ
+  C --> UI : 403 từ chối
+else
+  C -> BS : move_to_discussing(thẻ)
+  BS -> B : đọc trạng thái
+  alt B.E2 - đã chốt hoặc đã loại
+    BS --> C : lỗi
+    C --> UI : 409 không chuyển được
+  else
+    BS -> B : (2) status = discussing
+    C --> UI : bảng đã cập nhật
+  end
+end
+@enduml

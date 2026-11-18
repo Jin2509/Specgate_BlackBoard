@@ -1,30 +1,29 @@
-' Shows the lifecycle of one idea on the idea board (UC14, BR-20, BR-21, BR-23).
-@startuml board-item
+' State diagram of an idea on the idea board (BoardItem, UC14).
+@startuml st-board-item
 !include ../_style.iuml
-title Trạng thái: một ý trên bảng ý tưởng
+title Biểu đồ trạng thái: Ý trên bảng ý tưởng (BoardItem)
 
-[*] --> DeXuat : /idea, /pin, nút "Thêm ý"\n(chỉ do người gõ, BR-20)
-state "Đề xuất" as DeXuat
-state "Đang bàn" as DangBan
-state "Đã chốt" as DaChot
-state "Đã loại" as DaLoai
+state "Đề xuất" as Proposed
+state "Đang bàn" as Discussing
+state "Đã chốt" as Decided
+state "Đã loại" as Rejected
 
-DeXuat --> DangBan : chủ bấm "Đưa vào bàn" (BR-21)
-DeXuat --> DaChot : chốt + lý do
-DeXuat --> DaLoai : loại + lý do
-DangBan --> DaChot : chốt + lý do
-DangBan --> DaLoai : loại + lý do
-DaChot --> [*]
-DaLoai --> [*]
+[*] --> Proposed : /idea, /pin, nút "Thêm"\n[người gõ, nội dung khác rỗng]
+Proposed --> Discussing : "Đưa vào bàn" [người bấm là chủ]
+Proposed --> Decided : chốt [có lý do]
+Proposed --> Rejected : loại [có lý do]
+Discussing --> Decided : chốt [có lý do]
+Discussing --> Rejected : loại [có lý do]
+Decided --> [*]
+Rejected --> [*]
 
-DaChot : ghi người, thời điểm, lý do
-DaChot : vào ngữ cảnh agent và bản tổng hợp
-DaLoai : luôn hiển thị
-DaLoai : agent được dặn không đề xuất lại
+Decided : ghi người quyết định, thời điểm, lý do
+Decided : agent mọi thành viên biết ý đã chốt
+Rejected : luôn hiện trên bảng
+Rejected : agent được dặn không đề xuất lại
 
-note bottom of DaChot
-  BR-23: bắt buộc lý do, chỉ con người làm,
-  không quay ngược. Lệnh trong thẻ trích dẫn
-  lời agent không được thực hiện.
+note bottom of Decided
+  Không có chuyển ngược từ Đã chốt hay Đã loại (BR-23).
+  Agent không gây ra được chuyển trạng thái nào (BR-20).
 end note
 @enduml

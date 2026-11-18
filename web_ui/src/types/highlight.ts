@@ -1,5 +1,5 @@
 // Defines agent highlights and the group context a linked conversation sends to the model.
-import type { CardRun, RunState } from "./run";
+import type { ContextTask } from "./task";
 import type { TeamMember } from "./workspace";
 
 export type HighlightLabel = "important" | "review";
@@ -11,7 +11,7 @@ export interface HighlightSegment {
   part: number | null;
   text: string;
   at: string;
-  authorKind: "human" | "agent" | "data";
+  authorKind: "human" | "agent";
   authorUserId: string;
   authorModel?: string | null;
   speaker: string;
@@ -22,9 +22,6 @@ export interface HighlightSegment {
   cutEnd?: boolean;
   /** Taken from a summary: a retelling, not anyone's own position. */
   relayed?: boolean;
-  /** A stats card line whose run was invalidated, superseded or removed since. */
-  notice?: string;
-  runState?: RunState;
 }
 
 export interface Highlight {
@@ -97,6 +94,7 @@ export interface AgentContext {
   myName: string;
   myTeamRole: string | null;
   team: TeamMember[];
+  tasks: ContextTask[];
   decided: ContextIdea[];
   rejected: ContextIdea[];
   timeline: TimelineItem[];
@@ -114,7 +112,6 @@ export interface AgentContext {
   } | null;
   highlights: Array<Highlight & { status: string }>;
   highlightLimit: number;
-  metrics: { run: CardRun; lines: string[] } | null;
 }
 
 export interface ContextResponse {

@@ -1,0 +1,24 @@
+' Activity diagram of UC17: keeping work when the network drops and recovers.
+@startuml act-uc17
+!include ../_style.iuml
+title Biểu đồ hoạt động UC17: Tiếp tục làm việc khi mạng chập chờn
+
+|Người dùng|
+start
+:Đang dùng website thì mất Internet;
+|Hệ thống|
+:(1) Hiện dải "Mất kết nối,\nđang thử kết nối lại";
+:(2) Khóa nút gửi;
+:(3) Giữ chữ đang soạn trên trình duyệt;
+if (Đang làm gì?) then (agent đang trả lời)
+  :[A1] Giữ phần đã viết,\ncó thể bấm "Tạo lại";
+elseif () then (tải lại trang khi soạn)
+  :[A2] Chữ đang soạn hiện lại;
+else (việc khác)
+endif
+repeat
+  :Tự thử kết nối lại;
+repeat while (Có mạng?) is (chưa) not (có)
+:(4) Ẩn dải báo, mở nút gửi,\nkênh hiện bù tin đã lỡ;
+stop
+@enduml

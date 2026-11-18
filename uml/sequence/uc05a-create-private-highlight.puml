@@ -1,0 +1,30 @@
+' Sequence diagram of UC05 part A: saving a private highlight.
+@startuml seq-uc05a
+!include ../_style.iuml
+title Biểu đồ tuần tự UC05 - Phần A: Tạo highlight riêng
+autonumber
+
+actor "Người dùng" as A
+boundary "Màn hình chat" as UI
+control "PrivateHighlightController" as C
+entity "Turn" as T
+entity "PrivateHighlight" as PH
+
+A -> UI : bôi đen một đoạn
+alt A.E1 - vùng chọn qua hai lượt, lượt lỗi hoặc đang viết
+  UI --> A : không hiện thanh lưu
+else
+  UI --> A : thanh chọn màu
+  A -> UI : chọn màu, ghi chú, bấm Lưu
+  UI -> C : POST /private-highlights {turnId, text, color, note}
+  C -> PH : đếm highlight của người dùng
+  alt A.E2 - đã đủ ~200
+    C --> UI : 409 nhắc dọn bớt
+  else
+    C -> T : lấy lượt gốc (người nói, mô hình, ngữ cảnh nhóm)
+    C -> PH : lưu(nguyên văn, màu, ghi chú, lượt gốc)
+    C --> UI : 201 highlight
+    UI --> A : tô màu; "Chưa có gì được gửi vào nhóm"
+  end
+end
+@enduml

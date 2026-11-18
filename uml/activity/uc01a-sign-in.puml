@@ -1,0 +1,52 @@
+' Activity diagram of UC01 part A: signing up or signing in with Google or GitHub.
+@startuml act-uc01a
+!include ../_style.iuml
+title Biểu đồ hoạt động UC01 - Phần A: Đăng ký hoặc đăng nhập
+
+|Khách|
+start
+:(1) Mở một trang bất kỳ;
+|Hệ thống|
+if (Phiên còn hạn?) then (còn)
+  :[A.A3] Tính lại 30 ngày,\nmở thẳng trang đó;
+  stop
+else (không)
+endif
+:(1) Ghi nhớ trang định mở,\nchuyển về trang đăng nhập;
+:(2) Hiện nút "Tiếp tục với Google"\nvà "Tiếp tục với GitHub";
+|Khách|
+:(3) Bấm một nút;
+|Hệ thống|
+if (Đã cấu hình OAuth?) then (có)
+  |Google/GitHub|
+  :(3) Hiện trang chọn tài khoản;
+  |Khách|
+  :(4) Chọn tài khoản, đồng ý;
+  if (Hủy?) then (hủy)
+    |Hệ thống|
+    :[A.E1] Báo "Bạn đã hủy đăng nhập";
+    stop
+  else (đồng ý)
+  endif
+  |Google/GitHub|
+  :(5) Trả danh tính;
+  |Hệ thống|
+  if (Danh tính hợp lệ?) then (không)
+    :[A.E2] Báo lỗi đăng nhập;
+    stop
+  else (có)
+  endif
+else (chưa)
+  :[A.A4] Hiện màn giả lập\nchọn hoặc tạo tài khoản;
+endif
+|Hệ thống|
+:(7) Lưu phiên 30 ngày;
+if (Lần đầu dùng danh tính?) then (có)
+  :[A.A1] Tạo tài khoản và workspace riêng,\nmở màn nhập API key;
+elseif (Có trang định mở?) then (có)
+  :[A.A2] Mở đúng trang định mở;
+else (không)
+  :(6) Mở Trang chủ;
+endif
+stop
+@enduml

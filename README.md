@@ -1,11 +1,11 @@
 # SpecGate Workspace
 
-Bảng đen chung cho người và LLM: một workspace để nhóm lên ý tưởng cho bất kỳ đề bài nào mà không mất ngữ cảnh. Ca sử dụng đầu tiên là nghiên cứu bài báo ADOM.
+Bảng đen chung cho người và LLM: một workspace để nhóm lên ý tưởng cho bất kỳ đề bài nào mà không mất ngữ cảnh.
 
 ```
 .
 ├── web_ui/     Frontend: Next.js 16 (App Router), TypeScript strict, Tailwind CSS 4, shadcn/ui, Lucide
-├── backend/    Backend FastAPI + SQLAlchemy, gọi pipeline ADOM (repo spec-gate đặt cạnh repo này)
+├── backend/    Backend FastAPI + SQLAlchemy: tài khoản, agent riêng, kênh, highlight, bảng ý tưởng
 ├── deploy/     Cấu hình server: Caddy (HTTPS, mật khẩu chung), lớp phủ compose, script cập nhật
 ├── compose.yaml  Chạy cả backend và web bằng Docker
 └── docs/       Tài liệu nội bộ: spec, kế hoạch sprint, đề xuất công nghệ, prototype (không đưa lên git)
@@ -14,7 +14,6 @@ Bảng đen chung cho người và LLM: một workspace để nhóm lên ý tư�
 ## Chạy cả hệ thống bằng Docker
 
 ```bash
-git clone -b cleanup-scripts <repo spec-gate> ../spec-gate   # pipeline ADOM, đặt cạnh repo này
 docker compose up --build      # web http://localhost:3000, backend http://localhost:8000/docs
 ```
 
@@ -44,7 +43,6 @@ Cách nối:
 - `next.config.ts` rewrite `/api/*` sang `BACKEND_URL` (mặc định `http://localhost:8000`). Server component và server action gọi backend qua `lib/api/` (`client.ts` fetch + `ApiError`, `server.ts` kèm token từ cookie, `queries.ts` một hàm cho mỗi endpoint đọc). Trình duyệt chỉ gọi thẳng `/api` cho hai luồng SSE: trả lời của agent (`features/personal/chat-screen.tsx`) và tin mới trong kênh (`features/channel/channel-live.tsx`).
 - Phiên: token backend nằm trong cookie httpOnly `sg_session`; `proxy.ts` hỏi `GET /api/auth/session` ở mỗi lần điều hướng và ghi nhớ workspace vừa mở (`PUT /api/me/last-workspace`). Chưa cấu hình OAuth thật thì nút Google/GitHub mở màn chọn tài khoản giả lập (`GET /api/auth/dev-accounts`, `POST /api/auth/dev-login`); cấu hình rồi thì đi thẳng `/api/auth/{provider}/start`.
 - Ghi dữ liệu qua server action (`lib/*-actions.ts`), mỗi action một endpoint; xong gọi `revalidatePath("/", "layout")` để thanh workspace và các số đếm cập nhật.
-- Chỉ còn số liệu ADOM (các màn 12, 13, 14) là dữ liệu giả ở `lib/adom.ts`; backend chưa gắn ADOM vào workspace nên các màn này hiện không mở được từ giao diện.
 
 Tài khoản thử (màn chọn tài khoản giả lập sau khi bấm nút): GitHub `Lan` (chủ "Đồ án Kiểm chứng", mã `KC26DAX`), GitHub `Long` (thành viên), Google `Trang` (có key, chưa vào workspace chung nào). Tài khoản mới: tab *Tạo tài khoản*, điền tên GitHub hoặc email bất kỳ.
 
@@ -78,14 +76,12 @@ features/<trang>/    Component riêng của từng trang, test đặt cạnh fil
   join/              Mã tham gia: ô nhập mã, hộp thoại chia sẻ/đổi mã, thẻ trạng thái chờ duyệt
   channel/           02, 04, 05, 15 (composer/ là ô soạn và gợi ý @ /)
   board/             06, 07 · brief/ 08 · explore/ 09 · requests/ 10 · settings/ 11
-  runs/              12 · metrics/ 13, 14 và thẻ /stats, /run hiện trong kênh
 components/ui/       shadcn/ui (không sửa tay)
 components/common/   Thành phần dùng chung giữa các trang: PageLayout/PageHeader/PageBody, Panel,
                      SegmentedControl, ToneBadge, LegendSwatch, ActorAvatar, Logo
 lib/                 Kiểu dữ liệu (types.ts, khớp JSON backend), bảng màu trạng thái, lệnh, định dạng thời gian, helper route
 lib/api/             Gọi backend: client.ts (fetch, ApiError), server.ts (token từ cookie), auth.ts, queries.ts (đọc)
 lib/*-actions.ts     Server action ghi dữ liệu: auth, private (workspace riêng), channel, join, board, workspace
-lib/adom.ts          Số liệu ADOM giả cho các màn số liệu
 lib/session*.ts      Phiên đăng nhập (token backend trong cookie); proxy.ts chặn route và điều hướng trang gốc
 hooks/               useQueryParam (mở sẵn hộp thoại cho ảnh chụp prototype)
 ```
@@ -97,7 +93,7 @@ hooks/               useQueryParam (mở sẵn hộp thoại cho ảnh chụp pr
 ## Quy ước giao diện
 
 - **Màu chỉ khai báo bằng token** ở `web_ui/src/app/globals.css` (chủ đề tối kiểu Discord: ba tầng nền xám, một màu nhấn tím xanh `#5865f2`). Mã hex trong `.ts`/`.tsx` làm `pnpm check` đỏ.
-- **Màu trạng thái có nghĩa cố định** và chỉ xuất hiện ở chấm nhỏ, nhãn và biểu đồ, không tô viền hay nền thẻ: vàng đề xuất, xanh trời đang bàn, xanh lục đã chốt và PASS, đỏ đã loại và cảnh báo, cam dữ kiện ADOM, tím thiếu dữ liệu. `INSUFFICIENT_DATA` không bao giờ dùng màu của PASS (có test).
+- **Màu trạng thái có nghĩa cố định** và chỉ xuất hiện ở chấm nhỏ, nhãn và biểu đồ, không tô viền hay nền thẻ: vàng đề xuất, xanh trời đang bàn, xanh lục đã chốt, đỏ đã loại và cảnh báo, tím bản tóm tắt.
 - **Lưới co giãn theo vùng nội dung** (container query `@container`, `@2xl:`…), không theo bề rộng màn hình, vì hai cột bên trái đã chiếm sẵn 312px.
 - **Icon** chỉ dùng Lucide. Thành phần nền là shadcn/ui ở `web_ui/src/components/ui/` (không sửa tay, cập nhật bằng `pnpm dlx shadcn@latest add`).
 - Next.js 16 có thay đổi so với các bản trước (`cacheComponents`, `params` là Promise, `PageProps`/`LayoutProps` toàn cục). Đọc `web_ui/node_modules/next/dist/docs/` trước khi dùng API lạ.
@@ -117,5 +113,3 @@ hooks/               useQueryParam (mở sẵn hộp thoại cho ảnh chụp pr
 | `/w/[ws]/explore` | 09 Tìm workspace và xin tham gia |
 | `/w/[ws]/requests` | 10 Duyệt yêu cầu tham gia (chỉ chủ workspace) |
 | `/w/[ws]/settings` | 11 Thành viên và agent |
-| `/w/[ws]/runs` | 12 Nhập lượt chạy ADOM |
-| `/w/[ws]/metrics`, `/metrics/repairs` | 13, 14 Bảng số liệu |

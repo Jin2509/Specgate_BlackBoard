@@ -1,5 +1,5 @@
 // Shows exactly what the agent receives about the linked team with each question, and where the user can change it.
-import { FlaskConical, Highlighter, History, KanbanSquare, MessageSquareText, TriangleAlert, Users } from "lucide-react";
+import { ClipboardList, Highlighter, History, KanbanSquare, MessageSquareText, Users } from "lucide-react";
 import Link from "next/link";
 
 import { ActorAvatar } from "@/components/ActorAvatar";
@@ -72,26 +72,30 @@ export function AgentContextPanel({
           </ul>
         </ContextSection>
 
+        <ContextSection icon={<ClipboardList />} title={t.personal.tasks}>
+          {context.tasks.length > 0 ? (
+            <ul className="space-y-1">
+              {context.tasks.map((task) => (
+                <li key={task.number} className="leading-snug text-foreground">
+                  <span className="font-mono text-[11.5px] text-subtle">{format(t.tasks.number, { number: task.number })}</span>{" "}
+                  {task.body}{" "}
+                  <span className={task.assigneeName ? "text-muted-foreground" : "text-proposed"}>
+                    ({task.assigneeName ?? t.tasks.unassigned})
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-muted-foreground">{t.personal.tasksEmpty}</p>
+          )}
+          <p className="mt-1 text-xs text-subtle">{t.personal.tasksHint}</p>
+        </ContextSection>
+
         <ContextSection icon={<KanbanSquare />} title={t.personal.board}>
           <p className="text-muted-foreground">
             {format(t.personal.boardSummary, { decided: context.decided.length, rejected: context.rejected.length })}
           </p>
         </ContextSection>
-
-        {context.metrics ? (
-          <ContextSection icon={<FlaskConical />} title={format(t.personal.metricsRun, { run: context.metrics.run.name })}>
-            {context.metrics.run.validity !== "valid" ? (
-              <p className="mb-1.5 flex gap-1 text-rejected">
-                <TriangleAlert className="mt-0.5 size-3.5 shrink-0" /> {t.personal.metricsInvalid}
-              </p>
-            ) : null}
-            <ul className="space-y-1 text-[12px] text-muted-foreground">
-              {context.metrics.lines.map((line) => (
-                <li key={line}>{line}</li>
-              ))}
-            </ul>
-          </ContextSection>
-        ) : null}
 
         {context.digest || context.digestPending ? (
           <ContextSection icon={<History />} title={t.personal.oldMessages}>

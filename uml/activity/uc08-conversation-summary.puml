@@ -1,0 +1,25 @@
+' Activity diagram of UC08: the user's agent writes a conversation summary that is kept, reviewed and sent.
+@startuml act-uc08
+!include ../_style.iuml
+title Biểu đồ hoạt động UC08: Tóm tắt hội thoại cho nhóm
+
+|Thành viên|
+start
+:Bấm "Tóm tắt cho nhóm";
+|Nhà cung cấp AI|
+:(1) Viết bản tóm tắt theo khung cố định\n(2) mỗi ý ghi của ai;
+|Hệ thống|
+if (Key lỗi?) then (có)
+  :[E1] Báo lỗi, không lưu gì;
+  stop
+else (không)
+endif
+:(3) Lưu vào Highlight riêng\nvới nhãn "bản tóm tắt";
+|Thành viên|
+:(4) Xem lại, sửa, bỏ bớt;
+:(5) Đính kèm tối đa 4 lượt gốc (tùy chọn);
+:(6) Gửi như một highlight riêng (UC07);
+|Hệ thống|
+:(7) Kênh hiện thẻ "Tóm tắt hội thoại\ncủa ‹tên›, chưa được lọc";
+stop
+@enduml

@@ -1,5 +1,5 @@
-from app.ws.routers import (auth, channels, conversations, highlights, join, me, paper_runs, private_highlights,
-                            workspaces)
+from app.ws.routers import (auth, channels, conversations, highlights, join, me, private_highlights,
+                            tasks, workspaces)
 
 ROUTERS = [auth.router, me.router, conversations.router, private_highlights.router, workspaces.router,
-           channels.router, join.router, highlights.router, paper_runs.router]
+           channels.router, join.router, highlights.router, tasks.router]

@@ -5,7 +5,6 @@ import type { Profile } from "./profile";
 export type WorkspaceKind = "personal" | "shared";
 export type Visibility = "hidden" | "discoverable";
 export type MemberRole = "owner" | "member";
-export type WorkspaceModule = "adom";
 
 export interface Channel {
   id: string;
@@ -39,7 +38,6 @@ export interface Workspace {
   joinCodeAt?: string | null;
   channels?: Channel[];
   members?: TeamMember[];
-  modules?: WorkspaceModule[];
 }
 
 export interface SharedWorkspace extends Workspace {

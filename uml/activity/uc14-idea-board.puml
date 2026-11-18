@@ -1,0 +1,95 @@
+' Mirrors every flow of UC14: adding ideas (part A), moving them to discussion (part B) and deciding them (part C).
+@startuml act-uc14
+!include ../_style.iuml
+title Hoạt động UC14: Quản lý bảng ý tưởng
+
+start
+partition "Phần A. Đưa ý lên bảng ý tưởng" {
+  switch (Cách đưa)
+  case (/idea)
+    :(1) Thành viên gõ /idea ‹nội dung› và gửi;
+  case (/note)
+    :[A.A1] /note ‹nội dung›: thêm vào mục ghi chú;
+  case (Nút trên trang Bảng)
+    :[A.A2] Chọn loại (ý hoặc ghi chú), nhập nội dung, bấm Thêm;
+  case (/pin)
+    if (Đang trả lời một tin?) then (không)
+      :[A.E2] Nhắc cần trả lời một tin trước;
+      stop
+    else (có)
+    endif
+    if (Tin được trả lời gồm?) then (chỉ lời người)
+      :[A.A3] Ghim lời đó;
+    elseif () then (chỉ một thẻ)
+      :[A.A3] Ghim thẻ, giữ người nói và nhãn của thẻ;
+    elseif () then (bản tóm tắt kênh)
+      :[A.A3] Thẻ ghi "Bản tóm tắt kênh do ‹agent› viết (chưa lọc)";
+    else (lời người và thẻ)
+      :[A.A3] Hỏi "Ghim lời của ‹tên›", "Ghim đoạn của ‹agent›",\n"Ghim cả hai"; cả hai: một ý gồm hai phần, mỗi phần một người nói;
+    endif
+  endswitch
+  if (Nội dung trống?) then (có)
+    :[A.E1] Không thêm; hướng dẫn cú pháp;
+    stop
+  else (không)
+  endif
+  :(2) Thêm thẻ vào cột Đề xuất (hoặc mục ghi chú): số thứ tự,\nngười đưa lên, thời điểm, tin và kênh nguồn;
+  :(3) Kênh có tin hệ thống "Đã thêm #‹số› vào cột Đề xuất…";
+  note right
+  BR-20: ý mới luôn ở cột Đề xuất;
+  highlight không tự lên bảng.
+  end note
+}
+stop
+
+partition "Phần B. Chuyển ý sang Đang bàn" {
+  start
+  if (Người bấm là chủ?) then (không)
+    :[B.E1] Không có nút; gọi trực tiếp thì bị từ chối;
+    stop
+  elseif (Ý đã chốt hoặc đã loại?) then (có)
+    :[B.E2] Không chuyển được;
+    stop
+  else (chủ, ý ở Đề xuất)
+  endif
+  :(1) Chủ bấm "Đưa vào bàn" trên thẻ ở cột Đề xuất;
+  :(2) Thẻ chuyển sang cột Đang bàn;
+  note right
+  BR-21.
+  end note
+  stop
+}
+
+partition "Phần C. Chốt hoặc loại ý" {
+  start
+  if (Lệnh nằm trong tin không do người gõ?) then (có)
+    :[C.E4] Không thực hiện;
+    stop
+  else (không)
+  endif
+  if (Cách?) then (nút trên thẻ)
+    :(1) Thành viên bấm "Chốt" hoặc "Loại" trên thẻ;
+    :(2) Hộp thoại yêu cầu lý do, hiện lệnh /decide tương đương;
+    :(3) Nhập lý do, xác nhận;
+  else (lệnh)
+    :[C.A1] Gõ /decide #‹số› chốt|loại ‹lý do›;
+  endif
+  if (Thiếu lý do?) then (có)
+    :[C.E1] Không cho xác nhận;
+    stop
+  elseif (Ý đã chốt hoặc đã loại?) then (có)
+    :[C.E2] Báo không đổi được nữa;
+    stop
+  elseif (Số thẻ không tồn tại, hoặc là ghi chú?) then (có)
+    :[C.E3] Báo lỗi;
+    stop
+  else (hợp lệ)
+  endif
+  :(4) Thẻ chuyển sang Đã chốt hoặc Đã loại;\nkênh có tin hệ thống ghi quyết định;
+  note right
+  BR-20, BR-21, BR-23: bắt buộc lý do, chỉ con người,
+  không quay ngược; cột Đã loại luôn hiển thị.
+  end note
+  stop
+}
+@enduml

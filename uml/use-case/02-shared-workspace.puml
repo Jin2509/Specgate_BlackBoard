@@ -1,18 +1,15 @@
-' Details the shared workspace use cases, the channel commands and the paper data features.
-@startuml 02-shared-workspace
+' Details the shared workspace use cases and the channel commands.
+@startuml uc-02-shared-workspace
 !include ../_style.iuml
-title Ca sử dụng chi tiết: workspace chung, kênh, bảng và số liệu
+title Ca sử dụng chi tiết: workspace chung, kênh và bảng
 left to right direction
 
 actor "Người dùng" as User
 actor "Thành viên" as Member
 actor "Chủ workspace" as Owner
-actor "Người nhập số liệu" as Importer
 actor "Nhà cung cấp AI" as Ai <<hệ thống>>
-actor "Pipeline ADOM" as Adom <<hệ thống>>
 Member -|> User
 Owner -|> Member
-Importer -|> Member
 
 rectangle "Tham gia" {
   usecase "UC09 Tạo workspace chung" as UC09
@@ -31,15 +28,9 @@ rectangle "Kênh" {
   usecase "UC15-B Dựng và tải bản tổng hợp\n(/brief)" as UC15B
 }
 
-rectangle "Số liệu bài báo" {
-  usecase "UC16 Nhập lượt chạy" as UC16
-  usecase "UC17 Chạy thử trên web" as UC17
-  usecase "UC18 Xem số liệu,\n/stats, /task" as UC18
-}
-
 rectangle "Thành viên và cài đặt" {
-  usecase "UC19-A Tên, vai,\nrời nhóm, xóa thành viên" as UC19A
-  usecase "UC19-B Đề bài, mã tham gia,\ntạo kênh" as UC19B
+  usecase "UC16-A Tên, vai,\nrời nhóm, xóa thành viên" as UC16A
+  usecase "UC16-B Đề bài, mã tham gia,\ntạo kênh" as UC16B
 }
 
 User --> UC09
@@ -53,11 +44,8 @@ Member --> UC14C
 Owner --> UC14B
 Owner --> UC15A
 Owner --> UC15B
-Member --> UC18
-Importer --> UC16
-Owner --> UC17
-Member --> UC19A
-Owner --> UC19B
+Member --> UC16A
+Owner --> UC16B
 
 UC10A ..> UC11 : chờ chủ duyệt
 UC10B ..> UC11 : chờ chủ duyệt
@@ -65,10 +53,7 @@ UC14A .> UC12 : <<extend>>\ntin bắt đầu bằng lệnh
 UC14C .> UC12 : <<extend>>
 UC15A .> UC12 : <<extend>>
 UC15B .> UC12 : <<extend>>
-UC18 .> UC12 : <<extend>>\n/stats, /task
 UC15A --> Ai
-UC17 --> Adom
-UC17 ..> UC16 : kết quả gắn như\nmột lượt nhập
 
 note right of UC13
   Chỉ trên tin của người khác.
