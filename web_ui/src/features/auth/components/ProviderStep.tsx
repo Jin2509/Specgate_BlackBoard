@@ -24,13 +24,9 @@ export async function ProviderStep({ provider, isSignUp, next }: { provider: Aut
   if (isSignUp) {
     return (
       <>
-        <StepHeader
-          icon={details.renderIcon("size-6")}
-          title={format(t.auth.signUpWithTitle, { provider: details.label })}
-          lead={provider === "github" ? t.auth.githubSignUpLead : t.auth.googleSignUpLead}
-        />
+        <StepHeader icon={details.renderIcon("size-6")} title={format(t.auth.signUpWithTitle, { provider: details.label })} />
         <SignUpForm provider={provider} />
-        <StepFooter providerLabel={details.label}>
+        <StepFooter>
           {t.auth.hasAccount}
           <Link href={`/login/${provider}${toQuery("")}`} className="text-primary-strong hover:underline">
             {t.auth.signIn}
@@ -70,22 +66,26 @@ export async function ProviderStep({ provider, isSignUp, next }: { provider: Aut
   );
 }
 
-function StepHeader({ icon, title, lead }: { icon: ReactNode; title: string; lead: string }) {
+function StepHeader({ icon, title, lead }: { icon: ReactNode; title: string; lead?: string }) {
   return (
     <div className="flex flex-col items-center text-center">
       <span className="flex size-12 items-center justify-center rounded-full bg-muted">{icon}</span>
       <h1 className="mt-4 text-xl font-semibold text-sidebar-accent-foreground">{title}</h1>
-      <p className="mt-1 text-sm text-muted-foreground">{lead}</p>
+      {lead ? <p className="mt-1 text-sm text-muted-foreground">{lead}</p> : null}
     </div>
   );
 }
 
-function StepFooter({ providerLabel, children }: { providerLabel: string; children: ReactNode }) {
+function StepFooter({ providerLabel, children }: { providerLabel?: string; children: ReactNode }) {
   return (
     <p className="mt-5 text-center text-xs leading-relaxed text-subtle">
       {children}
-      <br />
-      {format(t.auth.simulatedNote, { provider: providerLabel })}
+      {providerLabel ? (
+        <>
+          <br />
+          {format(t.auth.simulatedNote, { provider: providerLabel })}
+        </>
+      ) : null}
     </p>
   );
 }

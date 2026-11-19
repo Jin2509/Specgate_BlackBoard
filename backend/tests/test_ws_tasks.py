@@ -112,3 +112,48 @@ def test_agent_context_carries_unfinished_tasks_only(team):
     assert "- việc 1: chạy dataset (phụ trách: Long)" in body["system"]
     assert "- việc 2: viết báo cáo (phụ trách: chưa có người phụ trách)" in body["system"]
     assert "dựng khung" not in body["system"]
+
+
+def test_should_nest_subtasks_under_parent_and_announce_the_parent(team):
+    api, lan, long, ws = team
+    create(api, lan, ws, "xây dựng runner")
+    r = create(api, long, ws, "viết bộ chấm điểm", parentNumber=1)
+    assert r.status_code == 201 and r.json()["parentNumber"] == 1
+    assert chung(api, lan, ws)[-1]["text"] == "Long tự nhận việc 2 (thuộc việc 1): viết bộ chấm điểm."
+    assert {t["number"]: t["parentNumber"] for t in tasks(api, lan, ws)["tasks"]} == {1: None, 2: 1}
+
+
+def test_should_let_owner_take_a_task_for_themself(team):
+    api, lan, long, ws = team
+    create(api, lan, ws, "tìm ý tưởng", unassigned=True)
+    claimed = api.post(f"/api/v1/workspaces/{ws['id']}/tasks/1/claim", headers=lan)
+    assert claimed.json()["assignee"]["displayName"] == "Lan"
+
+
+def test_should_refuse_subtask_deeper_than_three_levels(team):
+    api, lan, long, ws = team
+    create(api, lan, ws, "cấp 1")
+    create(api, lan, ws, "cấp 2", parentNumber=1)
+    create(api, lan, ws, "cấp 3", parentNumber=2)
+    r = create(api, lan, ws, "cấp 4", parentNumber=3)
+    assert r.status_code == 400 and r.json()["error"]["code"] == "TOO_DEEP"
+    assert create(api, lan, ws, "con", parentNumber=99).status_code == 404
+
+
+def test_should_delete_subtasks_with_their_parent(team):
+    api, lan, long, ws = team
+    create(api, lan, ws, "cha")
+    create(api, lan, ws, "con", parentNumber=1)
+    create(api, lan, ws, "cháu", parentNumber=2)
+    create(api, lan, ws, "việc khác")
+    assert api.delete(f"/api/v1/workspaces/{ws['id']}/tasks/1", headers=lan).status_code == 204
+    assert [t["number"] for t in tasks(api, lan, ws)["tasks"]] == [4]
+
+
+def test_agent_context_names_the_parent_of_a_subtask(team):
+    api, lan, long, ws = team
+    create(api, lan, ws, "xây dựng runner")
+    create(api, lan, ws, "viết bộ chấm điểm", parentNumber=1)
+    conv = api.post("/api/v1/conversations", headers=lan, json={"workspaceId": ws["id"]}).json()
+    body = api.get(f"/api/v1/conversations/{conv['id']}/context", headers=lan).json()
+    assert "- việc 2 (thuộc việc 1): viết bộ chấm điểm (phụ trách: Lan)" in body["system"]

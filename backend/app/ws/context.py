@@ -301,8 +301,12 @@ def render_system(user_name: str, agent_label: str, ctx: dict | None) -> str:
     parts.append("## Thành viên\n" + "\n".join(lines))
     parts.append(f"Bạn đang làm việc cho {name}. Vai của {name}: {ctx['myTeamRole'] or '(chưa ghi)'}")
 
-    tasks = "\n".join(f"- {tk.label(t['number'])}: {t['body']} (phụ trách: {t['assigneeName'] or 'chưa có người phụ trách'})"
-                      for t in ctx.get("tasks", [])) or "(chưa có việc nào)"
+    def task_line(t: dict) -> str:
+        parent = f" (thuộc {tk.label(t['parentNumber'])})" if t.get("parentNumber") else ""
+        holder = t["assigneeName"] or "chưa có người phụ trách"
+        return f"- {tk.label(t['number'])}{parent}: {t['body']} (phụ trách: {holder})"
+
+    tasks = "\n".join(task_line(t) for t in ctx.get("tasks", [])) or "(chưa có việc nào)"
     parts.append("## Bảng phân công: việc đang làm và việc chưa có người phụ trách\n" + tasks)
 
     def ideas(title: str, rows: list[dict]) -> str:

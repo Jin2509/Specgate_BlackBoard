@@ -76,7 +76,6 @@ export function SignUpForm({ provider }: { provider: AuthProvider }) {
           </Link>
         </Button>
       </div>
-      <p className="text-xs leading-relaxed text-subtle">{format(t.auth.existingAccountNote, { provider: providerLabel })}</p>
     </form>
   );
 }

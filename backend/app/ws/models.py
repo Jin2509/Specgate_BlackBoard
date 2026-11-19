@@ -286,8 +286,8 @@ class BoardItem(Base):
 
 
 class Task(Base):
-    """One line of the task board (flow §13): a short description, who does it and "doing" or "done".
-    No deadline, priority or sub-task on purpose."""
+    """One node of the task tree (flow §13): a short description, who does it and "doing" or "done".
+    A task may sit under a parent task, at most three levels deep. No deadline or priority on purpose."""
 
     __tablename__ = "ws_tasks"
     __table_args__ = (UniqueConstraint("workspace_id", "number"),)
@@ -296,6 +296,8 @@ class Task(Base):
     workspace_id: Mapped[str] = mapped_column(ForeignKey("ws_workspaces.id"), index=True)
     number: Mapped[int] = mapped_column(Integer)
     body: Mapped[str] = mapped_column(String(200))
+    # None = a top-level task; otherwise the id of the larger task this one breaks down.
+    parent_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
     # None = "chưa có người phụ trách": anyone may claim it, the owner may assign it.
     assignee_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
     status: Mapped[str] = mapped_column(String, default="doing")   # doing | done

@@ -29,13 +29,14 @@ class NewTask(BaseModel):
     body: str = Field(max_length=2000)
     assigneeId: str | None = Field(None, description="Bỏ trống = việc đứng tên người tạo")
     unassigned: bool = Field(False, description="Chỉ chủ: để việc chưa có người phụ trách")
+    parentNumber: int | None = Field(None, description="Số của việc lớn hơn mà việc này thuộc về; bỏ trống = việc cấp cao nhất")
 
 
 @router.post("", status_code=201)
 def create_task(ws_id: str, body: NewTask, user: m.User = Depends(current_user), s: Session = Depends(db)) -> dict:
     ws, mem = require_member(s, ws_id, user)
     assignee = None if body.unassigned else (body.assigneeId or user.id)
-    task = tk.create_task(s, ws, mem, body.body, assignee)
+    task = tk.create_task(s, ws, mem, body.body, assignee, body.parentNumber)
     _commit_with_notices(s, [tk.post_notice(s, ws, tk.created_text(s, ws, task))])
     return tk.task_out(s, task)
 

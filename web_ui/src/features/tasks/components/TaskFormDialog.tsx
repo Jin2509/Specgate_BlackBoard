@@ -1,5 +1,5 @@
 "use client";
-// Adds a task or, for the owner, edits one: a member's new task is in their own name, the owner picks who does it.
+// Lets the owner edit a task's description and choose who does it, themself included.
 import { LoaderCircle } from "lucide-react";
 import { useState, useTransition } from "react";
 
@@ -12,7 +12,7 @@ import { format, t } from "@/lib/i18n";
 import type { Task } from "@/types/task";
 import type { TeamMember } from "@/types/workspace";
 
-import { createTask, updateTask } from "../api/task-actions";
+import { updateTask } from "../api/task-actions";
 
 const BODY_MAX_LENGTH = 200;
 const NOBODY = "";
@@ -21,7 +21,6 @@ export function TaskFormDialog({
   workspaceId,
   members,
   viewerId,
-  isOwner,
   task,
   isOpen,
   onOpenChange,
@@ -30,29 +29,29 @@ export function TaskFormDialog({
   workspaceId: string;
   members: TeamMember[];
   viewerId: string;
-  isOwner: boolean;
-  /** The task to edit; absent when adding a new one. */
-  task?: Task;
+  task: Task;
   isOpen: boolean;
   onOpenChange: (isOpen: boolean) => void;
   onSave: () => void;
 }) {
-  const [body, setBody] = useState(task?.body ?? "");
-  const [assigneeId, setAssigneeId] = useState(task ? (task.assignee?.id ?? NOBODY) : viewerId);
+  const [body, setBody] = useState(task.body);
+  const [assigneeId, setAssigneeId] = useState(task.assignee?.id ?? NOBODY);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const assigneeOptions: Array<SelectOption> = [
-    ...members.map((member) => ({ value: member.user.id, label: member.user.displayName })),
+    ...members.map((member) => ({
+      value: member.user.id,
+      label:
+        member.user.id === viewerId ? format(t.tasks.assigneeMe, { name: member.user.displayName }) : member.user.displayName,
+    })),
     { value: NOBODY, label: t.tasks.unassigned },
   ];
 
   function handleSubmit() {
     startTransition(async () => {
-      const input = { workspaceId, body, assigneeId: isOwner ? assigneeId : viewerId };
-      const outcome = task ? await updateTask({ ...input, number: task.number }) : await createTask(input);
+      const outcome = await updateTask({ workspaceId, number: task.number, body, assigneeId });
       if (!outcome.ok) return setErrorMessage(outcome.error);
       setErrorMessage(null);
-      if (!task) setBody("");
       onSave();
     });
   }
@@ -61,8 +60,8 @@ export function TaskFormDialog({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-125">
         <DialogHeader>
-          <DialogTitle>{task ? format(t.tasks.editTitle, { number: task.number }) : t.tasks.addTitle}</DialogTitle>
-          <DialogDescription>{isOwner ? t.tasks.addOwnerDescription : t.tasks.addMemberDescription}</DialogDescription>
+          <DialogTitle>{format(t.tasks.editTitle, { number: task.number })}</DialogTitle>
+          <DialogDescription>{t.tasks.editDescription}</DialogDescription>
         </DialogHeader>
         <div className="grid gap-1.5">
           <Label htmlFor="task-body">{t.tasks.bodyLabel}</Label>
@@ -74,12 +73,10 @@ export function TaskFormDialog({
             placeholder={t.tasks.bodyPlaceholder}
           />
         </div>
-        {isOwner ? (
-          <div className="grid gap-1.5">
-            <Label htmlFor="task-assignee">{t.tasks.assigneeLabel}</Label>
-            <Select id="task-assignee" size="lg" value={assigneeId} onValueChange={setAssigneeId} options={assigneeOptions} />
-          </div>
-        ) : null}
+        <div className="grid gap-1.5">
+          <Label htmlFor="task-assignee">{t.tasks.assigneeLabel}</Label>
+          <Select id="task-assignee" size="lg" value={assigneeId} onValueChange={setAssigneeId} options={assigneeOptions} />
+        </div>
         {errorMessage ? (
           <p role="alert" className="text-sm text-destructive">
             {errorMessage}
@@ -90,7 +87,7 @@ export function TaskFormDialog({
             {t.common.cancel}
           </Button>
           <Button disabled={isPending || !body.trim()} onClick={handleSubmit}>
-            {isPending ? <LoaderCircle className="animate-spin" /> : null} {task ? t.common.save : t.tasks.add}
+            {isPending ? <LoaderCircle className="animate-spin" /> : null} {t.common.save}
           </Button>
         </DialogFooter>
       </DialogContent>

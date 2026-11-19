@@ -25,12 +25,25 @@ async function runAction(call: () => Promise<unknown>): Promise<TaskOutcome> {
   return { ok: true };
 }
 
-/** An empty `assigneeId` leaves the task without anyone in charge, which only the owner may do. */
-export async function createTask(input: { workspaceId: string; body: string; assigneeId: string }): Promise<TaskOutcome> {
+/**
+ * An empty `assigneeId` leaves the task without anyone in charge, which only the owner may do.
+ * A `parentNumber` puts the new task under that larger task.
+ */
+export async function createTask(input: {
+  workspaceId: string;
+  body: string;
+  assigneeId: string;
+  parentNumber: number | null;
+}): Promise<TaskOutcome> {
   return runAction(() =>
     callApi<Task>(toTasksPath(input.workspaceId), {
       method: "POST",
-      body: { body: input.body, assigneeId: input.assigneeId || null, unassigned: !input.assigneeId },
+      body: {
+        body: input.body,
+        assigneeId: input.assigneeId || null,
+        unassigned: !input.assigneeId,
+        parentNumber: input.parentNumber,
+      },
     }),
   );
 }

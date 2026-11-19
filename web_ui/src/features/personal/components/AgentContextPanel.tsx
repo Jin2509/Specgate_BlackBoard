@@ -78,6 +78,9 @@ export function AgentContextPanel({
               {context.tasks.map((task) => (
                 <li key={task.number} className="leading-snug text-foreground">
                   <span className="font-mono text-[11.5px] text-subtle">{format(t.tasks.number, { number: task.number })}</span>{" "}
+                  {task.parentNumber ? (
+                    <span className="text-subtle">{format(t.tasks.partOf, { number: task.parentNumber })} </span>
+                  ) : null}
                   {task.body}{" "}
                   <span className={task.assigneeName ? "text-muted-foreground" : "text-proposed"}>
                     ({task.assigneeName ?? t.tasks.unassigned})
