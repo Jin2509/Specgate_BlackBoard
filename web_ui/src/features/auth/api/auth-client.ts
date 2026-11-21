@@ -37,8 +37,6 @@ export interface EmailCode {
   email: string;
   expiresInSeconds: number;
   resendAfterSeconds: number;
-  /** Only in local development, when the backend cannot send email. */
-  devCode?: string;
 }
 
 /** Return the session of a token, or null when the token is wrong, expired or its user is gone. */
@@ -52,11 +50,13 @@ export async function getBackendSession(token: string | undefined): Promise<Back
   }
 }
 
-/** Stand in for the provider step while the backend has no real OAuth configured. */
+/** Stand in for the provider step while the backend has no real OAuth configured; a new identity sends its email code. */
 export function createDevSession(input: {
   provider: AuthProvider;
   login: string;
   displayName?: string;
+  email?: string;
+  code?: string;
   next?: string;
 }): Promise<DevSession> {
   return callJson<DevSession>("/auth/dev-sessions", { method: "POST", body: input });

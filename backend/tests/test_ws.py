@@ -7,21 +7,39 @@ import pytest
 
 from app.config import settings
 from app.db import SessionLocal
+from app.ws import mailer
 from app.ws import models as wm
 from app.ws import providers as pv
 
 GOOD_KEY = "sk-test-aaaaaaaaaaaaaaaaaaaa1234"
+# Codes "emailed" during a test, by address: the api fixture replaces SMTP delivery with this mailbox.
+SENT_CODES: dict[str, str] = {}
 
 
 @pytest.fixture()
 def api(client, monkeypatch):
     monkeypatch.setattr(settings, "llm_fake", True)
     monkeypatch.setattr(settings, "auth_dev_login", True)
+    monkeypatch.setattr(settings, "smtp_host", "smtp.example.test")
+    monkeypatch.setattr(settings, "smtp_from_address", "noreply@example.test")
+    SENT_CODES.clear()
+    monkeypatch.setattr(mailer, "send_login_code", lambda address, code: SENT_CODES.__setitem__(address, code))
     return client
 
 
+def dev_session(c, login_, name=None, provider="github"):
+    """Sign in on the simulated provider screen; a new identity first verifies the email that receives the code."""
+    email = login_.strip().lower() if provider == "google" else f"{login_.lower()}@example.test"
+    body = {"provider": provider, "login": login_, "displayName": name, "email": email}
+    r = c.post("/api/v1/auth/dev-sessions", json=body)
+    if r.status_code == 400 and r.json()["error"]["code"] == "EMAIL_CODE_REQUIRED":
+        assert c.post("/api/v1/auth/email-codes", json={"email": email}).status_code == 201
+        r = c.post("/api/v1/auth/dev-sessions", json={**body, "code": SENT_CODES[email]})
+    return r
+
+
 def login(c, login_, name=None, provider="github"):
-    r = c.post("/api/v1/auth/dev-sessions", json={"provider": provider, "login": login_, "displayName": name})
+    r = dev_session(c, login_, name, provider)
     assert r.status_code == 201, r.text
     c.cookies.clear()   # every test call authenticates with its Bearer token
     return {"Authorization": f"Bearer {r.json()['token']}"}, r.json()
@@ -117,8 +135,26 @@ def test_fr02_validation_and_unknown_signin(api):
     assert api.post("/api/v1/auth/dev-sessions", json={"provider": "facebook", "login": "a"}).status_code == 400
 
 
+def test_new_dev_identity_needs_email_code(api):
+    """A new account on the simulated screen proves its email; a wrong code or a missing GitHub email is refused."""
+    body = {"provider": "github", "login": "khang", "displayName": "Khang"}
+    r = api.post("/api/v1/auth/dev-sessions", json=body)
+    assert r.status_code == 400 and r.json()["error"]["code"] == "INVALID_EMAIL"
+    r = api.post("/api/v1/auth/dev-sessions", json={**body, "email": "khang@example.test"})
+    assert r.status_code == 400 and r.json()["error"]["code"] == "EMAIL_CODE_REQUIRED"
+    api.post("/api/v1/auth/email-codes", json={"email": "khang@example.test"})
+    code = SENT_CODES["khang@example.test"]
+    wrong = "000000" if code != "000000" else "111111"
+    r = api.post("/api/v1/auth/dev-sessions", json={**body, "email": "khang@example.test", "code": wrong})
+    assert r.status_code == 400 and r.json()["error"]["code"] == "EMAIL_CODE_INVALID"
+    r = api.post("/api/v1/auth/dev-sessions", json={**body, "email": "khang@example.test", "code": code})
+    assert r.status_code == 201 and r.json()["created"] is True
+    # The code is spent, and signing in again to the now known identity needs none.
+    assert api.post("/api/v1/auth/dev-sessions", json={"provider": "github", "login": "khang"}).status_code == 201
+
+
 def test_fr05_cookie_session_and_logout(api):
-    r = api.post("/api/v1/auth/dev-sessions", json={"provider": "github", "login": "lan-pham", "displayName": "Lan"})
+    r = dev_session(api, "lan-pham", "Lan")
     assert "sg_session" in r.cookies
     assert api.get("/api/v1/me").status_code == 200
     api.delete("/api/v1/auth/session")

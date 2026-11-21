@@ -75,11 +75,6 @@ function CodeStep({
       <p className="text-sm leading-relaxed text-muted-foreground">
         {format(t.auth.codeSentTo, { email: state.email ?? "", minutes: state.expiresInMinutes ?? "" })}
       </p>
-      {state.devCode ? (
-        <p className="rounded-lg bg-background/60 px-3 py-2 text-sm text-foreground">
-          {format(t.auth.devCodeNote, { code: state.devCode })}
-        </p>
-      ) : null}
       {state.notice ? <p className="text-sm text-foreground">{state.notice}</p> : null}
       <div className="grid gap-1.5">
         <Label htmlFor="sign-in-code" className={LABEL_CLASS}>

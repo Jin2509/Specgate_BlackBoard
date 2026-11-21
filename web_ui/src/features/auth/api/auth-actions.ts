@@ -17,11 +17,21 @@ const CONFLICT_STATUS = 409;
 const SECONDS_PER_MINUTE = 60;
 
 export interface SignUpState {
+  /** details: login, email and name; code: the code emailed to prove the address before the account exists. */
+  step: "details" | "code";
   error?: string;
-  field?: "login" | "displayName";
-  /** The typed values, so the form shows them again after an error. */
-  values?: { login: string; displayName: string };
+  field?: "login" | "email" | "displayName" | "code";
+  /** The typed values, so the form shows them again after an error and carries them into the code step. */
+  values?: { login: string; email: string; displayName: string };
+  expiresInMinutes?: number;
+  notice?: string;
   attempt?: number;
+}
+
+type SignUpIntent = "send" | "resend" | "edit" | "create";
+
+function toSignUpIntent(value: FormDataEntryValue | null): SignUpIntent {
+  return value === "send" || value === "resend" || value === "edit" ? value : "create";
 }
 
 function toProvider(value: FormDataEntryValue | null): AuthProvider {
@@ -53,21 +63,64 @@ export async function signIn(formData: FormData): Promise<void> {
   await finishSignIn(session);
 }
 
-/** Create the account of a new Google or GitHub identity, or sign in when it is already registered. */
-export async function signUp(_previous: SignUpState, formData: FormData): Promise<SignUpState> {
-  const values = { login: String(formData.get("login") ?? ""), displayName: String(formData.get("displayName") ?? "") };
+type SignUpValues = NonNullable<SignUpState["values"]>;
+
+function toSignUpValues(formData: FormData): SignUpValues {
+  return {
+    login: String(formData.get("login") ?? "").trim(),
+    email: String(formData.get("email") ?? "").trim(),
+    displayName: String(formData.get("displayName") ?? ""),
+  };
+}
+
+function toDetailsError(error: unknown, provider: AuthProvider, values: SignUpValues): SignUpState {
+  const keep = { step: "details" as const, values, attempt: Date.now() };
+  if (isApiError(error, BAD_REQUEST_STATUS, "INVALID_LOGIN")) return { ...keep, field: "login", error: error.message };
+  if (isApiError(error, BAD_REQUEST_STATUS, "INVALID_NAME")) return { ...keep, field: "displayName", error: error.message };
+  if (isApiError(error, BAD_REQUEST_STATUS, "INVALID_EMAIL"))
+    return { ...keep, field: provider === "google" ? "login" : "email", error: error.message };
+  return { ...keep, error: toErrorMessage(error, t.auth.createFailed) };
+}
+
+async function sendSignUpCode(provider: AuthProvider, values: SignUpValues, isResend: boolean): Promise<SignUpState> {
+  const email = provider === "google" ? values.login : values.email;
+  try {
+    const sent = await createEmailCode(email);
+    return {
+      step: "code",
+      values,
+      expiresInMinutes: Math.round(sent.expiresInSeconds / SECONDS_PER_MINUTE),
+      notice: isResend ? t.auth.codeResent : undefined,
+      attempt: Date.now(),
+    };
+  } catch (error) {
+    if (!isResend) return toDetailsError(error, provider, values);
+    return { step: "code", values, error: toErrorMessage(error, t.auth.codeSendFailed), attempt: Date.now() };
+  }
+}
+
+/**
+ * Create the account of a new Google or GitHub identity on the simulated screen, in two steps: check the details
+ * and email a code, then create the account with that code. An identity already registered signs in at once.
+ */
+export async function signUp(previous: SignUpState, formData: FormData): Promise<SignUpState> {
+  const provider = toProvider(formData.get("provider"));
+  const intent = toSignUpIntent(formData.get("intent"));
+  const values = toSignUpValues(formData);
+  if (intent === "edit") return { step: "details", values, attempt: Date.now() };
+  if (intent === "resend") return sendSignUpCode(provider, values, true);
+
+  const code = intent === "create" ? String(formData.get("code") ?? "").replace(/\s/g, "") : undefined;
+  const email = provider === "google" ? values.login : values.email;
   let session: DevSession;
   try {
-    session = await createDevSession({
-      provider: toProvider(formData.get("provider")),
-      login: values.login.trim(),
-      displayName: values.displayName,
-    });
+    session = await createDevSession({ provider, login: values.login, displayName: values.displayName, email, code });
   } catch (error) {
-    const keep = { values, attempt: Date.now() };
-    if (isApiError(error, BAD_REQUEST_STATUS, "INVALID_LOGIN")) return { ...keep, field: "login", error: error.message };
-    if (isApiError(error, BAD_REQUEST_STATUS, "INVALID_NAME")) return { ...keep, field: "displayName", error: error.message };
-    return { ...keep, error: isApiError(error) ? error.message : t.auth.createFailed };
+    if (intent === "send" && isApiError(error, BAD_REQUEST_STATUS, "EMAIL_CODE_REQUIRED"))
+      return sendSignUpCode(provider, values, false);
+    if (isApiError(error, BAD_REQUEST_STATUS, "EMAIL_CODE_INVALID"))
+      return { ...previous, step: "code", values, field: "code", error: error.message, notice: undefined, attempt: Date.now() };
+    return toDetailsError(error, provider, values);
   }
   return finishSignIn(session);
 }
@@ -78,7 +131,6 @@ export interface EmailSignInState {
   /** The typed code, kept when the backend asks for a display name first. */
   code?: string;
   expiresInMinutes?: number;
-  devCode?: string;
   needsName?: boolean;
   notice?: string;
   error?: string;
@@ -99,7 +151,6 @@ async function sendEmailCode(previous: EmailSignInState, email: string, isResend
       step: "code",
       email: sent.email,
       expiresInMinutes: Math.round(sent.expiresInSeconds / SECONDS_PER_MINUTE),
-      devCode: sent.devCode,
       notice: isResend ? t.auth.codeResent : undefined,
       attempt: Date.now(),
     };

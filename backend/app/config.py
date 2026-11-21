@@ -27,8 +27,8 @@ class Settings(BaseSettings):
     # Dev/test only: POST /api/auth/dev-login stands in for the provider step (same as the UI's mock form).
     auth_dev_login: bool = True
 
-    # Email sign-in with a one-time code. Without smtp_host the code is only returned to the UI while auth_dev_login
-    # is on (local development); otherwise email sign-in is off. Port 465 uses implicit TLS, any other port STARTTLS.
+    # Email one-time codes, needed to sign in by email and to create accounts on the simulated provider screen.
+    # Without smtp_host and smtp_from_address both are off. Port 465 uses implicit TLS, any other port STARTTLS.
     smtp_host: str = ""
     smtp_port: int = 587
     smtp_username: str = ""

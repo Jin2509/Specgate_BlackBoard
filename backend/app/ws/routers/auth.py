@@ -2,7 +2,8 @@
 
 Real OAuth: GET /api/auth/{provider}/start -> provider -> GET /api/auth/{provider}/callback -> cookie + redirect.
 Email: POST /api/auth/email-codes (sends the code) -> POST /api/auth/email-sessions (checks it) -> cookie.
-Dev/test: POST /api/auth/dev-login stands in for the provider step (enabled by AUTH_DEV_LOGIN).
+Dev/test: POST /api/auth/dev-sessions stands in for the provider step (enabled by AUTH_DEV_LOGIN); creating an
+account there still needs a code sent to the user's email.
 """
 
 import re
@@ -165,7 +166,7 @@ DISPLAY_NAME_MAX = 40
 
 
 def _email_enabled() -> bool:
-    return mailer.is_configured() or settings.auth_dev_login
+    return mailer.is_configured()
 
 
 def _to_email(raw: str) -> str:
@@ -181,22 +182,19 @@ class EmailCodeRequest(BaseModel):
 
 @router.post("/email-codes", status_code=201)
 def create_email_code(body: EmailCodeRequest, s: Session = Depends(db)) -> dict:
-    """Send a 6-digit code. The answer is the same whether the address has an account, so it reveals nothing.
-    Without SMTP (local development only) the code comes back as `devCode` instead of by email."""
+    """Send a 6-digit code by email. The answer is the same whether the address has an account, so it reveals
+    nothing. The code itself never leaves the server except in that email."""
     if not _email_enabled():
         raise ApiError(501, "Máy chủ chưa cấu hình gửi email.", "EMAIL_NOT_CONFIGURED")
     email = _to_email(body.email)
     code = email_codes.issue(s, email)
     s.commit()
-    out = {"email": email, "expiresInSeconds": settings.email_code_ttl_minutes * 60,
-           "resendAfterSeconds": settings.email_code_resend_seconds}
-    if not mailer.is_configured():
-        return {**out, "devCode": code}
     try:
         mailer.send_login_code(email, code)
     except mailer.MailError:
         raise ApiError(502, "Không gửi được email. Kiểm tra địa chỉ hoặc thử lại sau.", "EMAIL_SEND_FAILED") from None
-    return out
+    return {"email": email, "expiresInSeconds": settings.email_code_ttl_minutes * 60,
+            "resendAfterSeconds": settings.email_code_resend_seconds}
 
 
 class EmailSessionRequest(BaseModel):
@@ -235,7 +233,18 @@ class DevLogin(BaseModel):
     provider: Provider
     login: str = Field(description="Email Google hoặc tên GitHub")
     displayName: str | None = Field(None, description="Bắt buộc khi đăng ký tài khoản mới")
+    email: str | None = Field(None, description="GitHub: email nhận mã xác thực khi tạo tài khoản mới")
+    code: str | None = Field(None, description="Mã gửi tới email, bắt buộc khi tạo tài khoản mới")
     next: str | None = None
+
+
+def _verify_new_identity(s: Session, body: DevLogin, login: str) -> None:
+    """A new account proves it owns an email first: Google's login is the email, GitHub names one to receive the
+    code. Answers 400 EMAIL_CODE_REQUIRED (nothing else wrong) so the UI knows to send the code."""
+    email = _to_email(login if body.provider == "google" else (body.email or ""))
+    if not body.code:
+        raise ApiError(400, "Nhập mã gửi tới email để tạo tài khoản.", "EMAIL_CODE_REQUIRED")
+    email_codes.consume(email_codes.check(s, email, body.code))
 
 
 @router.post("/dev-sessions", status_code=201)
@@ -254,6 +263,7 @@ def create_dev_session(body: DevLogin, response: Response, s: Session = Depends(
         name = " ".join((body.displayName or "").split())
         if not name or len(name) > 40:
             raise ApiError(400, "Tên hiển thị không được trống và tối đa 40 ký tự.", "INVALID_NAME")
+        _verify_new_identity(s, body, login)
     user, created = upsert_identity(s, body.provider, subject, login, body.displayName or "")
     token = issue_session(user.id)
     set_session_cookie(response, token)
