@@ -27,6 +27,18 @@ class Settings(BaseSettings):
     # Dev/test only: POST /api/auth/dev-login stands in for the provider step (same as the UI's mock form).
     auth_dev_login: bool = True
 
+    # Email sign-in with a one-time code. Without smtp_host the code is only returned to the UI while auth_dev_login
+    # is on (local development); otherwise email sign-in is off. Port 465 uses implicit TLS, any other port STARTTLS.
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_username: str = ""
+    smtp_password: str = ""
+    smtp_from_address: str = ""
+    email_code_ttl_minutes: int = 10
+    email_code_attempts_max: int = 5        # wrong guesses before the code is void
+    email_code_resend_seconds: int = 60     # wait before asking for another code
+    email_codes_per_hour_max: int = 5       # codes sent to one address per hour
+
     # LLM gateway. llm_fake=true: deterministic agent for dev and CI (no network, no cost); key rules match the UI mock:
     # shorter than 20 chars -> invalid, ending in "0000" -> out of quota.
     llm_fake: bool = False

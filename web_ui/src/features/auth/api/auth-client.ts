@@ -16,6 +16,8 @@ export interface OAuthProviders {
   google: boolean;
   github: boolean;
   devLogin: boolean;
+  /** Sign-in with a one-time code sent by email is available. */
+  email: boolean;
 }
 
 export interface DevAccount {
@@ -29,6 +31,14 @@ export interface DevSession {
   user: Profile;
   created: boolean;
   redirect: string;
+}
+
+export interface EmailCode {
+  email: string;
+  expiresInSeconds: number;
+  resendAfterSeconds: number;
+  /** Only in local development, when the backend cannot send email. */
+  devCode?: string;
 }
 
 /** Return the session of a token, or null when the token is wrong, expired or its user is gone. */
@@ -52,6 +62,21 @@ export function createDevSession(input: {
   return callJson<DevSession>("/auth/dev-sessions", { method: "POST", body: input });
 }
 
+/** Ask the backend to email a one-time sign-in code. */
+export function createEmailCode(email: string): Promise<EmailCode> {
+  return callJson<EmailCode>("/auth/email-codes", { method: "POST", body: { email } });
+}
+
+/** Exchange the emailed code for a session; a new address also needs its display name. */
+export function createEmailSession(input: {
+  email: string;
+  code: string;
+  displayName?: string;
+  next?: string;
+}): Promise<DevSession> {
+  return callJson<DevSession>("/auth/email-sessions", { method: "POST", body: input });
+}
+
 export async function listDevAccounts(provider: AuthProvider): Promise<DevAccount[]> {
   try {
     return await callJson<DevAccount[]>("/auth/dev-accounts", { query: { provider } });
@@ -70,6 +95,6 @@ export async function getOAuthProviders(): Promise<OAuthProviders> {
     return await callJson<OAuthProviders>("/auth/providers");
   } catch {
     // An unreachable backend is treated as "simulated sign-in only"; the page itself reports the outage later.
-    return { google: false, github: false, devLogin: true };
+    return { google: false, github: false, devLogin: true, email: false };
   }
 }

@@ -14,7 +14,7 @@ services:
       - path: ./backend/.env
         required: false
     environment:
-      DATABASE_URL: sqlite:////data/specgate.db
+      DATABASE_URL: ${DATABASE_URL:-sqlite:////data/specgate.db}
       CORS_ORIGINS: '["http://localhost:3000"]'
     volumes:
       - backend-data:/data

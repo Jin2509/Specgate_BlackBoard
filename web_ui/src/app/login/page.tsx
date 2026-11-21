@@ -27,6 +27,6 @@ export default function LoginPage() {
 }
 
 async function LoginWithProviders() {
-  const { google, github } = await getOAuthProviders();
-  return <LoginForm oauthProviders={{ google, github }} />;
+  const { google, github, devLogin, email } = await getOAuthProviders();
+  return <LoginForm oauthProviders={{ google, github }} isDevLogin={devLogin} isEmailEnabled={email} />;
 }

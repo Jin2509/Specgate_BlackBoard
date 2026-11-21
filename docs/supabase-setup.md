@@ -6,7 +6,7 @@ Hướng dẫn chuyển CSDL của backend từ SQLite sang Postgres do Supabase
 
 | Thành phần Supabase | Dùng không | Ghi chú |
 | --- | --- | --- |
-| Postgres | Có | Thay SQLite qua biến `DATABASE_URL`. Mọi bảng `ws_*` và bảng ADOM (`runs`, `tickets`…) nằm ở đây |
+| Postgres | Có | Thay SQLite qua biến `DATABASE_URL`. 17 bảng `ws_*` tạo bằng tệp schema ở mục 4 |
 | Auth | Không | Backend tự làm OAuth Google/GitHub và tự ký phiên (`app/ws/security.py`). Đổi sang Supabase Auth là một thay đổi mã riêng |
 | Realtime | Không | Kênh chat dùng SSE và bộ phát tin trong tiến trình (`app/ws/realtime.py`). Chỉ cần đổi khi chạy nhiều bản backend |
 | Data API (PostgREST), Storage | Không | Nên tắt Data API hoặc bật RLS để không ai đọc bảng qua khóa `anon` (mục 6) |
@@ -45,30 +45,45 @@ postgresql+psycopg://postgres.<project-ref>:<mật-khẩu>@aws-0-<vùng>.pooler.
 python3 -c "import urllib.parse,sys; print(urllib.parse.quote(sys.argv[1], safe=''))" 'mat-khau'
 ```
 
-## 4. Cài driver Postgres
+## 4. Tạo bảng trên Supabase
 
-`backend/pyproject.toml` hiện chưa có driver Postgres. Thêm `psycopg[binary]` vào `dependencies`:
+Toàn bộ cấu trúc CSDL nằm trong một tệp: [`supabase/migrations/20261121000000_create_workspace_schema.sql`](../supabase/migrations/20261121000000_create_workspace_schema.sql). Tệp tạo 17 bảng `ws_*` khớp từng cột với `backend/app/ws/models.py`, kèm:
 
-```toml
-dependencies = [
-    "fastapi>=0.110",
-    "uvicorn[standard]>=0.29",
-    "sqlalchemy>=2.0",
-    "pydantic>=2.6",
-    "pydantic-settings>=2.2",
-    "httpx>=0.27",
-    "cryptography>=42",
-    "psycopg[binary]>=3.2",
-]
+- khóa ngoại giữa các bảng (người dùng, workspace, kênh, tin nhắn, việc cha – con…);
+- ràng buộc `CHECK` cho mọi giá trị dạng liệt kê (`role`, `status`, `kind`, `label`, `color`…), đúng tập giá trị backend ghi;
+- ràng buộc duy nhất (mã tham gia, số thứ tự ý/việc trong workspace, mỗi người chỉ một yêu cầu tham gia đang chờ cho mỗi workspace);
+- index cho các truy vấn hay dùng (tin theo kênh và `seq`, highlight theo người…);
+- bật RLS và thu hồi quyền của `anon`, `authenticated` trên mọi bảng (mục 6).
+
+Chọn **một** trong hai cách:
+
+**Cách A: SQL Editor (đơn giản nhất).** Trên dashboard mở **SQL Editor → New query**, dán toàn bộ nội dung tệp, bấm **Run**. Mở **Table Editor** để thấy 17 bảng.
+
+**Cách B: Supabase CLI.** Từ thư mục gốc repo:
+
+```bash
+npx supabase login
 ```
 
-Rồi cài lại trong môi trường ảo của backend:
+```bash
+npx supabase link --project-ref <project-ref>
+```
+
+```bash
+npx supabase db push
+```
+
+CLI đọc thư mục `supabase/migrations/` và chỉ chạy những tệp chưa chạy.
+
+Tệp chỉ chạy được trên CSDL trống. Nếu backend đã từng khởi động với `DATABASE_URL` trỏ Supabase (khi đó `create_all` tự tạo bảng, thiếu ràng buộc và index), xóa các bảng `ws_*` trong SQL Editor rồi chạy lại tệp.
+
+Driver Postgres `psycopg[binary]` đã có trong `backend/pyproject.toml`. Cài lại môi trường ảo của backend một lần:
 
 ```bash
 cd backend && .venv/bin/pip install -e ".[dev]"
 ```
 
-Docker tự cài theo `pyproject.toml` khi build lại image.
+Docker tự cài khi build lại image.
 
 ## 5. Cấu hình backend
 
@@ -93,20 +108,18 @@ cd backend && .venv/bin/python -c "from sqlalchemy import text; from app.db impo
 
 Dòng in ra bắt đầu bằng `PostgreSQL 15` hoặc `PostgreSQL 17` là đã kết nối được.
 
-Khởi động backend như thường. Lần đầu, `Base.metadata.create_all` trong `app/main.py` tạo toàn bộ bảng trên Supabase. Mở **Table Editor** trên dashboard để thấy các bảng `ws_users`, `ws_workspaces`, `ws_messages`…
+Khởi động backend như thường. Bảng đã có từ mục 4 nên `create_all` trong `app/main.py` không tạo gì thêm. Muốn có dữ liệu demo (Lan, Long, Trang và workspace "Đồ án Kiểm chứng"), chạy `.venv/bin/python -m app.ws.seed` một lần; không chạy trên server thật.
 
 ### 5.2. Chạy bằng Docker Compose
 
-`compose.yaml` ghi đè `DATABASE_URL` bằng SQLite trong khối `environment`, và khối này thắng giá trị trong `backend/.env`. Muốn dùng Supabase, sửa dòng đó để nhận giá trị từ ngoài, còn mặc định vẫn là SQLite:
+`compose.yaml` đọc `DATABASE_URL` từ biến môi trường của lệnh `docker compose`, mặc định là SQLite trong volume:
 
 ```yaml
     environment:
-      ADOM_DIR: /opt/spec-gate/adom
-      RUNS_DIR: /data/runs
       DATABASE_URL: ${DATABASE_URL:-sqlite:////data/specgate.db}
 ```
 
-Rồi đặt `DATABASE_URL` trong tệp env dùng cho compose (trên server là `deploy/.env.prod`, chạy kèm `--env-file`), không ghi mật khẩu vào `compose.yaml`.
+Biến này lấy từ shell hoặc từ tệp env truyền bằng `--env-file`, không lấy từ `backend/.env` (khối `environment` thắng `env_file`). Trên máy, đặt `DATABASE_URL` trong tệp `.env` ở thư mục gốc repo; trên server, đặt trong `deploy/.env.prod`. Không ghi mật khẩu vào `compose.yaml`.
 
 ## 6. Khóa Data API của Supabase
 
@@ -128,14 +141,14 @@ END $$;
 
 Không có chính sách nghĩa là vai `anon` và `authenticated` không đọc, không ghi được dòng nào. Backend vẫn chạy bình thường vì nó kết nối bằng vai `postgres`, là chủ các bảng, và chủ bảng không bị RLS chặn.
 
-Chạy lại đoạn SQL này mỗi khi backend tạo thêm bảng mới. Kiểm tra bằng **Advisors → Security Advisor**: không còn cảnh báo "RLS disabled in public".
+Tệp schema ở mục 4 đã làm việc này cho 17 bảng hiện có. Chạy lại đoạn SQL trên mỗi khi thêm bảng mới. Kiểm tra bằng **Advisors → Security Advisor**: không còn cảnh báo "RLS disabled in public".
 
 ## 7. Chuyển dữ liệu cũ từ SQLite (tùy chọn)
 
 Bỏ qua mục này nếu bắt đầu với CSDL trống.
 
 1. Dừng backend để SQLite không đổi trong lúc chép.
-2. Chạy backend một lần với `DATABASE_URL` trỏ Supabase cho tới khi khởi động xong, để tạo bảng; rồi dừng.
+2. Tạo bảng trên Supabase bằng tệp schema (mục 4). Không chạy seed.
 3. Lưu đoạn sau vào một tệp ngoài repo, ví dụ `/tmp/copy_sqlite_to_supabase.py`, rồi chạy từ thư mục `backend/`:
 
 ```python
@@ -145,7 +158,6 @@ import sys
 
 from sqlalchemy import Integer, create_engine, select, text
 
-from app import models  # noqa: F401  (registers the ADOM tables)
 from app.db import Base
 from app.ws import models as ws_models  # noqa: F401  (registers the ws_ tables)
 
@@ -177,8 +189,9 @@ cd backend && DATABASE_URL='postgresql+psycopg://…' .venv/bin/python /tmp/copy
 
 ## 8. Những điều cần biết khi chạy trên Postgres
 
-- **Thêm cột cho bảng đã có.** `app/ws/migrate.py` tự thêm cột mới khi khởi động, nhưng với cột kiểu `Boolean` nó sinh `DEFAULT 1` / `DEFAULT 0`. Postgres từ chối giá trị này cho cột boolean, nên backend sẽ lỗi khi khởi động nếu sau này mô hình có thêm cột boolean. CSDL mới tạo không bị, vì `create_all` đã tạo đủ cột. Trước khi thêm cột boolean, chuyển sang Alembic như ghi chú trong `migrate.py`, hoặc thêm cột tay trong SQL Editor (`ALTER TABLE … ADD COLUMN … BOOLEAN DEFAULT false`).
-- **Kết nối rảnh bị đóng.** Pooler có thể đóng kết nối không dùng lâu; khi đó yêu cầu đầu tiên sau khoảng lặng có thể lỗi. Nếu gặp, bật `pool_pre_ping=True` khi tạo engine trong `app/db.py`.
+- **Thêm cột cho bảng đã có.** `app/ws/migrate.py` tự thêm cột mới khi khởi động, nhưng với cột kiểu `Boolean` nó sinh `DEFAULT 1` / `DEFAULT 0`. Postgres từ chối giá trị này cho cột boolean, nên backend sẽ lỗi khi khởi động nếu sau này mô hình có thêm cột boolean. CSDL mới tạo không bị, vì tệp schema đã có đủ cột. Trước khi thêm cột boolean, chuyển sang Alembic như ghi chú trong `migrate.py`, hoặc thêm cột tay trong SQL Editor (`ALTER TABLE … ADD COLUMN … BOOLEAN DEFAULT false`).
+- **Kết nối rảnh bị đóng.** Pooler có thể đóng kết nối không dùng lâu. `app/db.py` bật `pool_pre_ping` cho Postgres nên backend tự kết nối lại.
+- **Đổi cấu trúc bảng.** Thêm tệp mới vào `supabase/migrations/` (tên `<thời điểm>_<động từ>_<đối tượng>.sql`), không sửa tệp đã chạy.
 - **Một bản backend.** Kênh thời gian thực phát tin trong tiến trình, nên chỉ chạy một bản uvicorn. Muốn chạy nhiều bản thì phải thay `app/ws/realtime.py` bằng Postgres `LISTEN/NOTIFY` hoặc Supabase Realtime.
 - **Kiểm thử vẫn dùng SQLite.** `pytest` tạo CSDL SQLite tạm; không trỏ `DATABASE_URL` của bộ kiểm thử vào Supabase.
 - **Sao lưu.** Gói trả phí có sao lưu hằng ngày ở **Database → Backups**. Tự sao lưu bằng `pg_dump` với chuỗi Direct connection hoặc Session pooler.

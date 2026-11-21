@@ -1,6 +1,7 @@
-"""UC01: sign in / sign up with Google or GitHub only (FR-01-FR-05).
+"""UC01: sign in / sign up with Google, GitHub or a one-time code sent by email (FR-01-FR-05).
 
 Real OAuth: GET /api/auth/{provider}/start -> provider -> GET /api/auth/{provider}/callback -> cookie + redirect.
+Email: POST /api/auth/email-codes (sends the code) -> POST /api/auth/email-sessions (checks it) -> cookie.
 Dev/test: POST /api/auth/dev-login stands in for the provider step (enabled by AUTH_DEV_LOGIN).
 """
 
@@ -18,6 +19,8 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.errors import ApiError
+from app.ws import email_codes
+from app.ws import mailer
 from app.ws import models as m
 from app.ws import service as sv
 from app.ws.deps import current_user, db
@@ -91,7 +94,8 @@ def _configured(provider: str) -> bool:
 
 @router.get("/providers")
 def providers() -> dict:
-    return {"google": _configured("google"), "github": _configured("github"), "devLogin": settings.auth_dev_login}
+    return {"google": _configured("google"), "github": _configured("github"), "devLogin": settings.auth_dev_login,
+            "email": _email_enabled()}
 
 
 @router.get("/{provider}/start", response_class=RedirectResponse, status_code=302)
@@ -152,6 +156,76 @@ async def _identity(provider: str, code: str) -> tuple[str, str, str]:
         info = (await client.get("https://api.github.com/user", headers={
             "Authorization": f"Bearer {tok['access_token']}", "Accept": "application/vnd.github+json"})).raise_for_status().json()
         return str(info["id"]), info["login"], info.get("name") or info["login"]
+
+
+# ---------- email one-time code ----------
+
+EMAIL_PROVIDER = "email"
+DISPLAY_NAME_MAX = 40
+
+
+def _email_enabled() -> bool:
+    return mailer.is_configured() or settings.auth_dev_login
+
+
+def _to_email(raw: str) -> str:
+    email = raw.strip().lower()
+    if not EMAIL.match(email) or len(email) > 254:
+        raise ApiError(400, "Email chưa đúng dạng, ví dụ ten@gmail.com.", "INVALID_EMAIL")
+    return email
+
+
+class EmailCodeRequest(BaseModel):
+    email: str = Field(description="Địa chỉ nhận mã đăng nhập")
+
+
+@router.post("/email-codes", status_code=201)
+def create_email_code(body: EmailCodeRequest, s: Session = Depends(db)) -> dict:
+    """Send a 6-digit code. The answer is the same whether the address has an account, so it reveals nothing.
+    Without SMTP (local development only) the code comes back as `devCode` instead of by email."""
+    if not _email_enabled():
+        raise ApiError(501, "Máy chủ chưa cấu hình gửi email.", "EMAIL_NOT_CONFIGURED")
+    email = _to_email(body.email)
+    code = email_codes.issue(s, email)
+    s.commit()
+    out = {"email": email, "expiresInSeconds": settings.email_code_ttl_minutes * 60,
+           "resendAfterSeconds": settings.email_code_resend_seconds}
+    if not mailer.is_configured():
+        return {**out, "devCode": code}
+    try:
+        mailer.send_login_code(email, code)
+    except mailer.MailError:
+        raise ApiError(502, "Không gửi được email. Kiểm tra địa chỉ hoặc thử lại sau.", "EMAIL_SEND_FAILED") from None
+    return out
+
+
+class EmailSessionRequest(BaseModel):
+    email: str
+    code: str = Field(min_length=1, max_length=12)
+    displayName: str | None = Field(None, description="Bắt buộc khi email chưa có tài khoản")
+    next: str | None = None
+
+
+@router.post("/email-sessions", status_code=201)
+def create_email_session(body: EmailSessionRequest, response: Response, s: Session = Depends(db)) -> dict:
+    """Check the code, then sign in, or create the account when the address is new. A new address without a
+    display name answers 409 NAME_REQUIRED and keeps the code, so the user can add the name and send it again."""
+    email = _to_email(body.email)
+    row = email_codes.check(s, email, body.code)
+    known = s.scalar(select(m.OAuthAccount).where(m.OAuthAccount.provider == EMAIL_PROVIDER,
+                                                  m.OAuthAccount.subject == email))
+    name = " ".join((body.displayName or "").split())
+    if not known and not name:
+        raise ApiError(409, "Email này chưa có tài khoản. Nhập tên hiển thị để tạo.", "NAME_REQUIRED")
+    if not known and len(name) > DISPLAY_NAME_MAX:
+        raise ApiError(400, "Tên hiển thị tối đa 40 ký tự.", "INVALID_NAME")
+    email_codes.consume(row)
+    s.commit()
+    user, created = upsert_identity(s, EMAIL_PROVIDER, email, email, name)
+    token = issue_session(user.id)
+    set_session_cookie(response, token)
+    return {"token": token, "user": sv.user_out(user), "created": created,
+            "redirect": after_login(s, user, created, EMAIL_PROVIDER, safe_next(body.next))}
 
 
 # ---------- dev login (the UI's mock provider form) ----------

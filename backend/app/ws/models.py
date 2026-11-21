@@ -28,16 +28,31 @@ class User(Base):
 
 
 class OAuthAccount(Base):
-    """One Google/GitHub identity -> exactly one user (FR-04)."""
+    """One Google/GitHub/email identity -> exactly one user (FR-04)."""
 
     __tablename__ = "ws_oauth_accounts"
     __table_args__ = (UniqueConstraint("provider", "subject"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    provider: Mapped[str] = mapped_column(String)          # google | github
-    subject: Mapped[str] = mapped_column(String)           # provider's stable user id (lower-cased login in dev mode)
-    login: Mapped[str] = mapped_column(String)             # email (Google) or username (GitHub), for display
+    provider: Mapped[str] = mapped_column(String)          # google | github | email
+    # Provider's stable user id; the lower-cased address for email, the lower-cased login in dev mode.
+    subject: Mapped[str] = mapped_column(String)
+    login: Mapped[str] = mapped_column(String)             # email (Google, email) or username (GitHub), for display
     user_id: Mapped[str] = mapped_column(ForeignKey("ws_users.id"), index=True)
+
+
+class EmailCode(Base):
+    """A one-time sign-in code sent to an address. Only an HMAC of the code is kept; the newest unused one counts."""
+
+    __tablename__ = "ws_email_codes"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    email: Mapped[str] = mapped_column(String(254), index=True)   # lower-cased
+    code_hash: Mapped[str] = mapped_column(String(64))
+    attempt_count: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    consumed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class Workspace(Base):

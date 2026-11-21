@@ -17,7 +17,7 @@ import { toDateClock } from "@/utils/date-format";
 
 export const metadata: Metadata = { title: t.workspace.keyAndModel };
 
-const WELCOME_PROVIDERS: Record<string, string> = { github: "GitHub", google: "Google" };
+const WELCOME_PROVIDERS: Record<string, string> = { github: "GitHub", google: "Google", email: "email" };
 
 export default function KeyPage(props: PageProps<"/w/[workspaceId]/chat/key">) {
   return (

@@ -1,5 +1,5 @@
 "use client";
-// Signs in or creates an account with Google or GitHub only; ?mode=signup switches between the two modes.
+// Signs in or creates an account with Google, GitHub or an emailed code; ?mode=signup switches between the two modes.
 import Link from "next/link";
 
 import { Button } from "@/components/ui/Button";
@@ -9,6 +9,7 @@ import { format, t } from "@/lib/i18n";
 import type { AuthProvider } from "@/types/profile";
 import { cn } from "@/utils/cn";
 
+import { EmailSignInForm } from "./EmailSignInForm";
 import { AUTH_PROVIDERS, PROVIDER_DETAILS } from "../utils/auth-providers";
 
 const ERROR_MESSAGES: Record<string, string> = {
@@ -17,12 +18,20 @@ const ERROR_MESSAGES: Record<string, string> = {
   backend: t.auth.errorBackend,
 };
 
-/** `oauthProviders`: providers with real OAuth on the backend go straight there; others use the simulated screen. */
-export function LoginForm({ oauthProviders = {} }: { oauthProviders?: Partial<Record<AuthProvider, boolean>> }) {
+interface LoginFormProps {
+  /** Providers with real OAuth on the backend go straight there. */
+  oauthProviders?: Partial<Record<AuthProvider, boolean>>;
+  /** Development only: providers without real OAuth open the simulated screen instead of being hidden. */
+  isDevLogin?: boolean;
+  isEmailEnabled?: boolean;
+}
+
+export function LoginForm({ oauthProviders = {}, isDevLogin = false, isEmailEnabled = false }: LoginFormProps) {
   const next = useQueryParam("next") ?? "";
   const errorCode = useQueryParam("error");
   const errorMessage = errorCode ? (ERROR_MESSAGES[errorCode] ?? ERROR_MESSAGES.oauth) : null;
   const isSignUp = useQueryParam("mode") === "signup";
+  const visibleProviders = AUTH_PROVIDERS.filter((provider) => oauthProviders[provider] || isDevLogin);
 
   function toQuery(extra: Record<string, string>): string {
     const params = new URLSearchParams(extra);
@@ -46,7 +55,7 @@ export function LoginForm({ oauthProviders = {} }: { oauthProviders?: Partial<Re
       <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{isSignUp ? t.auth.signUpLead : t.auth.signInLead}</p>
 
       <div className="mt-8 grid gap-3">
-        {AUTH_PROVIDERS.map((provider) => {
+        {visibleProviders.map((provider) => {
           const details = PROVIDER_DETAILS[provider];
           const label = (
             <>
@@ -72,6 +81,19 @@ export function LoginForm({ oauthProviders = {} }: { oauthProviders?: Partial<Re
           );
         })}
       </div>
+
+      {isEmailEnabled ? (
+        <>
+          {visibleProviders.length > 0 ? (
+            <div className="my-5 flex items-center gap-3 text-xs text-muted-foreground" aria-hidden="true">
+              <span className="h-px flex-1 bg-foreground/15" />
+              {t.auth.orDivider}
+              <span className="h-px flex-1 bg-foreground/15" />
+            </div>
+          ) : null}
+          <EmailSignInForm next={next} />
+        </>
+      ) : null}
 
       {errorMessage ? (
         <p role="alert" className="mt-3 rounded-lg bg-destructive/20 px-3 py-2 text-sm text-foreground">

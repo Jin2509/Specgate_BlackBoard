@@ -155,13 +155,14 @@ def name_taken(s: Session, workspace_id: str, name: str, except_user: str | None
 
 
 def account_hint(s: Session, user_id: str) -> str | None:
-    """Shown on hover over a name (flow §9): the GitHub login, or the Google e-mail partly masked."""
+    """Shown on hover over a name (flow §9): the GitHub login, or the Google or sign-in e-mail partly masked."""
     acc = s.scalar(select(m.OAuthAccount).where(m.OAuthAccount.user_id == user_id).order_by(m.OAuthAccount.id))
     if not acc:
         return None
-    if acc.provider == "google" and "@" in acc.login:
+    if acc.provider in ("google", "email") and "@" in acc.login:
         local, domain = acc.login.split("@", 1)
-        return f"Google: {local[:2]}{'•' * max(1, len(local) - 2)}@{domain}"
+        source = "Google" if acc.provider == "google" else "Email"
+        return f"{source}: {local[:2]}{'•' * max(1, len(local) - 2)}@{domain}"
     return f"GitHub: {acc.login}"
 
 
