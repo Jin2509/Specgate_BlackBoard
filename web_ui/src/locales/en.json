@@ -575,7 +575,7 @@
     "model": "Model",
     "anthropicHint": "The key starts with sk-ant-, created at console.anthropic.com.",
     "openAiLabel": "OpenAI style",
-    "openAiHint": "OpenAI, OpenRouter, DeepSeek, Groq, Ollama… For any service using the OpenAI format, enter its API address.",
+    "openAiHint": "OpenAI, Google Gemini, OpenRouter, DeepSeek, Groq, Ollama… For any service using the OpenAI format, enter its API address. Gemini: https://generativelanguage.googleapis.com/v1beta/openai with a key from aistudio.google.com.",
     "provider": "Provider",
     "apiAddress": "API address",
     "hideKey": "Hide key",

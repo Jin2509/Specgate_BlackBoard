@@ -575,7 +575,7 @@
     "model": "Mô hình",
     "anthropicHint": "Key bắt đầu bằng sk-ant-, tạo ở console.anthropic.com.",
     "openAiLabel": "Kiểu OpenAI",
-    "openAiHint": "OpenAI, OpenRouter, DeepSeek, Groq, Ollama… Dịch vụ nào dùng định dạng của OpenAI thì nhập địa chỉ API của nó.",
+    "openAiHint": "OpenAI, Google Gemini, OpenRouter, DeepSeek, Groq, Ollama… Dịch vụ nào dùng định dạng của OpenAI thì nhập địa chỉ API của nó. Gemini: https://generativelanguage.googleapis.com/v1beta/openai, key tạo ở aistudio.google.com.",
     "provider": "Nhà cung cấp",
     "apiAddress": "Địa chỉ API",
     "hideKey": "Ẩn key",

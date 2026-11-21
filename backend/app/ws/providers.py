@@ -23,6 +23,11 @@ FAKE_MODELS = {
     "anthropic": ["claude-sonnet-5-5", "claude-haiku-5-5", "claude-opus-5-5"],
     "openai-compatible": ["gpt-6-luna", "qwen-3.8-max", "deepseek-v4"],
 }
+# Gemini's OpenAI-style /models prefixes ids with "models/"; its chat endpoint takes the bare id too.
+GEMINI_MODEL_PREFIX = "models/"
+# Listed by /models but unable to answer a chat turn; offering them only leads to provider errors.
+NON_CHAT_MODEL = re.compile(
+    r"embedding|tts|image|audio|live|transcribe|whisper|dall-e|moderation|aqa|lyria|imagen|veo|robotics", re.IGNORECASE)
 
 
 class ProviderError(Exception):
@@ -127,12 +132,13 @@ async def list_models(t: Target) -> list[str]:
     if r.status_code >= 400:
         raise _status_error(r.status_code, r.text[:2000])
     try:
-        ids = [str(item["id"]) for item in r.json()["data"]]
+        ids = [str(item["id"]).removeprefix(GEMINI_MODEL_PREFIX) for item in r.json()["data"]]
     except (ValueError, KeyError, TypeError):
         raise fail("provider") from None
-    if not ids:
+    chat_ids = [model for model in ids if not NON_CHAT_MODEL.search(model)] or ids
+    if not chat_ids:
         raise fail("model")
-    return sorted(set(ids))
+    return sorted(set(chat_ids))
 
 
 # ---------- chat ----------

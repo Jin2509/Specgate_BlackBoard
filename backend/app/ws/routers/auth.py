@@ -6,6 +6,7 @@ Dev/test: POST /api/auth/dev-sessions stands in for the provider step (enabled b
 account there still needs a code sent to the user's email.
 """
 
+import logging
 import re
 import secrets
 from typing import Literal
@@ -28,6 +29,7 @@ from app.ws.deps import current_user, db
 from app.ws.security import SESSION_COOKIE, issue_session, read_state, sign_state
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+logger = logging.getLogger(__name__)
 
 Provider = Literal["google", "github"]
 GITHUB_LOGIN = re.compile(r"^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$", re.IGNORECASE)
@@ -191,7 +193,8 @@ def create_email_code(body: EmailCodeRequest, s: Session = Depends(db)) -> dict:
     s.commit()
     try:
         mailer.send_login_code(email, code)
-    except mailer.MailError:
+    except mailer.MailError as err:
+        logger.warning("Email code delivery failed: %s", err)
         raise ApiError(502, "Không gửi được email. Kiểm tra địa chỉ hoặc thử lại sau.", "EMAIL_SEND_FAILED") from None
     return {"email": email, "expiresInSeconds": settings.email_code_ttl_minutes * 60,
             "resendAfterSeconds": settings.email_code_resend_seconds}

@@ -185,3 +185,17 @@ def test_mailer_should_use_implicit_tls_on_port_465(monkeypatch):
     monkeypatch.setattr(settings, "smtp_from_address", "noreply@example.test")
     mailer.send_login_code(EMAIL, "654321")
     assert [call[0] for call in FakeSmtp.calls] == ["connect", "send"]
+
+
+def test_mailer_should_verify_tls_with_certifi_roots(monkeypatch):
+    FakeSmtp.calls = []
+    cafiles = []
+    real_context = mailer.ssl.create_default_context
+    monkeypatch.setattr(mailer.ssl, "create_default_context",
+                        lambda cafile=None: cafiles.append(cafile) or real_context(cafile=cafile))
+    monkeypatch.setattr(mailer.smtplib, "SMTP", FakeSmtp)
+    monkeypatch.setattr(settings, "smtp_host", "smtp.example.test")
+    monkeypatch.setattr(settings, "smtp_port", 587)
+    monkeypatch.setattr(settings, "smtp_from_address", "noreply@example.test")
+    mailer.send_login_code(EMAIL, "123456")
+    assert cafiles == [mailer.certifi.where()]

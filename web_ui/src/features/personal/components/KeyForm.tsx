@@ -17,6 +17,14 @@ const PROVIDERS: ReadonlyArray<{ value: ProviderKind; label: string; hint: strin
   { value: "openai-compatible", label: t.personal.openAiLabel, hint: t.personal.openAiHint },
 ];
 
+const BASE_URL_SUGGESTIONS: ReadonlyArray<{ url: string; label: string }> = [
+  { url: "https://api.openai.com/v1", label: "OpenAI" },
+  { url: "https://generativelanguage.googleapis.com/v1beta/openai", label: "Google Gemini" },
+  { url: "https://openrouter.ai/api/v1", label: "OpenRouter" },
+  { url: "https://api.deepseek.com/v1", label: "DeepSeek" },
+  { url: "https://api.groq.com/openai/v1", label: "Groq" },
+];
+
 function toSubmitLabel(isPending: boolean, hasKey: boolean): string {
   if (isPending) return t.personal.checkingKey;
   return hasKey ? t.personal.checkAndReplace : t.personal.checkAndSave;
@@ -58,7 +66,19 @@ export function KeyForm({
           <Label htmlFor="base-url" className="text-[13px] font-semibold text-muted-foreground">
             {t.personal.apiAddress}
           </Label>
-          <Input id="base-url" name="baseUrl" placeholder="https://api.openai.com/v1" inputMode="url" autoComplete="off" />
+          <Input
+            id="base-url"
+            name="baseUrl"
+            list="base-url-suggestions"
+            placeholder="https://api.openai.com/v1"
+            inputMode="url"
+            autoComplete="off"
+          />
+          <datalist id="base-url-suggestions">
+            {BASE_URL_SUGGESTIONS.map((suggestion) => (
+              <option key={suggestion.url} value={suggestion.url} label={suggestion.label} />
+            ))}
+          </datalist>
         </div>
       ) : null}
 

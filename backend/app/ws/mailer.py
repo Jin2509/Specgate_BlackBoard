@@ -4,6 +4,8 @@ import smtplib
 import ssl
 from email.message import EmailMessage
 
+import certifi
+
 from app.config import settings
 
 IMPLICIT_TLS_PORT = 465
@@ -30,7 +32,8 @@ def send_login_code(address: str, code: str) -> None:
         "Không đưa mã này cho ai, kể cả người tự nhận là nhân viên SpecGate.\n"
         "Nếu bạn không yêu cầu mã, hãy bỏ qua email này: chưa ai vào được tài khoản của bạn.\n"
     )
-    context = ssl.create_default_context()
+    # Python from python.org on macOS ships without system CA roots, so STARTTLS to Gmail fails verification.
+    context = ssl.create_default_context(cafile=certifi.where())
     try:
         if settings.smtp_port == IMPLICIT_TLS_PORT:
             with smtplib.SMTP_SSL(settings.smtp_host, settings.smtp_port, timeout=SMTP_TIMEOUT_S, context=context) as smtp:
