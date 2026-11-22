@@ -58,6 +58,10 @@ class Settings(BaseSettings):
     owned_workspaces_max: int = 10          # shared workspaces one person owns
     summary_attached_turns_max: int = 4     # original turns attached to a "Tóm tắt cho nhóm"
     conversation_history_turns_max: int = 40   # newest turns sent back to the model (flow §4, open point 1)
+    # Files attached to a conversation (PDF, Word .docx): only their text is kept and sent with every call.
+    document_size_max_bytes: int = 10 * 1024 * 1024
+    document_chars_max: int = 60_000       # text kept per file, about 15k tokens
+    documents_per_conversation_max: int = 5
 
 
 settings = Settings()

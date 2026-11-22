@@ -7,6 +7,8 @@ import { t } from "@/lib/i18n";
 import type { Turn } from "@/types/conversation";
 import { cn } from "@/utils/cn";
 
+import { toUsageLabel } from "../utils/document-format";
+
 export function ChatTurnRow({
   turn,
   isLocal = false,
@@ -55,6 +57,7 @@ export function ChatTurnRow({
             className="mt-1.5 flex items-center gap-1 opacity-0 transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 max-sm:opacity-100"
           >
             <CopyButton text={turn.text} />
+            {turn.usage ? <span className="px-1.5 text-xs text-subtle tabular-nums">{toUsageLabel(turn.usage)}</span> : null}
             {canRegenerate ? (
               <button
                 type="button"

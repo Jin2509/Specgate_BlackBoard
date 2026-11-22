@@ -247,8 +247,8 @@ def check_context(s: Session, hls: list[m.PrivateHighlight], ws: m.Workspace, co
                 others.append(wid)
     if others and not confirmed:
         names = ", ".join(x["name"] for x in sv.context_workspaces(s, others))
-        raise ApiError(409, f"Đoạn này được viết khi agent đang đọc thông tin của nhóm {names}, và có thể chứa thông "
-                            "tin của nhóm đó. Bạn vẫn muốn gửi sang nhóm này?", "OTHER_CONTEXT")
+        raise ApiError(409, f"Đoạn này có thể chứa thông tin của nhóm {names}. Vẫn gửi sang nhóm này?",
+                       "OTHER_CONTEXT")
 
 
 def load_mine(s: Session, user: m.User, ids: list[str]) -> list[m.PrivateHighlight]:

@@ -18,20 +18,18 @@ from app.config import settings
 from app.db import SessionLocal
 from app.errors import ApiError
 from app.ws import context as cx
+from app.ws import documents as dc
 from app.ws import models as m
 from app.ws import providers as pv
 from app.ws import service as sv
-from app.ws.deps import current_user, db, not_found, require_member
+from app.ws.deps import current_user, db, not_found, owned_conversation, require_member
 from app.ws.security import decrypt_key
 
 router = APIRouter(prefix="/conversations", tags=["conversations"])
 
 
 def _own(s: Session, conv_id: str, user: m.User) -> m.Conversation:
-    conv = s.get(m.Conversation, conv_id)
-    if not conv or conv.owner_id != user.id:
-        raise not_found("Không tìm thấy hội thoại.")
-    return conv
+    return owned_conversation(s, conv_id, user)
 
 
 def _all_turns(s: Session, conv_id: str) -> list[m.Turn]:
@@ -65,6 +63,9 @@ def _turn_out(s: Session, t: m.Turn, owner_id: str) -> dict:
         out["error"] = t.error
     if t.stopped:
         out["stopped"] = True
+    if t.input_tokens is not None:
+        out["usage"] = {"inputTokens": t.input_tokens, "cachedInputTokens": t.cached_input_tokens or 0,
+                        "cacheWriteTokens": t.cache_write_tokens or 0, "outputTokens": t.output_tokens}
     return out
 
 
@@ -104,7 +105,8 @@ def _full(s: Session, conv: m.Conversation, user: m.User) -> dict:
             # flow §4: private highlights painted in the conversation, and the count asked about on delete.
             "highlights": [{"id": h.id, "turnId": h.turn_id, "text": h.original_text, "color": h.color, "kind": h.kind}
                            for h in hls if h.kind == "passage"],
-            "highlightCount": len(hls)}
+            "highlightCount": len(hls),
+            "documents": [dc.document_out(d) for d in dc.list_documents(s, conv.id)]}
 
 
 def _check_link(s: Session, workspace_id: str, user: m.User) -> str:
@@ -179,6 +181,8 @@ def delete_conversation(conv_id: str, highlights: Literal["keep", "delete"] = Qu
     _drop_highlights(s, _highlights_of(s, conv.id, user.id), highlights == "keep", conversation_gone=True)
     for t in _turns(s, conv.id):
         s.delete(t)
+    for d in dc.list_documents(s, conv.id):
+        s.delete(d)
     s.delete(conv)
     s.commit()
 
@@ -188,9 +192,11 @@ def get_context(conv_id: str, user: m.User = Depends(current_user), s: Session =
     """FR-27: exactly the group context sent with each call, plus the rendered system prompt."""
     conv = _own(s, conv_id, user)
     ctx = cx.build(s, user, conv.workspace_id) if conv.workspace_id else None
+    docs = dc.list_documents(s, conv.id)
     agent = sv.agent_out(s, user.id)
-    return {"linked": ctx is not None, "context": ctx,
-            "system": cx.render_system(user.display_name, agent["label"] if agent else f"agent của {user.display_name}", ctx)}
+    label = agent["label"] if agent else f"agent của {user.display_name}"
+    return {"linked": ctx is not None, "context": ctx, "documents": [dc.document_out(d) for d in docs],
+            "system": cx.render_system(user.display_name, label, ctx, documents=dc.context_rows(docs))}
 
 
 @router.post("/{conv_id}/context/digest")
@@ -249,10 +255,14 @@ def _next_seq(s: Session, conv_id: str) -> int:
 
 
 def _save_answer(conv_id: str, owner_id: str, model: str, text: str, error: str | None, stopped: bool = False,
-                 *, version_group: str | None = None, context_ws: str | None = None) -> dict:
+                 *, version_group: str | None = None, context_ws: str | None = None,
+                 usage: pv.Usage | None = None) -> dict:
+    usage = usage or pv.Usage()
     with SessionLocal() as s2:
         t = m.Turn(conversation_id=conv_id, seq=_next_seq(s2, conv_id), role="assistant", text=text, model=model,
-                   error=error, stopped=stopped, version_group=version_group, context_workspace_id=context_ws)
+                   error=error, stopped=stopped, version_group=version_group, context_workspace_id=context_ws,
+                   input_tokens=usage.input_tokens, cached_input_tokens=usage.cached_input_tokens,
+                   cache_write_tokens=usage.cache_write_tokens, output_tokens=usage.output_tokens)
         s2.add(t)
         conv = s2.get(m.Conversation, conv_id)
         if conv:
@@ -278,17 +288,19 @@ async def _answer(s: Session, conv: m.Conversation, user: m.User, user_turn: m.T
     here: that is "Tóm tắt tin cũ", pressed by the user (flow §5)."""
     key, target = _agent_target(s, user)
     ctx = cx.build(s, user, conv.workspace_id) if conv.workspace_id else None
-    system = cx.render_system(user.display_name, sv.agent_label(s, user.id, key.model), ctx)
+    documents = dc.context_rows(dc.list_documents(s, conv.id))
+    system = cx.render_system_blocks(user.display_name, sv.agent_label(s, user.id, key.model), ctx, documents=documents)
     turns = [t for t in _turns(s, conv.id) if t.seq <= user_turn.seq]
     messages = _history(turns)
     model, owner_id, conv_key = key.model, user.id, conv.id
     user_out = _turn_out(s, user_turn, owner_id)
     # flow §6: the answer remembers whose group context it was written with.
-    save = {"version_group": version_group, "context_ws": ctx["workspace"]["id"] if ctx else None}
+    usage = pv.Usage()
+    save = {"version_group": version_group, "context_ws": ctx["workspace"]["id"] if ctx else None, "usage": usage}
 
     if not stream:
         try:
-            text = await pv.complete(target, model, system, messages)
+            text = await pv.complete(target, model, system, messages, usage=usage)
         except pv.ProviderError as e:
             return {"user": user_out, "error": {"code": e.code, "message": e.message},
                     "turn": _save_answer(conv_key, owner_id, model, e.message, e.code, **save)}
@@ -300,7 +312,7 @@ async def _answer(s: Session, conv: m.Conversation, user: m.User, user_turn: m.T
         chunks: list[str] = []
         finished = False
         try:
-            async for delta in pv.stream_chat(target, model, system, messages):
+            async for delta in pv.stream_chat(target, model, system, messages, usage=usage):
                 chunks.append(delta)
                 yield _sse("delta", {"text": delta})
             finished = True

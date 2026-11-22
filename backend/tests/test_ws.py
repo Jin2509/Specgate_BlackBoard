@@ -250,6 +250,16 @@ def test_fr17_stream_events(api):
     assert len(api.get(f"/api/v1/conversations/{conv['id']}", headers=h).json()["turns"]) == 2
 
 
+def test_should_save_token_usage_with_each_answer(api):
+    h, _ = login(api, "lan-pham", "Lan")
+    with_key(api, h)
+    conv = api.post("/api/v1/conversations", headers=h, json={}).json()
+    turn = ask(api, h, conv["id"], "Xin chào")["turn"]
+    assert turn["usage"]["inputTokens"] > 0 and turn["usage"]["cachedInputTokens"] == 0
+    saved = api.get(f"/api/v1/conversations/{conv['id']}", headers=h).json()["turns"][-1]
+    assert saved["usage"] == turn["usage"]
+
+
 def test_uc03_provider_error_keeps_question(api):
     h, _ = login(api, "lan-pham", "Lan")
     with_key(api, h)
@@ -508,7 +518,7 @@ def test_fr23_cannot_highlight_own(team):
     api, lan, long, ws = team
     mine = post(api, lan, ws, "tin của tôi")[0]
     r = hl(api, lan, ws, mine["id"], "tin")
-    assert r.status_code == 400 and r.json()["error"]["code"] == "OWN_MESSAGE" and "tự vào ngữ cảnh" in r.json()["error"]["message"]
+    assert r.status_code == 400 and r.json()["error"]["code"] == "OWN_MESSAGE" and "tự đọc tin của bạn" in r.json()["error"]["message"]
     assert mine["id"] in api.get(f"/api/v1/workspaces/{ws['id']}/channels/chung/messages", headers=lan).json()["ownMessageIds"]
 
 

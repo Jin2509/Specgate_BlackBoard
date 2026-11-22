@@ -2,11 +2,11 @@
 
 | Mục | Nội dung |
 | --- | --- |
-| Phiên bản | 0.4 |
-| Ngày | 21/11/2026 |
+| Phiên bản | 0.5 |
+| Ngày | 23/11/2026 |
 | Nguồn | `flow.md` (bản đã chốt), mã nguồn `web_ui/` và `backend/` |
 | Trạng thái | Bản đặc tả theo flow đã chốt; các điểm còn mở ghi ở mục 9 |
-| Thay thế | Bản 0.3 (18/11/2026); khác biệt ghi ở mục 11 |
+| Thay thế | Bản 0.4 (21/11/2026); khác biệt ghi ở mục 11 |
 
 ## Mục lục
 
@@ -1706,6 +1706,12 @@ Mỗi yêu cầu kiểm được bằng ít nhất một ca kiểm thử. Mức:
 | FR-108 | Chữ đang soạn được giữ trên trình duyệt qua mất mạng và tải lại trang | M |
 | FR-109 | Tự kết nối lại khi có mạng; kênh hiện bù tin đã lỡ | M |
 | FR-110 | Phần câu trả lời đã nhận được giữ khi mất mạng | M |
+| FR-127 | Người dùng đính kèm file PDF hoặc Word (.docx) vào hội thoại riêng, kể cả trước câu hỏi đầu; file sai loại, hỏng, có mật khẩu hoặc không có chữ bị từ chối kèm thông báo ngắn | M |
+| FR-128 | Chỉ chữ của file, ở dạng Markdown, được lưu; file gốc không lưu | M |
+| FR-129 | Mọi câu hỏi sau đó gửi kèm chữ của các file đính kèm; file dài hơn giới hạn chỉ gửi phần đầu và agent được báo phần bị cắt | M |
+| FR-130 | File đính kèm hiện trên ô soạn với tên, dung lượng và phần bị cắt; người dùng bỏ file bất kỳ lúc nào; xóa hội thoại xóa luôn file | M |
+| FR-131 | System prompt chia khối theo độ ổn định: chỉ dẫn và trạng thái nhóm, rồi file đính kèm, rồi dòng thời gian; với Anthropic, mỗi khối và cuối hội thoại được đánh dấu cache để phần đầu lặp lại tính giá cache | M |
+| FR-132 | Mỗi câu trả lời lưu số token vào, số token đọc từ cache và số token ra do nhà cung cấp báo; số này hiện cạnh câu trả lời | S |
 
 ---
 
@@ -1752,6 +1758,8 @@ Mỗi yêu cầu kiểm được bằng ít nhất một ca kiểm thử. Mức:
 | BR-37 | Cây việc tối đa 3 cấp; xóa một việc xóa luôn mọi việc con; mô tả việc tối đa 200 ký tự |
 | BR-38 | Khóa bảng chặn thêm, sửa, xóa, giao lại và nhận việc; không chặn người phụ trách đánh dấu xong, và không chặn việc gỡ người đã rời khỏi các việc chưa xong |
 | BR-39 | Agent chỉ nhận các việc chưa xong, kèm người phụ trách và việc cha |
+| BR-40 | Chỉ nhận .pdf và .docx (không nhận .doc, không đọc chữ trong ảnh scan); mỗi file tối đa 10 MB; mỗi hội thoại tối đa 5 file; mỗi file gửi cho agent tối đa 60 000 ký tự |
+| BR-41 | Thông báo tối đa hai câu: chuyện gì xảy ra và người dùng làm gì tiếp; phần giải thích cách hệ thống hoạt động không đặt trong thông báo |
 
 Chi tiết loại, nguồn và truy vết của từng quy tắc: [business-rules.md](business-rules.md).
 
@@ -1777,6 +1785,7 @@ Chi tiết loại, nguồn và truy vết của từng quy tắc: [business-rule
 | NFR-14 | Quốc tế hóa | Mọi chữ hiển thị nằm trong tệp ngôn ngữ (tiếng Việt mặc định, có tiếng Anh) |
 | NFR-15 | Kết nối | Cần Internet; xử lý mất kết nối theo UC17 |
 | NFR-16 | API | API có phiên bản trong đường dẫn (`/api/v1`); lỗi trả về dạng `{ "error": { "code", "message", "details" } }` |
+| NFR-17 | Chi phí | Phần prompt ít đổi đứng trước để nhà cung cấp dùng lại prompt cache; số token mỗi câu trả lời được lưu để đo chi phí |
 
 ---
 
@@ -1828,7 +1837,7 @@ Tài liệu ghi phương án đang áp dụng trong ngoặc; nhóm xác nhận h
 | UC01 | FR-01 – FR-06, FR-111 – FR-115 | BR-01, BR-02, BR-26, BR-34 |
 | UC02 | FR-07 – FR-09 | BR-03 |
 | UC03 | FR-10 – FR-14, FR-116 | BR-04, BR-05 |
-| UC04 | FR-15 – FR-23 | BR-06, BR-07, BR-09, BR-13 |
+| UC04 | FR-15 – FR-23, FR-127 – FR-132 | BR-06, BR-07, BR-09, BR-13, BR-40 |
 | UC05 | FR-24 – FR-30 | BR-08, BR-09, BR-12 |
 | UC06 | FR-31 – FR-41 | BR-06, BR-10, BR-11, BR-14 |
 | UC07 | FR-42 – FR-49 | BR-12, BR-13, BR-15 |
@@ -1846,6 +1855,16 @@ Tài liệu ghi phương án đang áp dụng trong ngoặc; nhóm xác nhận h
 ---
 
 ## 11. Thay đổi so với các bản trước
+
+### 11.0. Bản 0.5 so với bản 0.4
+
+Bản 0.5 ghi lại các thay đổi theo [problem_2211.md](problem_2211.md) (23/11/2026). Mã mới tiếp tục ở cuối dãy.
+
+| Phần | Bản 0.4 | Bản 0.5 |
+| --- | --- | --- |
+| Chi phí token | Mỗi lượt gửi lại toàn bộ system prompt một khối | Prompt chia khối theo độ ổn định, đánh dấu cache với Anthropic, lưu số token mỗi câu trả lời (FR-131, FR-132, NFR-17) |
+| File đính kèm | Không có | Đính kèm PDF và Word vào hội thoại riêng, chỉ lưu chữ dạng Markdown (FR-127 – FR-130, BR-40) |
+| Thông báo | Nhiều thông báo dài, giải thích cách hệ thống hoạt động | Thông báo tối đa hai câu (BR-41) |
 
 ### 11.1. Bản 0.4 so với bản 0.3
 

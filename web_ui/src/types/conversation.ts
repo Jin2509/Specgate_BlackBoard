@@ -1,6 +1,26 @@
 // Defines personal conversations with the agent and the private highlights kept from them.
 import type { Channel } from "./workspace";
 
+/** Token counts the provider reported for one answer; `cachedInputTokens` were read from its prompt cache. */
+export interface TurnUsage {
+  inputTokens: number;
+  cachedInputTokens: number;
+  cacheWriteTokens: number;
+  outputTokens: number | null;
+}
+
+/** A PDF or Word file attached to a conversation; only its text is kept and sent to the agent. */
+export interface ConversationDocument {
+  id: string;
+  fileName: string;
+  mediaType: string;
+  sizeBytes: number;
+  charCount: number;
+  sentChars: number;
+  truncated: boolean;
+  createdAt: string;
+}
+
 export interface Turn {
   id: string;
   /** Answer versions kept by "regenerate", oldest first; `version` is this answer's number. */
@@ -15,6 +35,7 @@ export interface Turn {
   error?: string;
   /** The user stopped the answer, or the connection dropped; the text is what was written until then. */
   stopped?: boolean;
+  usage?: TurnUsage;
 }
 
 export interface ConversationSummary {
@@ -43,6 +64,7 @@ export interface Conversation extends ConversationSummary {
   highlightCount: number;
   /** Turn id to version group, to open the version that holds a highlight. */
   turnVersions?: Record<string, string>;
+  documents: ConversationDocument[];
 }
 
 export interface HighlightSend {

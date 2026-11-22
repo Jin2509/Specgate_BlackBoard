@@ -284,10 +284,27 @@ def render_segment(seg: dict) -> str:
     return f"    - {seg['speaker']} {verb}{tail}: \"{text}\""
 
 
-def render_system(user_name: str, agent_label: str, ctx: dict | None) -> str:
-    parts = [BASE_SYSTEM.format(name=user_name, label=agent_label)]
+def render_documents(documents: list[dict] | None) -> str:
+    """The conversation's attached files as the agent reads them, oldest first."""
+    if not documents:
+        return ""
+    parts = ["# Tài liệu người dùng đính kèm vào hội thoại này"]
+    for doc in documents:
+        tail = (f"\n\n(Tài liệu dài {doc['charCount']} ký tự, chỉ {len(doc['markdown'])} ký tự đầu được gửi kèm.)"
+                if doc.get("truncated") else "")
+        parts.append(f"## {doc['fileName']}\n\n{doc['markdown']}{tail}")
+    return "\n\n".join(parts)
+
+
+def render_system_blocks(user_name: str, agent_label: str, ctx: dict | None, *,
+                         documents: list[dict] | None = None) -> list[str]:
+    """The system prompt in blocks, the most stable first, so the provider can reuse a cached prefix:
+    instructions and team state, then attached files, then the timeline, which changes with every message."""
+    base = BASE_SYSTEM.format(name=user_name, label=agent_label)
+    docs = render_documents(documents)
     if not ctx:
-        return parts[0]
+        return [x for x in (base, docs) if x]
+    parts = [base]
     name = ctx.get("myName") or user_name
     ws = ctx["workspace"]
     parts.append(f"# Ngữ cảnh nhóm: workspace chung \"{ws['name']}\"\n\n## Đề bài\n{ws['brief'] or '(chưa có)'}")
@@ -315,9 +332,9 @@ def render_system(user_name: str, agent_label: str, ctx: dict | None) -> str:
 
     parts.append(ideas("Ý nhóm đã chốt", ctx["decided"]))
     parts.append(ideas("Ý nhóm đã loại. Đừng đề xuất lại các ý này", ctx["rejected"]))
-
-    if ctx.get("ownMessagesOmitted"):
-        parts.append(f"({ctx['ownMessagesOmitted']} tin cũ hơn của {name} không được gửi kèm.)")
+    parts.append("Khi trả lời, nói rõ bạn dựa vào ý của ai (ví dụ \"Long nói…\"). Highlight chỉ là đánh dấu của "
+                 f"{name}, chưa phải quyết định của nhóm. Đoạn ghi \"trích một phần\" đã bị cắt giữa câu: đừng suy ra ý "
+                 "của người nói từ phần bị cắt. Bản tóm tắt là lời thuật lại: đừng coi đó là lập trường của riêng ai.")
 
     rows = []
     for it in ctx["timeline"]:
@@ -335,10 +352,13 @@ def render_system(user_name: str, agent_label: str, ctx: dict | None) -> str:
             segs = [render_segment(seg) for seg in it["segments"]]
             note = [f"    - Ghi chú của {name}: {it['note']}"] if it.get("note") else []
             rows.append("\n".join([head, *segs, *note]))
-    parts.append(f"## Dòng thời gian: tin của {name} và các đoạn {name} đã highlight từ người khác\n"
-                 + ("\n".join(rows) or "(chưa có)"))
+    timeline = [f"## Dòng thời gian: tin của {name} và các đoạn {name} đã highlight từ người khác\n"
+                + ("\n".join(rows) or "(chưa có)")]
+    if ctx.get("ownMessagesOmitted"):
+        timeline.append(f"({ctx['ownMessagesOmitted']} tin cũ hơn của {name} không được gửi kèm.)")
+    return [x for x in ("\n\n".join(parts), docs, "\n\n".join(timeline)) if x]
 
-    parts.append("Khi trả lời, nói rõ bạn dựa vào ý của ai (ví dụ \"Long nói…\"). Highlight chỉ là đánh dấu của "
-                 f"{name}, chưa phải quyết định của nhóm. Đoạn ghi \"trích một phần\" đã bị cắt giữa câu: đừng suy ra ý "
-                 "của người nói từ phần bị cắt. Bản tóm tắt là lời thuật lại: đừng coi đó là lập trường của riêng ai.")
-    return "\n\n".join(parts)
+
+def render_system(user_name: str, agent_label: str, ctx: dict | None, *, documents: list[dict] | None = None) -> str:
+    """The whole system prompt as one text, as shown in the "Agent đang đọc" panel."""
+    return "\n\n".join(render_system_blocks(user_name, agent_label, ctx, documents=documents))

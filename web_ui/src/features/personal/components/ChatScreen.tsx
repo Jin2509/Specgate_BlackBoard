@@ -1,9 +1,9 @@
 "use client";
 // Chats privately with the user's agent: streamed Markdown answers with stop and regenerate, and selection to highlight.
-import { LoaderCircle, SendHorizontal, Square } from "lucide-react";
+import { LoaderCircle, Paperclip, SendHorizontal, Square } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
@@ -12,7 +12,7 @@ import { useOnline } from "@/hooks/use-online";
 import { toApiPath } from "@/lib/api/api-base-path";
 import { toApiError } from "@/lib/api/http-client";
 import { format, t } from "@/lib/i18n";
-import type { Turn } from "@/types/conversation";
+import type { ConversationDocument, Turn } from "@/types/conversation";
 import { cn } from "@/utils/cn";
 import { toContentWidthClassName } from "@/utils/content-width";
 import { toClock } from "@/utils/date-format";
@@ -20,8 +20,10 @@ import { toClock } from "@/utils/date-format";
 import { ChatEmptyState } from "./ChatEmptyState";
 import { ChatSelectionBar, type SelectionTip } from "./ChatSelectionBar";
 import { ChatTurnRow } from "./ChatTurnRow";
+import { DocumentChips } from "./DocumentChips";
 import { NewChatContextSelect } from "./NewChatContextSelect";
 import { createConversation, type HighlightDisposal } from "../api/conversation-actions";
+import { uploadDocument } from "../api/document-upload";
 import { createPrivateHighlight } from "../api/private-highlight-actions";
 import { usePaintHighlights, type PaintMark } from "../hooks/use-paint-highlights";
 import { readServerSentEvents } from "../utils/read-server-sent-events";
@@ -34,6 +36,7 @@ const TIP_HALF_WIDTH_PX = 150;
 const TIP_MAX_RIGHT_PX = 320;
 const TIP_MIN_LEFT_PX = 8;
 const STOPPED_TURN_PREFIX = "stopped-";
+const DOCUMENT_ACCEPT = ".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
 function isAbortError(error: unknown): boolean {
   return error instanceof DOMException && error.name === "AbortError";
@@ -51,6 +54,7 @@ export function ChatScreen({
   linkName,
   linkOptions = [],
   marks = [],
+  documents = [],
 }: {
   /** Path of the personal workspace, to open a new conversation or the key page. */
   home: string;
@@ -64,11 +68,16 @@ export function ChatScreen({
   linkOptions?: WorkspaceOption[];
   /** The conversation's private highlights, painted over the text. */
   marks?: PaintMark[];
+  /** Files attached to the conversation; the agent reads their text with every question. */
+  documents?: ConversationDocument[];
 }) {
   const router = useRouter();
   const isOnline = useOnline();
   const scrollRef = useRef<HTMLDivElement>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  // A new conversation created to hold a file whose upload failed; the next question or file reuses it.
+  const createdConversationId = useRef<string | null>(null);
   const stoppedTurnCount = useRef(0);
   // Turns streamed in this session; after a refresh the server returns the same ids, so duplicates are dropped.
   const [localTurns, setLocalTurns] = useState<Turn[]>([]);
@@ -86,6 +95,7 @@ export function ChatScreen({
   const [newLinkId, setNewLinkId] = useState("");
   const [turnToRegenerate, setTurnToRegenerate] = useState<Turn | null>(null);
   const [localMarks, setLocalMarks] = useState<PaintMark[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const allMarks = useMemo(() => [...marks, ...localMarks], [marks, localMarks]);
   usePaintHighlights(scrollRef, allMarks, `${turns.length}:${streamedText === null}`);
 
@@ -95,7 +105,7 @@ export function ChatScreen({
   }, [turns.length, isPending, streamedText]);
 
   const lastAnswer = [...turns].reverse().find((turn) => turn.role === "assistant");
-  const isBusy = isPending || !isOnline;
+  const isBusy = isPending || isUploading || !isOnline;
 
   function fail(message: string, text?: string) {
     setError(message);
@@ -173,14 +183,34 @@ export function ChatScreen({
     setError(null);
     setAskedText(text);
     setQuestion("");
-    let targetId = conversationId;
-    if (!targetId) {
-      const created = await createConversation(newLinkId || undefined);
-      if (!created.ok) return fail(created.error, text);
-      targetId = created.value.id;
-    }
+    const targetId = await ensureConversation();
+    if (!targetId) return fail(t.personal.conversationCreateFailed, text);
     const response = await openAnswerStream(`/conversations/${encodeURIComponent(targetId)}/turns`, { text });
     if (response) await readAnswerStream(response, targetId, !conversationId);
+  }
+
+  /** The open conversation, or a new one with the team context picked for it; null when it cannot be created. */
+  async function ensureConversation(): Promise<string | null> {
+    if (conversationId) return conversationId;
+    if (createdConversationId.current) return createdConversationId.current;
+    const created = await createConversation(newLinkId || undefined);
+    if (!created.ok) return null;
+    createdConversationId.current = created.value.id;
+    return created.value.id;
+  }
+
+  async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    setError(null);
+    setIsUploading(true);
+    const targetId = await ensureConversation();
+    const message = targetId ? await uploadDocument(targetId, file) : t.personal.conversationCreateFailed;
+    setIsUploading(false);
+    if (message) return setError(message);
+    if (!conversationId && targetId) return router.push(`${home}/${targetId}`);
+    router.refresh();
   }
 
   async function regenerate(turn: Turn, highlights: HighlightDisposal) {
@@ -248,6 +278,7 @@ export function ChatScreen({
 
   function toHintText(): string {
     if (!isOnline) return t.personal.offline;
+    if (isUploading) return t.personal.readingDocument;
     return linkName ? format(t.personal.linkedHint, { name: linkName }) : t.personal.defaultHint;
   }
 
@@ -320,6 +351,7 @@ export function ChatScreen({
           data-conversation-id={conversationId ?? ""}
           className="rounded-lg border border-border bg-composer focus-within:border-subtle"
         >
+          {conversationId ? <DocumentChips conversationId={conversationId} documents={documents} onError={setError} /> : null}
           <label htmlFor="ask" className="sr-only">
             {t.personal.questionLabel}
           </label>
@@ -334,6 +366,25 @@ export function ChatScreen({
             className="block max-h-48 min-h-14 w-full resize-none bg-transparent px-3 pt-3 text-[15px] leading-relaxed text-foreground outline-none placeholder:text-subtle"
           />
           <div className="flex items-center gap-2 px-2 pb-2">
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={DOCUMENT_ACCEPT}
+              onChange={(event) => void handleFileChange(event)}
+              className="sr-only"
+              tabIndex={-1}
+              aria-hidden
+            />
+            <button
+              type="button"
+              aria-label={t.personal.attachDocument}
+              title={t.personal.attachDocument}
+              disabled={isBusy}
+              onClick={() => fileInputRef.current?.click()}
+              className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-subtle hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:opacity-35"
+            >
+              {isUploading ? <LoaderCircle className="size-4 animate-spin" /> : <Paperclip className="size-4" />}
+            </button>
             {!conversationId && linkOptions.length > 0 ? (
               <NewChatContextSelect value={newLinkId} onChange={setNewLinkId} options={linkOptions} />
             ) : null}

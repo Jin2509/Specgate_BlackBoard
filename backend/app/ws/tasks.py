@@ -20,7 +20,7 @@ BODY_MAX_LENGTH = 200
 MAX_DEPTH = 3
 STATUSES = ("doing", "done")
 GENERAL_CHANNEL = "chung"
-LOCKED_TEXT = "Bảng phân công đang khóa. Chủ workspace mở khóa thì mới thêm, sửa, giao hay nhận việc được."
+LOCKED_TEXT = "Bảng phân công đang khóa. Chờ chủ workspace mở khóa."
 
 
 def label(number: int) -> str:

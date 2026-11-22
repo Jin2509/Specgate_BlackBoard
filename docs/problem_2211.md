@@ -138,3 +138,11 @@ Mỗi phần là một thay đổi riêng, có test, chuỗi i18n và cập nh�
 2. Rút gọn thông báo (vấn đề 2, bước 1).
 3. Import PDF/Word và xuất Markdown (vấn đề 3).
 4. Tùy chọn, sau khi có số liệu: lỗi dịch theo `code` (vấn đề 2, bước 2), và agent tự lấy ngữ cảnh (vấn đề 1, phương án B).
+
+---
+
+## 5. Trạng thái (23/11)
+
+- Đã làm: vấn đề 1 phương án A, vấn đề 2 bước 1 (38 chuỗi giao diện, lỗi nhà cung cấp và một số lỗi backend dài), vấn đề 3 phần import. Ghi vào SRS 0.5: FR-127 – FR-132, BR-40, BR-41, NFR-17.
+- Chưa làm: xuất file và lựa chọn định dạng (mục 3.3, chờ quyết định), lỗi dịch theo `code` (vấn đề 2 bước 2), agent tự lấy ngữ cảnh (vấn đề 1 phương án B).
+

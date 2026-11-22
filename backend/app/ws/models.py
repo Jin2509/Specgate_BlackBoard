@@ -176,7 +176,29 @@ class Turn(Base):
     active: Mapped[bool] = mapped_column(Boolean, default=True)
     # The shared workspace whose context the agent read when it wrote this answer (flow §6, warning on send).
     context_workspace_id: Mapped[str | None] = mapped_column(String, nullable=True)
+    # Token counts the provider reported for this answer; cached_input_tokens is the part read from its prompt cache.
+    input_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    cached_input_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    cache_write_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    output_tokens: Mapped[int | None] = mapped_column(Integer, nullable=True)
     at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
+
+
+class ConversationDocument(Base):
+    """A PDF or Word file attached to a conversation. Only its text, as Markdown, is kept; the file is not."""
+
+    __tablename__ = "ws_conversation_documents"
+
+    id: Mapped[str] = mapped_column(String, primary_key=True, default=lambda: new_id("d"))
+    conversation_id: Mapped[str] = mapped_column(ForeignKey("ws_conversations.id", ondelete="CASCADE"), index=True)
+    owner_id: Mapped[str] = mapped_column(ForeignKey("ws_users.id"))
+    file_name: Mapped[str] = mapped_column(String(200))
+    media_type: Mapped[str] = mapped_column(String(100))
+    size_bytes: Mapped[int] = mapped_column(Integer)
+    # The text sent to the agent, cut at DOCUMENT_CHARS_MAX; char_count is the length before the cut.
+    markdown: Mapped[str] = mapped_column(Text)
+    char_count: Mapped[int] = mapped_column(Integer)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now)
 
 
 class Message(Base):

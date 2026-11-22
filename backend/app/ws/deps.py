@@ -70,6 +70,14 @@ def require_owner(s: Session, workspace_id: str, user: m.User, action: str = "th
     return ws
 
 
+def owned_conversation(s: Session, conversation_id: str, user: m.User) -> m.Conversation:
+    """NFR-04: another user's conversation answers 404, as if it did not exist."""
+    conv = s.get(m.Conversation, conversation_id)
+    if not conv or conv.owner_id != user.id:
+        raise not_found("Không tìm thấy hội thoại.")
+    return conv
+
+
 def channel_of(s: Session, ws: m.Workspace, channel_id: str) -> m.Channel:
     """Accepts the channel id or its name (the UI's URLs use /c/chung)."""
     ch = s.get(m.Channel, channel_id)

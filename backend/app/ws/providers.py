@@ -23,6 +23,8 @@ FAKE_MODELS = {
     "anthropic": ["claude-sonnet-5-5", "claude-haiku-5-5", "claude-opus-5-5"],
     "openai-compatible": ["gpt-6-luna", "qwen-3.8-max", "deepseek-v4"],
 }
+# Rough size of one token, for the fake agent's usage counts.
+FAKE_CHARS_PER_TOKEN = 4
 # Gemini's OpenAI-style /models prefixes ids with "models/"; its chat endpoint takes the bare id too.
 GEMINI_MODEL_PREFIX = "models/"
 # Listed by /models but unable to answer a chat turn; offering them only leads to provider errors.
@@ -39,14 +41,14 @@ class ProviderError(Exception):
 
 
 MESSAGES = {
-    "invalid-key": "Nhà cung cấp từ chối key này. Kiểm tra lại key, hoặc tạo key mới ở trang dành cho nhà phát triển.",
-    "quota": "Key hợp lệ nhưng đã hết hạn mức hoặc vượt giới hạn tốc độ. Nạp thêm tiền ở nhà cung cấp, chờ một lúc hoặc dùng key khác.",
-    "network": "Không kết nối được nhà cung cấp mô hình. Kiểm tra địa chỉ API và mạng rồi thử lại.",
-    "timeout": "Nhà cung cấp mô hình không trả lời kịp. Thử lại sau.",
-    "model": "Nhà cung cấp không có mô hình này, hoặc key không được dùng mô hình này.",
-    "context": "Hội thoại quá dài so với giới hạn ngữ cảnh của mô hình. Hãy tạo hội thoại mới.",
+    "invalid-key": "Nhà cung cấp từ chối key này. Kiểm tra lại key.",
+    "quota": "Key đã hết hạn mức hoặc bị giới hạn tốc độ. Thử lại sau hoặc dùng key khác.",
+    "network": "Không kết nối được nhà cung cấp. Kiểm tra địa chỉ API và mạng.",
+    "timeout": "Nhà cung cấp không trả lời kịp. Thử lại sau.",
+    "model": "Key này không dùng được mô hình đã chọn.",
+    "context": "Hội thoại hoặc file đính kèm quá dài với mô hình này. Bỏ bớt file hoặc tạo hội thoại mới.",
     "bad-url": "Địa chỉ API không hợp lệ. Dùng dạng https://…/v1.",
-    "provider": "Nhà cung cấp mô hình đang gặp lỗi. Thử lại sau.",
+    "provider": "Nhà cung cấp đang lỗi. Thử lại sau.",
 }
 
 
@@ -59,6 +61,21 @@ class Target:
     provider: str
     api_key: str
     base_url: str | None = None
+
+
+@dataclass
+class Usage:
+    """Token counts the provider reports for one call; filled in place while the answer streams."""
+
+    input_tokens: int | None = None
+    cached_input_tokens: int | None = None
+    cache_write_tokens: int | None = None
+    output_tokens: int | None = None
+
+
+# Anthropic caches the prompt up to each marked block; one request takes at most four marks.
+CACHE_MARK = {"type": "ephemeral"}
+CACHE_MARKS_MAX = 4
 
 
 def normalize_base_url(provider: str, base_url: str | None) -> str | None:
@@ -157,20 +174,57 @@ def _fake_answer(model: str, system: str, messages: list[dict]) -> str:
     if "# Ngữ cảnh nhóm" in system:
         n_hl = system.count("\n- [")
         parts.append(f"Mình đã đọc ngữ cảnh nhóm ({n_hl} mục có người nói).")
+    if "# Tài liệu người dùng đính kèm" in system:
+        parts.append("Mình đã đọc tài liệu đính kèm.")
     first = question.strip().split("\n")[0][:80]
     parts.append(f'Về "{first}": đây là câu trả lời của agent giả ({model}), dùng cho dev và kiểm thử.')
     return "\n\n".join(parts)
 
 
-async def stream_chat(t: Target, model: str, system: str, messages: list[dict]) -> AsyncIterator[str]:
-    """Yields text deltas as the provider sends them (FR-17, NFR-06). Raises ProviderError."""
+def anthropic_body(model: str, system: list[str], messages: list[dict]) -> dict:
+    """Mark the end of every system block and of the conversation so a repeated prefix is read from the cache."""
+    texts = [text for text in system if text]
+    # The conversation takes the last mark; the system blocks share the rest, the later ones first.
+    first_marked = max(0, len(texts) - (CACHE_MARKS_MAX - 1))
+    blocks = [{"type": "text", "text": text, **({"cache_control": CACHE_MARK} if i >= first_marked else {})}
+              for i, text in enumerate(texts)]
+    marked = [dict(x) for x in messages]
+    if marked:
+        marked[-1]["content"] = [{"type": "text", "text": marked[-1]["content"], "cache_control": CACHE_MARK}]
+    return {"model": model, "max_tokens": settings.llm_max_tokens, "system": blocks, "messages": marked,
+            "stream": True}
+
+
+def openai_body(model: str, system: list[str], messages: list[dict]) -> dict:
+    """OpenAI-style providers cache a repeated prefix on their own; the system blocks keep their order."""
+    return {"model": model, "stream": True, "stream_options": {"include_usage": True},
+            "messages": [{"role": "system", "content": "\n\n".join(x for x in system if x)}, *messages]}
+
+
+def _fake_usage(system: list[str], messages: list[dict], answer: str, usage: Usage | None) -> None:
+    if usage is None:
+        return
+    prompt = "".join(system) + "".join(x["content"] for x in messages)
+    usage.input_tokens = len(prompt) // FAKE_CHARS_PER_TOKEN
+    usage.cached_input_tokens = 0
+    usage.output_tokens = len(answer) // FAKE_CHARS_PER_TOKEN
+
+
+async def stream_chat(t: Target, model: str, system: str | list[str], messages: list[dict], *,
+                      usage: Usage | None = None) -> AsyncIterator[str]:
+    """Yields text deltas as the provider sends them (FR-17, NFR-06). Raises ProviderError.
+
+    `system` is one prompt or its blocks, most stable first; `usage` receives the token counts."""
+    blocks = [system] if isinstance(system, str) else list(system)
     if settings.llm_fake:
         _fake_check(t.api_key)
         if messages and messages[-1]["content"].endswith("[fake-error]"):
             raise fail("quota")
-        for word in _fake_answer(model, system, messages).split(" "):
+        answer = _fake_answer(model, "\n\n".join(blocks), messages)
+        for word in answer.split(" "):
             await asyncio.sleep(0)
             yield word + " "
+        _fake_usage(blocks, messages, answer, usage)
         return
     try:
         async with httpx.AsyncClient(timeout=settings.llm_timeout_s) as client:
@@ -178,15 +232,13 @@ async def stream_chat(t: Target, model: str, system: str, messages: list[dict]) 
                 req = client.build_request(
                     "POST", f"{settings.anthropic_base_url.rstrip('/')}/v1/messages",
                     headers={"x-api-key": t.api_key, "anthropic-version": "2023-06-01"},
-                    json={"model": model, "max_tokens": settings.llm_max_tokens, "system": system,
-                          "messages": messages, "stream": True},
+                    json=anthropic_body(model, blocks, messages),
                 )
             else:
                 req = client.build_request(
                     "POST", f"{t.base_url}/chat/completions",
                     headers={"Authorization": f"Bearer {t.api_key}"},
-                    json={"model": model, "stream": True,
-                          "messages": [{"role": "system", "content": system}, *messages]},
+                    json=openai_body(model, blocks, messages),
                 )
             r = await client.send(req, stream=True)
             try:
@@ -203,6 +255,8 @@ async def stream_chat(t: Target, model: str, system: str, messages: list[dict]) 
                         event = json.loads(data)
                     except json.JSONDecodeError:
                         continue
+                    if usage is not None:
+                        read_usage(t.provider, event, usage)
                     delta = _delta(t.provider, event)
                     if delta:
                         yield delta
@@ -214,6 +268,28 @@ async def stream_chat(t: Target, model: str, system: str, messages: list[dict]) 
         raise fail("timeout") from None
     except httpx.HTTPError:
         raise fail("network") from None
+
+
+def read_usage(provider: str, event: dict, usage: Usage) -> None:
+    """Copy the token counts out of a stream event, if it carries any."""
+    if provider == "anthropic":
+        counts = (event.get("message") or {}).get("usage") if event.get("type") == "message_start" else event.get("usage")
+        if not isinstance(counts, dict):
+            return
+        if counts.get("input_tokens") is not None:
+            usage.input_tokens = (counts.get("input_tokens") or 0) + (counts.get("cache_read_input_tokens") or 0) + (
+                counts.get("cache_creation_input_tokens") or 0)
+            usage.cached_input_tokens = counts.get("cache_read_input_tokens") or 0
+            usage.cache_write_tokens = counts.get("cache_creation_input_tokens") or 0
+        if counts.get("output_tokens") is not None:
+            usage.output_tokens = counts["output_tokens"]
+        return
+    counts = event.get("usage")
+    if not isinstance(counts, dict):
+        return
+    usage.input_tokens = counts.get("prompt_tokens")
+    usage.output_tokens = counts.get("completion_tokens")
+    usage.cached_input_tokens = (counts.get("prompt_tokens_details") or {}).get("cached_tokens") or 0
 
 
 def _delta(provider: str, event: dict) -> str:
@@ -230,5 +306,6 @@ def _delta(provider: str, event: dict) -> str:
         return ""
 
 
-async def complete(t: Target, model: str, system: str, messages: list[dict]) -> str:
-    return "".join([chunk async for chunk in stream_chat(t, model, system, messages)]).strip()
+async def complete(t: Target, model: str, system: str | list[str], messages: list[dict], *,
+                   usage: Usage | None = None) -> str:
+    return "".join([chunk async for chunk in stream_chat(t, model, system, messages, usage=usage)]).strip()

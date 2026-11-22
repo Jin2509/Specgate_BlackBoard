@@ -74,6 +74,7 @@ async function ConversationPageContent({ params }: PageProps<"/w/[workspaceId]/c
           model={me.key.model}
           linkName={linkName}
           marks={conversation.highlights}
+          documents={conversation.documents}
         />
       </PageLayout>
       {context ? (

@@ -297,15 +297,13 @@ def add_highlight(ws_id: str, channel_id: str, body: NewHighlight, user: m.User 
         source, who = _source(s, msg, seg.part, seg.turn)
         if not sv.same_words(text, source):
             who_name = who.get("speaker") or sv.segment_speaker(s, ws.id, who)
-            raise ApiError(400, f"Không được sửa chữ của {who_name} trong highlight: chỉ thu hẹp hoặc bỏ bớt đoạn "
-                                f"(đoạn \"{text[:40]}\").", "TEXT_CHANGED")
+            raise ApiError(400, f"Không sửa được chữ của {who_name}, chỉ cắt bớt ở hai đầu.", "TEXT_CHANGED")
         # flow §10: "…" where the passage was cut, "trích một phần" when cut mid-sentence; the words stay verbatim.
         kept.append({"messageId": msg.id, "channelId": ch.id, "part": seg.part, "turn": seg.turn, "text": text,
                      "at": sv.iso(msg.at), **who, **sv.excerpt(source, text)})
         first_msg = first_msg or msg
     if not kept:
-        raise ApiError(400, "Tin của bạn và thẻ bạn đã gửi đã tự vào ngữ cảnh agent của bạn, không cần highlight.",
-                       "OWN_MESSAGE")
+        raise ApiError(400, "Agent đã tự đọc tin của bạn, không cần highlight.", "OWN_MESSAGE")
     head = kept[0]
     h = m.Highlight(owner_id=user.id, workspace_id=ws.id, channel_id=ch.id, message_id=head["messageId"],
                     author_kind="agent" if head["authorKind"] == "agent" else "human", author_user_id=head["authorUserId"],
