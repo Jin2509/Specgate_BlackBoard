@@ -104,14 +104,24 @@ Gõ tên một người bằng dấu @ không phải là lệnh. Nhắc tên m�
 
 Muốn dùng SpecGate thì bắt buộc phải có tài khoản. Không có chế độ khách. Không có đường dẫn nào cho người lạ vào thẳng một workspace.
 
-Tài khoản chỉ được tạo bằng Google hoặc GitHub, không có mật khẩu riêng. Trang đăng nhập chỉ có một nút cho mỗi cách: "Tiếp tục với Google" và "Tiếp tục với GitHub".
+Tài khoản được tạo bằng Google, GitHub hoặc email, không có mật khẩu riêng. Trang đăng nhập có hai thẻ, "Đăng nhập" và "Tạo tài khoản". Thẻ nào cũng có ba cách: nút "Tiếp tục với Google", nút "Tiếp tục với GitHub" (ở thẻ Tạo tài khoản là "Đăng ký với Google", "Đăng ký với GitHub"), và bên dưới chữ "hoặc" là ô nhập email để nhận mã một lần.
 
-- Nếu đây là lần đầu bạn dùng tài khoản Google hoặc GitHub đó, hệ thống tạo tài khoản SpecGate cho bạn, kèm workspace riêng. Sau đó hệ thống đưa bạn tới màn nhập API key, kèm lời chào.
-- Nếu bạn đã có tài khoản, hệ thống đăng nhập luôn và đưa bạn tới Trang chủ (mục 2). Mỗi tài khoản Google hoặc GitHub chỉ ứng với một tài khoản SpecGate, không bao giờ tạo trùng.
+- Nếu đây là lần đầu bạn dùng tài khoản Google, GitHub hay địa chỉ email đó, hệ thống tạo tài khoản SpecGate cho bạn, kèm workspace riêng. Sau đó hệ thống đưa bạn tới màn nhập API key, kèm lời chào.
+- Nếu bạn đã có tài khoản, hệ thống đăng nhập luôn và đưa bạn tới Trang chủ (mục 2). Mỗi tài khoản Google, GitHub hay mỗi địa chỉ email chỉ ứng với một tài khoản SpecGate, không bao giờ tạo trùng. Ba cách là ba danh tính riêng: đăng nhập bằng email trùng với email Google không gộp vào tài khoản Google đó.
+
+**Đăng nhập bằng mã gửi qua email.** Bạn nhập email và bấm "Gửi mã đăng nhập". Hệ thống gửi tới email đó một mã 6 chữ số, dùng được một lần trong 10 phút. Bạn nhập mã và bấm "Xác nhận và đăng nhập". Nếu email đã có tài khoản, bạn vào luôn. Nếu email chưa có tài khoản, hệ thống hỏi thêm tên hiển thị (tối đa 40 ký tự) rồi mới tạo tài khoản; mã vẫn còn dùng được trong lúc bạn nhập tên.
+
+- Câu trả lời khi gửi mã giống nhau dù email đã có tài khoản hay chưa, để người lạ không dò được ai đã đăng ký.
+- Bấm "Gửi lại mã" thì có mã mới và mã cũ hết hiệu lực. Phải chờ 60 giây giữa hai lần gửi, và mỗi email nhận tối đa 5 mã trong một giờ.
+- Nhập sai mã 5 lần thì mã đó hết hiệu lực, phải gửi mã mới. Mã sai và mã hết hạn đều báo cùng một câu.
+- Bấm "Đổi email" để quay lại nhập địa chỉ khác.
+- Nếu máy chủ chưa cấu hình gửi email, ô nhập email không hiện, và trang chỉ còn Google, GitHub.
+
+**Tạo tài khoản mới trên màn giả lập.** Ở bản chạy thử, khi máy chủ chưa nối với Google hoặc GitHub thật, bấm nút Google hay GitHub sẽ mở một màn giả lập trang của nhà cung cấp. Màn này cho chọn một tài khoản đã đăng ký để đăng nhập, hoặc tạo tài khoản mới. Tạo tài khoản mới ở đây bắt buộc xác thực email: với Google, email chính là tên đăng nhập; với GitHub, bạn nhập thêm một email để nhận mã. Bạn nhập tên hiển thị, bấm "Gửi mã xác thực tới email", rồi nhập mã và bấm "Xác nhận mã và tạo tài khoản". Khi máy chủ đã nối với Google, GitHub thật, bước này là trang thật của nhà cung cấp và không cần mã email.
 
 Đăng nhập xong, hệ thống không tự đưa bạn vào một workspace chung nào. Ngoại lệ duy nhất: nếu bạn bấm vào một đường dẫn cụ thể khi chưa đăng nhập, ví dụ đường dẫn tới một kênh mà bạn bè gửi, thì đăng nhập xong bạn được đưa tới đúng trang đó.
 
-Nếu bạn bấm hủy ở trang của Google hoặc GitHub, bạn quay về trang đăng nhập và hệ thống không tạo gì.
+Nếu bạn bấm hủy ở trang của Google hoặc GitHub, bạn quay về trang đăng nhập với lời báo "Bạn đã hủy đăng nhập ở nhà cung cấp", và hệ thống không tạo gì.
 
 Hệ thống nhớ đăng nhập trên trình duyệt trong 30 ngày, giống như Messenger. Mỗi lần bạn quay lại, thời gian này được tính lại từ đầu. Bạn đăng xuất được bất cứ lúc nào từ khung thông tin người dùng.
 
@@ -141,9 +151,9 @@ Các dấu báo tự cập nhật, không cần tải lại trang. Khi bạn m�
 
 Để chat với agent, bạn cần nhập API key của một nhà cung cấp AI. Mọi lần agent của bạn trả lời đều chạy bằng key của bạn, và chi phí tính vào key đó.
 
-1. Bạn chọn nhà cung cấp: Anthropic (Claude), hoặc một dịch vụ theo kiểu OpenAI như OpenAI, DeepSeek, OpenRouter, Groq, Ollama. Với loại thứ hai, bạn nhập thêm địa chỉ của dịch vụ.
+1. Bạn chọn nhà cung cấp: Anthropic (Claude), hoặc một dịch vụ theo kiểu OpenAI như OpenAI, Google Gemini, DeepSeek, OpenRouter, Groq, Ollama. Với loại thứ hai, bạn nhập thêm địa chỉ API của dịch vụ; ô địa chỉ gợi ý sẵn địa chỉ của OpenAI, Google Gemini, OpenRouter, DeepSeek và Groq để chọn nhanh.
 2. Bạn dán key. Hệ thống kiểm tra key ngay với nhà cung cấp.
-3. Nếu key dùng được, hệ thống hiện danh sách mô hình của key đó. Bạn chọn một mô hình. Mô hình này chính là agent riêng của bạn.
+3. Nếu key dùng được, hệ thống hiện danh sách mô hình của key đó. Danh sách chỉ giữ các mô hình chat được; mô hình chỉ dùng để tạo ảnh, đọc giọng nói, chuyển giọng nói thành chữ hay tạo vector thì bị lọc bỏ, vì chọn chúng thì agent không trả lời được. Bạn chọn một mô hình. Mô hình này chính là agent riêng của bạn.
 4. Sau này bạn đổi mô hình, thay key khác, hoặc xóa key ở cùng màn hình này.
 
 Nếu key sai, key đã hết tiền, hoặc không kết nối được tới nhà cung cấp, hệ thống báo lỗi bằng một câu tiếng Việt dễ hiểu và không lưu key.
@@ -540,7 +550,7 @@ Chủ workspace có thêm các quyền: sửa đề bài, đổi tên và chế 
 SpecGate là website chạy trên máy chủ, nên cần kết nối Internet mới dùng được. Wifi, mạng dây hay 4G đều được, miễn là có Internet. Có ba lý do:
 
 - Dữ liệu của mọi người (tài khoản, hội thoại, kênh, bảng ý tưởng) nằm trên máy chủ, không nằm trên máy của từng người.
-- Đăng nhập đi qua Google hoặc GitHub, nên phải kết nối được tới họ.
+- Đăng nhập đi qua Google, GitHub, hoặc qua mã gửi tới email, nên máy chủ phải kết nối được tới nhà cung cấp hoặc máy chủ gửi thư.
 - Agent chạy ở máy chủ của nhà cung cấp AI (Anthropic, DeepSeek, OpenAI…). Mỗi câu trả lời đều cần máy chủ SpecGate kết nối được tới nhà cung cấp.
 
 Website không có chế độ ngoại tuyến. Khi mất mạng, website xử lý như sau để người dùng không mất công sức:
@@ -550,7 +560,7 @@ Website không có chế độ ngoại tuyến. Khi mất mạng, website xử l
 - Website tự kết nối lại khi có mạng. Kênh chat tự hiện bù những tin đã lỡ trong lúc mất mạng.
 - Nếu mất mạng khi agent đang trả lời, phần câu trả lời đã viết được giữ lại trong hội thoại. Người dùng bấm "Tạo lại" nếu muốn có câu trả lời đầy đủ.
 
-Có một ngoại lệ dành cho người phát triển: có thể cài cả SpecGate lẫn một mô hình AI chạy trên máy (ví dụ Ollama) trong cùng một mạng nội bộ. Khi đó việc chat với agent không cần Internet. Tuy vậy, đăng nhập bằng Google hoặc GitHub vẫn cần Internet, nên với người dùng bình thường, website vẫn phải có mạng.
+Có một ngoại lệ dành cho người phát triển: có thể cài cả SpecGate lẫn một mô hình AI chạy trên máy (ví dụ Ollama) trong cùng một mạng nội bộ. Khi đó việc chat với agent không cần Internet. Tuy vậy, đăng nhập bằng Google, GitHub hay mã email vẫn cần Internet, nên với người dùng bình thường, website vẫn phải có mạng.
 
 ---
 
@@ -583,7 +593,6 @@ Trong cả vòng làm việc này, không ai phải copy và dán lần nào.
 
 ## Những việc để làm sau
 
-- Cách thứ hai gửi vào kênh: bản tóm tắt hội thoại (mục 6), nếu không đủ thời gian làm trong đợt này.
 - Lệnh "/check" do chủ chủ động gọi: agent của chủ đối chiếu các ý mới với bảng ý tưởng và chỉ ra những chỗ đáng chú ý, ví dụ "ý 12 giống ý 4 đã bị loại vì…" hoặc "ý 9 mâu thuẫn với ý 3 đã chốt". Lệnh này không tự chốt, không tự loại, và không tự chạy khi chưa được gọi.
 - Mời thành viên qua email hoặc GitHub.
 - Dùng gói thuê bao qua kết nối từ ứng dụng của nhà cung cấp, như đã nói ở phần trên.
@@ -596,7 +605,7 @@ Trong cả vòng làm việc này, không ai phải copy và dán lần nào.
 2. Giữ lệnh "/summarize", hay bỏ và chỉ dùng "/brief"?
 3. Chủ workspace đã là người chuyển ý sang Đang bàn. Vậy việc chốt và loại có nên cũng chỉ chủ làm, cho trách nhiệm rõ ràng, hay để mọi thành viên làm được miễn là ghi tên và lý do?
 4. Khi một người rời workspace, bị chủ xóa khỏi workspace, hoặc khi workspace bị xóa, thì highlight và các hội thoại có ngữ cảnh nhóm của người đó xử lý thế nào? (Phần tên hiển thị của người đã rời đã chốt ở mục 13.)
-5. Cách thứ hai gửi vào kênh (bản tóm tắt hội thoại) làm trong đợt này, hay để sau?
+5. Cách thứ hai gửi vào kênh (bản tóm tắt hội thoại) làm trong đợt này, hay để sau? Website hiện tại đã có nút "Tóm tắt cho nhóm" (mục 6); nhóm chỉ cần xác nhận giữ.
 6. Các con số giới hạn đang đề xuất (200 highlight riêng mỗi người, 30 highlight cho agent mỗi workspace, 10 workspace làm chủ, và 50 tin của mình trong ngữ cảnh) có hợp lý không?
 7. Danh sách màu của highlight riêng gồm những màu nào, và bao nhiêu màu là đủ?
 8. Hội thoại mới có tự chọn sẵn ngữ cảnh nhóm (ví dụ workspace chung dùng gần nhất), hay người dùng phải tự chọn ô Ngữ cảnh nhóm?

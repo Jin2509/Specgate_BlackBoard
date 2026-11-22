@@ -13,7 +13,7 @@ if (Phiên còn hạn?) then (còn)
 else (không)
 endif
 :(1) Ghi nhớ trang định mở,\nchuyển về trang đăng nhập;
-:(2) Hiện nút "Tiếp tục với Google"\nvà "Tiếp tục với GitHub";
+:(2) Hiện nút "Tiếp tục với Google",\n"Tiếp tục với GitHub" và ô email (phần C);
 |Khách|
 :(3) Bấm một nút;
 |Hệ thống|
@@ -38,6 +38,15 @@ if (Đã cấu hình OAuth?) then (có)
   endif
 else (chưa)
   :[A.A4] Hiện màn giả lập\nchọn hoặc tạo tài khoản;
+  if (Tạo tài khoản mới?) then (có)
+    :[A.A4] Gửi mã xác thực tới email,\nkhách nhập mã 6 số;
+    if (Mã đúng, thông tin hợp lệ?) then (không)
+      :[A.E4] Báo lỗi ở đúng ô,\nkhông tạo tài khoản;
+      stop
+    else (có)
+    endif
+  else (chọn tài khoản có sẵn)
+  endif
 endif
 |Hệ thống|
 :(7) Lưu phiên 30 ngày;

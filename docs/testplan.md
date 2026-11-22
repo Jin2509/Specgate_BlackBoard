@@ -3,11 +3,11 @@
 | Mục | Nội dung |
 | --- | --- |
 | Tài liệu | Test Plan (TP) |
-| Phiên bản | 1.0 |
-| Ngày | 18/11/2026 |
+| Phiên bản | 1.1 |
+| Ngày | 21/11/2026 |
 | Dự án | SpecGate Workspace, website cho nhóm cùng lên ý tưởng với agent AI riêng của từng người |
 | Mẫu áp dụng | Cấu trúc Test Plan của môn Kiểm thử phần mềm (UIT, mẫu FPT Software): Giới thiệu, Yêu cầu kiểm thử, Chiến lược kiểm thử, Nguồn lực, Mốc kiểm thử, Sản phẩm bàn giao |
-| Căn cứ | [`flow.md`](flow.md), [SRS 0.3](SRS.md), mã nguồn `web_ui/` và `backend/` ở nhánh `dev` |
+| Căn cứ | [`flow.md`](flow.md), [SRS 0.4](SRS.md), mã nguồn `web_ui/` và `backend/` ở nhánh `dev` |
 
 ## Mục lục
 
@@ -85,7 +85,7 @@ Function test, User interface test, Data and database integrity test, Business c
 #### 1.4.3. Giả định
 
 - Kiểm thử chạy với agent giả (`LLM_FAKE=true`), để kết quả lặp lại được và không tốn tiền. Agent giả có quy tắc tạo lỗi cố định: key ngắn hơn 20 ký tự là key sai, key kết thúc bằng `0000` là hết hạn mức, câu hỏi kết thúc bằng `[fake-error]` làm nhà cung cấp lỗi giữa chừng.
-- Đăng nhập trong kiểm thử dùng phiên giả lập (`AUTH_DEV_LOGIN=true`, `POST /api/v1/auth/dev-sessions`), không cần tài khoản Google, GitHub thật. Luồng OAuth thật được kiểm một lần bằng tay trên môi trường staging.
+- Đăng nhập trong kiểm thử dùng phiên giả lập (`AUTH_DEV_LOGIN=true`, `POST /api/v1/auth/dev-sessions`), không cần tài khoản Google, GitHub thật. Tài khoản đã có trong dữ liệu mẫu đăng nhập không cần mã; tạo tài khoản mới phải qua mã email, nên kiểm thử thay hàm gửi thư bằng bản giả (`monkeypatch` `mailer.send_login_code`, hoặc máy SMTP giả như MailHog trong kiểm thử đầu-cuối) để đọc mã. Luồng OAuth thật và gửi thư thật qua Gmail được kiểm một lần bằng tay trên môi trường staging.
 - Dữ liệu mẫu nạp bằng `python -m app.ws.seed` (mục 4.2.3).
 - Mỗi lượt kiểm thử tự động dùng CSDL riêng, tạo mới, không dùng chung với CSDL của người phát triển.
 
@@ -103,7 +103,7 @@ Function test, User interface test, Data and database integrity test, Business c
 | Trivial | Sai chữ, lệch giao diện | Sai chính tả, lệch khoảng cách | Khi tiện |
 
 - **Vòng đời lỗi:** Mới → Đã xác nhận → Đang sửa → Đã sửa → Đã kiểm lại (đóng) hoặc Mở lại. Mỗi lỗi đã sửa phải có một test tự động mới để không tái phát (mục 3.1.10).
-- **Số lỗi dự kiến:** khoảng 40 lỗi trong cả đợt, dựa trên 125 yêu cầu chức năng và mật độ khoảng 0,3 lỗi mỗi yêu cầu cho dự án nhỏ; dùng để theo dõi tiến độ phát hiện lỗi ở mục 6.
+- **Số lỗi dự kiến:** khoảng 40 lỗi trong cả đợt, dựa trên 126 yêu cầu chức năng và mật độ khoảng 0,3 lỗi mỗi yêu cầu cho dự án nhỏ; dùng để theo dõi tiến độ phát hiện lỗi ở mục 6.
 
 ### 1.5. Ràng buộc
 
@@ -136,9 +136,9 @@ Mỗi dòng là một mục tiêu kiểm thử. Mã TC sẽ theo dạng `TC-UCxx
 
 | Ca sử dụng | Yêu cầu SRS | Nội dung cần kiểm (theo `flow.md`) | Độ phức tạp |
 | --- | --- | --- | --- |
-| UC01 Đăng nhập, đăng ký, đăng xuất | FR-01 – FR-06 | Chỉ Google/GitHub; lần đầu tạo tài khoản kèm workspace riêng rồi mở màn nhập key; quay về đúng trang định mở; hủy ở nhà cung cấp thì không tạo gì; phiên 30 ngày; đăng xuất | Trung bình |
+| UC01 Đăng nhập, đăng ký, đăng xuất | FR-01 – FR-06, FR-111 – FR-115 | Google/GitHub và mã email; mã 6 số một lần, hết hạn 10 phút, mã mới hủy mã cũ; 60 giây giữa hai lần gửi, 5 mã mỗi giờ, sai 5 lần thì hủy mã; email mới hỏi tên hiển thị; ô email ẩn khi chưa cấu hình SMTP; màn giả lập bắt xác thực email khi tạo mới; lần đầu tạo tài khoản kèm workspace riêng rồi mở màn nhập key; quay về đúng trang định mở; hủy ở nhà cung cấp thì không tạo gì; phiên 30 ngày; đăng xuất | Trung bình |
 | UC02 Trang chủ, dấu báo | FR-07 – FR-09 | Trang chủ gọn, không thống kê; nút đổi theo trạng thái (chưa key, chưa nhóm); chấm tin chưa đọc, chấm nhắc @, số yêu cầu chờ, tự cập nhật và tự mất | Trung bình |
-| UC03 API key, mô hình | FR-10 – FR-14 | Kiểm key ngay; key sai, hết tiền, địa chỉ sai báo câu dễ hiểu và không lưu; chỉ hiện 4 ký tự cuối; đổi mô hình, đổi key, xóa key | Trung bình |
+| UC03 API key, mô hình | FR-10 – FR-14, FR-116 | Kiểm key ngay; gợi ý địa chỉ (có Gemini); danh sách mô hình bỏ mô hình không chat được; key sai, hết tiền, địa chỉ sai báo câu dễ hiểu và không lưu; chỉ hiện 4 ký tự cuối; đổi mô hình, đổi key, xóa key | Trung bình |
 | UC04 Chat với agent | FR-15 – FR-23 | Câu hỏi lưu trước; trả lời hiện dần, có định dạng; Dừng giữ phần đã viết; lỗi nhà cung cấp hiện trong hội thoại và không gửi lại; Tạo lại giữ phiên bản cũ, agent chỉ đọc phiên bản đang hiện; đổi tên, xóa hội thoại hỏi giữ highlight; đoán đường dẫn của người khác chỉ thấy "không tìm thấy" | Phức tạp |
 | UC05 Highlight riêng | FR-24 – FR-30 | Bôi đen, chọn màu, ghi chú; giới hạn ~200; lọc, sửa, xóa, dọn dẹp; nhãn "(‹tên› đã chỉnh)" khi sửa chữ agent; không tự đi đâu | Trung bình |
 | UC06 Ngữ cảnh nhóm | FR-31 – FR-41 | Khung "Agent đang đọc" đúng nội dung; một dòng thời gian tin của mình và highlight; ~50 tin gần nhất; tóm tắt tin cũ theo khối, một lần gọi, khối ngắn giữ nguyên văn; không còn là thành viên thì không gửi ngữ cảnh; bị nhắc tên không làm tin lọt vào | Phức tạp |
@@ -151,7 +151,7 @@ Mỗi dòng là một mục tiêu kiểm thử. Mã TC sẽ theo dạng `TC-UCxx
 | UC13 Highlight cho agent | FR-77 – FR-84 | Nhiều đoạn qua nhiều tin; không highlight được tin của mình; không sửa chữ người khác, chỉ thu hẹp; ghi chú riêng; giới hạn ~30 mỗi workspace; chỉ mình thấy; vào ngữ cảnh kèm người nói | Phức tạp |
 | UC14 Bảng ý tưởng | FR-85 – FR-92 | /idea, /note, /pin (hỏi ghim phần nào); chỉ chủ đưa vào bàn; chốt, loại bắt buộc lý do, không quay ngược; agent không chốt được | Trung bình |
 | UC15 Tóm tắt kênh, bản tổng hợp | FR-93 – FR-97 | Chỉ chủ; /summarize chỉ đọc đề bài và tin của chính kênh, không tự vào ngữ cảnh của ai; /brief dựng từ bảng, tải Markdown | Trung bình |
-| UC16 Thành viên, cài đặt | FR-98 – FR-106 | Tên duy nhất, giữ chỗ mãi, "(đã rời)"; vai ≤ 40 ký tự; rời, xóa thành viên; sửa đề bài, đổi mã, tạo kênh chỉ chủ | Trung bình |
+| UC16 Thành viên, cài đặt, bảng phân công | FR-98 – FR-106, FR-117 – FR-126 | Tên duy nhất, giữ chỗ mãi, "(đã rời)"; vai ≤ 40 ký tự; rời, xóa thành viên; sửa đề bài, đổi tên, đổi mã, tạo kênh chỉ chủ. Bảng phân công: cây 3 cấp (cấp 4 bị từ chối); thành viên chỉ tự nhận, chủ giao, sửa, xóa (xóa kèm việc con); khóa chặn thêm, sửa, xóa, giao, nhận và `/task` nhưng không chặn đánh dấu xong; người rời được gỡ khỏi việc chưa xong kể cả khi khóa; agent chỉ nhận việc chưa xong kèm việc cha | Phức tạp |
 | UC17 Mạng chập chờn | FR-107 – FR-110 | Dải báo mất kết nối; khóa nút gửi; giữ chữ đang soạn; tự nối lại và hiện bù tin | Trung bình |
 
 **Quy tắc nghiệp vụ trọng yếu** (mỗi quy tắc có ít nhất một test riêng, kể cả gọi thẳng API để vượt qua giao diện):
@@ -165,6 +165,8 @@ Mỗi dòng là một mục tiêu kiểm thử. Mã TC sẽ theo dạng `TC-UCxx
 | BR-18 | Cả hai đường vào workspace đều phải chờ chủ duyệt |
 | BR-20, BR-23 | Agent không chốt, loại, đưa ý lên bảng; chốt, loại phải có lý do, không quay ngược |
 | BR-25 | Tên trong workspace không dùng lại được, kể cả của người đã rời |
+| BR-34 | Mã email chỉ lưu dạng băm; quá giới hạn gửi trả 429; sai 5 lần thì mã đúng cũng bị từ chối; câu trả lời khi gửi mã giống nhau dù email đã có tài khoản hay chưa |
+| BR-35, BR-38 | Agent không tạo hay đổi việc; bảng đang khóa thì mọi thay đổi phân công trả 409 `TASKS_LOCKED`, trừ người phụ trách đánh dấu xong |
 
 ### 2.2. Yêu cầu phi chức năng
 
@@ -172,7 +174,7 @@ Mỗi dòng là một mục tiêu kiểm thử. Mã TC sẽ theo dạng `TC-UCxx
 | --- | --- | --- | --- |
 | NFR-01 | Bảo mật | Key mã hóa khi lưu, không lộ ở log, phản hồi, Network | Test API quét mọi phản hồi tìm chuỗi key; đọc CSDL thấy chỉ có bản mã; quét log khi chạy test |
 | NFR-02 | Bảo mật | Mọi lời gọi mô hình đi qua máy chủ | Playwright ghi lại mọi request của trình duyệt, khẳng định không có request tới miền của nhà cung cấp AI |
-| NFR-03 | Bảo mật | OAuth có `state`; cookie httpOnly | Test API: callback với `state` sai bị từ chối; kiểm cờ cookie |
+| NFR-03 | Bảo mật | OAuth có `state`; mã email băm, có giới hạn; cookie httpOnly | Test API: callback với `state` sai bị từ chối; đọc CSDL thấy `code_hash` không chứa mã; gửi mã liên tục nhận 429; kiểm cờ cookie |
 | NFR-04 | Phân quyền | Mỗi thao tác kiểm quyền ở máy chủ | Ma trận quyền (mục 7.3) chạy tự động bằng pytest với từng vai |
 | NFR-05 | Riêng tư | Dữ liệu riêng chỉ chủ đọc được, kể cả qua API | Như BR-07 |
 | NFR-06 | Hiệu năng | Tin mới tới người khác dưới 2 giây | Playwright đo thời gian từ lúc gửi tới lúc hiện ở trình duyệt thứ hai; k6 đo khi có tải |
@@ -192,7 +194,7 @@ Mỗi dòng là một mục tiêu kiểm thử. Mã TC sẽ theo dạng `TC-UCxx
 | Nội dung | Lý do |
 | --- | --- |
 | Chất lượng câu trả lời của mô hình AI (đúng, hay, an toàn) | Thuộc nhà cung cấp; SpecGate chỉ kiểm việc gửi đúng ngữ cảnh và hiển thị đúng |
-| Hạ tầng của Google, GitHub, Anthropic, OpenAI | Hệ thống ngoài; chỉ kiểm cách SpecGate xử lý khi chúng lỗi (qua agent giả) |
+| Hạ tầng của Google, GitHub, máy chủ gửi thư, Anthropic, OpenAI | Hệ thống ngoài; chỉ kiểm cách SpecGate xử lý khi chúng lỗi (qua agent giả) |
 | Các mục SRS 8.1 "Không làm": quản trị viên, gói thuê bao, tải tệp vào chat, chế độ ngoại tuyến, nhiều key mỗi người | Ngoài phạm vi sản phẩm |
 | Trình duyệt di động như ứng dụng chính, Internet Explorer | Ngoài NFR-13; chỉ kiểm bố cục co giãn ở độ rộng 390 px |
 
@@ -320,10 +322,10 @@ Kiểm thử web tự động là trọng tâm của kế hoạch này: mọi lo
 
 | Tầng | Công cụ | Đang có |
 | --- | --- | --- |
-| Đơn vị giao diện | Vitest, Testing Library, jsdom | 14 tệp test, ví dụ `features/channel/utils/commands.test.ts`, `features/board/components/BoardItemCard.test.tsx` |
-| API máy chủ | pytest, httpx (TestClient của FastAPI) | 68 test cho phần workspace: `test_ws.py` (46), `test_ws_flow.py` (10), `test_ws_flow_rules.py` (12) |
+| Đơn vị giao diện | Vitest, Testing Library, jsdom | 17 tệp test, ví dụ `features/auth/components/LoginForm.test.tsx`, `features/tasks/utils/task-tree.test.ts`, ví dụ `features/channel/utils/commands.test.ts`, `features/board/components/BoardItemCard.test.tsx` |
+| API máy chủ | pytest, httpx (TestClient của FastAPI) | 103 test: `test_ws.py` (48), `test_ws_email_sign_in.py` (16), `test_ws_tasks.py` (14), `test_ws_flow_rules.py` (12), `test_ws_flow.py` (7), `test_ws_workspace_rename.py` (4), `test_ws_providers.py` (2) |
 | Kiểm mã | ESLint, luật kiểm mã nguồn riêng, TypeScript, Prettier | Chạy chung bằng `pnpm check` |
-| CI | GitHub Actions | `backend.yml` chạy pytest (bỏ test chậm và `test_judge.py`); `web.yml` chạy `pnpm check` và build |
+| CI | GitHub Actions | `backend.yml` chạy `pytest -q`; `web.yml` chạy `pnpm check` và build |
 | Đầu-cuối | Playwright | Đã cài (`@playwright/test` 1.65) nhưng chưa có cấu hình và kịch bản kiểm thử |
 
 #### 3.3.2. Công nghệ đề xuất
@@ -654,6 +656,11 @@ Lấy từ bảng RBAC ([uml/README.md](../uml/README.md#bảng-rbac)). Mỗi ô
 | Xem, duyệt yêu cầu `GET …/join-requests` | 401 | 403 | 403 | 403 | 200 | 403 |
 | Đổi mã `PUT …/join-code` | 401 | 403 | 403 | 403 | 200 | 403 |
 | Rời workspace `DELETE …/members/me` | 401 | 403 | 403 | 204 | 409 | 403 |
+| Thêm việc đứng tên mình `POST …/tasks` | 401 | 403 | 403 | 201 | 201 | 403 |
+| Giao việc cho người khác `POST …/tasks {assigneeId}` | 401 | 403 | 403 | 403 | 201 | 403 |
+| Sửa, xóa việc `PATCH`, `DELETE …/tasks/{n}` | 401 | 403 | 403 | 403 | 200 / 204 | 403 |
+| Khóa bảng phân công `PUT …/tasks/lock` | 401 | 403 | 403 | 403 | 200 | 403 |
+| Thêm việc khi bảng khóa | 401 | 403 | 403 | 409 | 409 | 403 |
 
 ### 7.4. Checklist rà soát Test Plan
 

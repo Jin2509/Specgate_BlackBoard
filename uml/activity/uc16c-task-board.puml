@@ -1,0 +1,76 @@
+' Activity diagram of UC16 part C: adding, claiming, assigning, finishing and locking tasks on the task board.
+@startuml act-uc16c
+!include ../_style.iuml
+title Biểu đồ hoạt động UC16 - Phần C: Bảng phân công
+
+|Thành viên|
+start
+:(1) Mở trang "Bảng phân công"\nhoặc gõ /task trong kênh;
+:Chọn một việc cần làm;
+|Hệ thống|
+if (Thao tác?) then (đánh dấu xong, mở lại)
+  if (Là người phụ trách?) then (có)
+    :[C.A4] Đổi trạng thái\n(kể cả khi bảng khóa);
+  elseif (Là chủ và bảng chưa khóa?) then (có)
+    :[C.A4] Đổi trạng thái;
+  else (không)
+    :Từ chối;
+  endif
+  stop
+elseif () then ([C.A8] khóa, mở khóa)
+  if (Là chủ?) then (có)
+    :Đổi khóa, tin hệ thống ở "chung";
+  else (không)
+    :Từ chối;
+  endif
+  stop
+else (thêm, nhận, sửa, giao, xóa)
+endif
+if (Bảng đang khóa?) then (có)
+  :[C.E1] Báo bảng đang khóa;
+  stop
+else (không)
+endif
+if (Thao tác?) then (thêm việc)
+  :(2) Nhập mô tả;
+  if (Mô tả trống hoặc quá 200 ký tự?) then (có)
+    :[C.E5] Không tạo;
+    stop
+  else (không)
+  endif
+  if (Giao cho người khác hoặc để trống?) then (có)
+    if (Là chủ?) then (không)
+      :[C.E2] Chỉ chủ giao việc;
+      stop
+    else (có)
+      :[C.A2] Chọn người phụ trách;
+    endif
+  else (không)
+  endif
+  if (Là việc con?) then (có)
+    if (Việc cha ở cấp 3?) then (có)
+      :[C.E3] Tối đa 3 cấp;
+      stop
+    else (không)
+      :[C.A1] Gắn vào việc cha;
+    endif
+  else (không)
+  endif
+  :(3) Tạo "việc N", Đang làm;
+  :(4) Tin hệ thống trong kênh;
+  :(5) Agent mọi thành viên đọc việc mới;
+elseif () then ([C.A3] nhận)
+  if (Chưa có người phụ trách và chưa xong?) then (có)
+    :Việc đứng tên người nhận;
+  else (không)
+    :[C.E4] Báo đã có người hoặc đã xong;
+  endif
+else ([C.A5][C.A6] sửa, giao lại, xóa)
+  if (Là chủ?) then (có)
+    :Sửa, giao lại, hoặc xóa\n(xóa kèm mọi việc con);
+  else (không)
+    :Từ chối;
+  endif
+endif
+stop
+@enduml

@@ -1,0 +1,54 @@
+' Activity diagram of UC01 part C: signing up or signing in with a one-time code sent by email.
+@startuml act-uc01c
+!include ../_style.iuml
+title Biểu đồ hoạt động UC01 - Phần C: Đăng nhập bằng mã gửi qua email
+
+|Khách|
+start
+:(1) Nhập email, bấm "Gửi mã đăng nhập";
+|Hệ thống|
+if (Email đúng dạng?) then (không)
+  :[C.E1] Báo email chưa đúng dạng;
+  stop
+else (có)
+endif
+if (Đủ 60 giây và dưới 5 mã/giờ?) then (không)
+  :[C.E2] Báo đợi rồi gửi lại;
+  stop
+else (có)
+endif
+:(2) Hủy mã cũ, tạo mã 6 số\nhết hạn sau 10 phút, lưu dạng băm;
+|Máy chủ gửi thư|
+if (Gửi được?) then (không)
+  |Hệ thống|
+  :[C.E4] Báo không gửi được email;
+  stop
+else (có)
+  :Gửi mã tới email;
+endif
+|Hệ thống|
+:(3) Hiện bước nhập mã;
+|Khách|
+:(4) Nhập mã, bấm "Xác nhận và đăng nhập";
+|Hệ thống|
+if (Mã đúng và còn hạn?) then (không)
+  :[C.E3] Báo mã sai hoặc hết hạn,\nđếm lần sai (5 lần thì hủy mã);
+  stop
+else (đúng)
+endif
+if (Email đã có tài khoản?) then (có)
+  :(5) Dùng mã, lưu phiên 30 ngày,\nmở Trang chủ hoặc trang định mở;
+else (chưa)
+  :[C.A1] Hỏi tên hiển thị (mã giữ nguyên);
+  |Khách|
+  :Nhập tên, xác nhận lại;
+  |Hệ thống|
+  if (Tên hợp lệ, tối đa 40 ký tự?) then (không)
+    :[C.E5] Không tạo tài khoản;
+    stop
+  else (có)
+  endif
+  :Dùng mã, tạo tài khoản và workspace riêng,\nlưu phiên, mở màn nhập API key;
+endif
+stop
+@enduml

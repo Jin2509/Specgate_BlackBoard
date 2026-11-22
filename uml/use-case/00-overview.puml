@@ -1,7 +1,7 @@
-' Shows all seventeen SRS use cases with their primary and secondary actors.
+' Shows all seventeen SRS 0.4 use cases with their primary and secondary actors.
 @startuml uc-00-overview
 !include ../_style.iuml
-title Sơ đồ ca sử dụng tổng quát (SRS 0.3)
+title Sơ đồ ca sử dụng tổng quát (SRS 0.4)
 left to right direction
 
 actor "Khách" as Guest
@@ -10,13 +10,14 @@ actor "Thành viên" as Member
 actor "Chủ workspace" as Owner
 actor "Nhà cung cấp\ndanh tính" as Idp <<hệ thống>>
 actor "Nhà cung cấp AI" as Ai <<hệ thống>>
+actor "Máy chủ gửi thư" as Mail <<hệ thống>>
 
 Member -|> User
 Owner -|> Member
 
 rectangle "SpecGate Workspace" {
   package "Tài khoản" {
-    usecase "UC01 Đăng nhập,\nđăng ký và đăng xuất" as UC01
+    usecase "UC01 Đăng nhập, đăng ký\n(Google, GitHub, mã email)\nvà đăng xuất" as UC01
     usecase "UC02 Dùng Trang chủ và\ndấu báo ở thanh bên" as UC02
     usecase "UC17 Tiếp tục làm việc\nkhi mạng chập chờn" as UC17
   }
@@ -34,7 +35,7 @@ rectangle "SpecGate Workspace" {
     usecase "UC09 Tạo workspace chung" as UC09
     usecase "UC10 Xin tham gia\nworkspace chung" as UC10
     usecase "UC11 Duyệt yêu cầu\ntham gia" as UC11
-    usecase "UC16 Thành viên và\ncài đặt workspace" as UC16
+    usecase "UC16 Thành viên, cài đặt\nvà bảng phân công" as UC16
   }
   package "Kênh, bảng và tổng hợp" {
     usecase "UC12 Nhắn tin trong kênh" as UC12
@@ -64,6 +65,7 @@ Owner --> UC11
 Owner --> UC15
 
 UC01 --> Idp
+UC01 --> Mail
 UC03 --> Ai
 UC04 --> Ai
 UC06 --> Ai

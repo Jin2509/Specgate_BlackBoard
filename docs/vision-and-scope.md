@@ -2,9 +2,9 @@
 
 ## cho SpecGate Workspace (Sàng Ý)
 
-Phiên bản 1.0, bản duyệt
+Phiên bản 1.1, bản duyệt
 Người lập: Nhóm SpecGate
-Ngày 18/11/2026
+Ngày 21/11/2026
 
 ---
 
@@ -34,6 +34,7 @@ Ngày 18/11/2026
 | --- | --- | --- | --- |
 | Nhóm SpecGate | 13/11/2026 | Bản nháp đầu, cùng SRS 0.2 | 1.0 nháp 1 |
 | Nhóm SpecGate | 18/11/2026 | Cập nhật theo `flow.md` đã chốt và SRS 0.3 | 1.0 bản duyệt |
+| Nhóm SpecGate | 21/11/2026 | Theo website đang chạy và SRS 0.4: đăng nhập bằng mã email, Google Gemini, bảng phân công, schema Supabase | 1.1 bản duyệt |
 
 ---
 
@@ -114,13 +115,13 @@ Xác suất từ 0 đến 1; mức ảnh hưởng từ 1 (thấp) đến 10 (cao
 
 **AS-1:** Người dùng tự có API key hợp lệ của Anthropic hoặc một dịch vụ kiểu OpenAI (OpenAI, DeepSeek, OpenRouter, Groq, Ollama) và tự chịu chi phí của key đó.
 
-**AS-2:** Người dùng có tài khoản Google hoặc GitHub.
+**AS-2:** Người dùng có tài khoản Google, GitHub, hoặc một địa chỉ email nhận được thư.
 
 **AS-3:** Người dùng có kết nối Internet khi làm việc; website không có chế độ ngoại tuyến.
 
 **AS-4:** Mỗi nhóm có một người đứng ra làm chủ workspace, chịu trách nhiệm duyệt thành viên và chọn ý đưa vào bàn.
 
-**DE-1:** Đăng nhập phụ thuộc OAuth của Google và GitHub.
+**DE-1:** Đăng nhập phụ thuộc OAuth của Google và GitHub, và một máy chủ gửi thư (SMTP) cho mã đăng nhập qua email.
 
 **DE-2:** Agent phụ thuộc API của các nhà cung cấp AI; hệ thống hỗ trợ hai kiểu: Anthropic và định dạng kiểu OpenAI.
 
@@ -130,7 +131,7 @@ Xác suất từ 0 đến 1; mức ảnh hưởng từ 1 (thấp) đến 10 (cao
 
 ### 2.1. Tính năng chính (Major Features)
 
-**FE-1:** Đăng nhập bằng Google hoặc GitHub; Trang chủ gọn; dấu báo tin chưa đọc, tin nhắc tên và yêu cầu tham gia ở thanh bên.
+**FE-1:** Đăng nhập bằng Google, GitHub hoặc mã một lần gửi qua email; Trang chủ gọn; dấu báo tin chưa đọc, tin nhắc tên và yêu cầu tham gia ở thanh bên.
 
 **FE-2:** Agent riêng bằng API key của mỗi người: kiểm key, chọn mô hình, chat với câu trả lời hiện dần, dừng, tạo lại có phiên bản.
 
@@ -138,7 +139,7 @@ Xác suất từ 0 đến 1; mức ảnh hưởng từ 1 (thấp) đến 10 (cao
 
 **FE-4:** Ngữ cảnh nhóm cho agent: chọn workspace làm ngữ cảnh cho hội thoại, khung "Agent đang đọc", tóm tắt tin cũ theo khối; Highlight cho agent trên tin của người khác.
 
-**FE-5:** Workspace chung: tạo, tham gia bằng mã hoặc qua trang Khám phá, chủ duyệt yêu cầu, quản lý thành viên, tên trong workspace, vai trong nhóm, cài đặt.
+**FE-5:** Workspace chung: tạo, tham gia bằng mã hoặc qua trang Khám phá, chủ duyệt yêu cầu, quản lý thành viên, tên trong workspace, vai trong nhóm, cài đặt; bảng phân công dạng cây 3 cấp (nhận việc, chủ giao việc, `/task`, khóa bảng), agent của mọi thành viên đọc các việc chưa xong.
 
 **FE-6:** Kênh chat thời gian thực: tin, nhắc tên, gợi ý lệnh, bốn loại tin, kết nối lại và hiện bù tin khi mạng chập chờn.
 
@@ -154,11 +155,11 @@ Bản 1 là đợt này của đồ án; bản 2, bản 3 là việc làm sau gh
 
 | Tính năng | Bản 1 | Bản 2 | Bản 3 |
 | --- | --- | --- | --- |
-| FE-1 Tài khoản, Trang chủ | Google, GitHub; phiên 30 ngày; dấu báo ở thanh bên | Mời thành viên qua email hoặc GitHub | |
-| FE-2 Agent riêng | Anthropic và kiểu OpenAI; chat, dừng, tạo lại có phiên bản | | Dùng gói thuê bao qua kết nối từ ứng dụng của nhà cung cấp |
+| FE-1 Tài khoản, Trang chủ | Google, GitHub, mã email; phiên 30 ngày; dấu báo ở thanh bên | Mời thành viên qua email hoặc GitHub | |
+| FE-2 Agent riêng | Anthropic và kiểu OpenAI (OpenAI, Google Gemini, DeepSeek, OpenRouter, Groq, Ollama…); chat, dừng, tạo lại có phiên bản | | Dùng gói thuê bao qua kết nối từ ứng dụng của nhà cung cấp |
 | FE-3 Riêng sang chung | Highlight riêng; gửi vào kênh từ danh sách và bằng `@`; tóm tắt hội thoại cho nhóm ở bản tối thiểu | Tóm tắt hội thoại cho nhóm đầy đủ | |
 | FE-4 Ngữ cảnh cho agent | Ngữ cảnh nhóm, khung "Agent đang đọc", tóm tắt tin cũ theo khối, Highlight cho agent | | |
-| FE-5 Workspace chung | Tạo, tham gia bằng mã, Khám phá, duyệt, thành viên, tên, vai, cài đặt | Xóa workspace; xử lý highlight khi rời nhóm (SRS điểm mở 9.4) | |
+| FE-5 Workspace chung | Tạo, tham gia bằng mã, Khám phá, duyệt, thành viên, tên, vai, cài đặt, bảng phân công | Xóa workspace; xử lý highlight khi rời nhóm (SRS điểm mở 9.4) | |
 | FE-6 Kênh | Tin, `@`, lệnh, thời gian thực, kết nối lại | Sửa và xóa tin | |
 | FE-7 Bảng, tổng hợp | Bốn cột, `/idea`, `/note`, `/pin`, `/decide`, `/summarize`, `/brief` | Lệnh `/check` do chủ gọi để đối chiếu ý mới với bảng | |
 
@@ -176,6 +177,10 @@ Bản 1 là đợt này của đồ án; bản 2, bản 3 là việc làm sau gh
 
 **LI-6:** Không có chế độ ngoại tuyến; không có chức năng quản trị viên hệ thống.
 
+**LI-7:** Không có mật khẩu riêng; email chỉ dùng để nhận mã đăng nhập một lần, hệ thống không gửi email thông báo.
+
+**LI-8:** Bảng phân công không có hạn chót hay mức ưu tiên, để không biến thành công cụ quản lý dự án.
+
 ---
 
 ## 3. Bối cảnh nghiệp vụ (Business Context)
@@ -185,10 +190,10 @@ Bản 1 là đợt này của đồ án; bản 2, bản 3 là việc làm sau gh
 | Bên liên quan | Giá trị chính | Thái độ | Quan tâm chính | Ràng buộc |
 | --- | --- | --- | --- | --- |
 | Thành viên nhóm (người dùng chính) | Không phải copy và dán; agent hiểu nhóm đang bàn gì; biết ai nói gì | Hào hứng, nhưng có thể quay về chat nhóm quen thuộc nếu highlight tốn công | Dễ dùng; câu trả lời nhanh; riêng tư cho hội thoại riêng; chi phí key | Cần API key và Internet |
-| Chủ workspace | Kiểm soát ai vào nhóm; điều phối ý nào được bàn; bản tổng hợp cho báo cáo | Ủng hộ, cần công cụ quản lý gọn | Duyệt nhanh; bảng ý tưởng rõ; `/summarize`, `/brief` | Chịu chi phí key cho `/summarize` |
+| Chủ workspace | Kiểm soát ai vào nhóm; điều phối ý nào được bàn; chia việc cho nhóm; bản tổng hợp cho báo cáo | Ủng hộ, cần công cụ quản lý gọn | Duyệt nhanh; bảng ý tưởng rõ; `/summarize`, `/brief` | Chịu chi phí key cho `/summarize` |
 | Giảng viên hướng dẫn | Đồ án đúng quy trình phần mềm: tài liệu, kiểm thử, triển khai | Trung lập, đánh giá theo tiêu chí môn học | Tài liệu đầy đủ, kiểm thử tự động, sản phẩm chạy được | Lịch nộp cố định |
 | Nhóm phát triển | Sản phẩm hoàn chỉnh, mã sạch, dễ bảo trì | Cam kết | Phạm vi vừa sức trong một học kỳ | Nhóm sinh viên, làm song song việc học khác |
-| Nhà cung cấp AI, Google, GitHub | Không áp dụng (hệ thống ngoài) | | | Điều khoản sử dụng; giới hạn tần suất |
+| Nhà cung cấp AI, Google, GitHub, máy chủ gửi thư | Không áp dụng (hệ thống ngoài) | | | Điều khoản sử dụng; giới hạn tần suất |
 
 ### 3.2. Thứ tự ưu tiên của dự án (Project Priorities)
 
@@ -203,8 +208,9 @@ Bản 1 là đợt này của đồ án; bản 2, bản 3 là việc làm sau gh
 ### 3.3. Lưu ý khi triển khai (Deployment Considerations)
 
 - Bản 1 chạy trên một VPS bằng Docker Compose: Caddy nhận HTTPS và chia đường `/api/*` cho backend FastAPI, phần còn lại cho web Next.js (xem `deploy/README.md`).
-- CSDL chuyển từ SQLite sang Postgres do Supabase quản lý khi triển khai thật; Supabase chỉ dùng làm Postgres, đăng nhập vẫn do backend tự làm OAuth (xem [supabase-setup.md](supabase-setup.md)). Phải khóa Data API của Supabase bằng RLS hoặc tắt hẳn.
+- CSDL chuyển từ SQLite sang Postgres do Supabase quản lý khi triển khai thật; Supabase chỉ dùng làm Postgres, đăng nhập vẫn do backend tự làm (OAuth và mã email); schema tạo bằng các tệp trong `supabase/migrations/` (xem [supabase-setup.md](supabase-setup.md)). Phải khóa Data API của Supabase bằng RLS hoặc tắt hẳn.
 - Phải đặt `SECRET_KEY` riêng và giữ nguyên qua các lần triển khai, vì khóa mã hóa API key suy ra từ đây.
 - Phải đăng ký ứng dụng OAuth Google, GitHub với địa chỉ callback `<PUBLIC_API_URL>/api/v1/auth/{provider}/callback`; khi chưa có OAuth thật, giữ lớp mật khẩu chung của Caddy và không mở đăng nhập giả lập ra Internet.
+- Muốn có đăng nhập bằng email phải cấu hình SMTP (`SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_ADDRESS`); với Gmail dùng App Password. Không cấu hình thì ô email ẩn.
 - Backend chạy một tiến trình (bộ phát tin thời gian thực nằm trong tiến trình); muốn chạy nhiều bản phải chuyển sang Postgres LISTEN/NOTIFY hoặc Supabase Realtime.
 - Cần một video ngắn (không quá 5 phút) hướng dẫn vòng làm việc mẫu: nhập key, tạo nhóm, highlight, gửi vào kênh, highlight cho agent, chốt ý, xuất bản tổng hợp.

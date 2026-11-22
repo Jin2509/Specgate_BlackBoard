@@ -1,0 +1,24 @@
+' State diagram of a Task entity on the task board: unassigned, doing and done (UC16 part C).
+@startuml st-task
+!include ../_style.iuml
+title Biểu đồ trạng thái: Việc trên bảng phân công (Task)
+
+state "Chưa có người phụ trách" as Open
+state "Đang làm" as Doing
+state "Xong" as Done
+
+[*] --> Doing : thêm việc [đứng tên người tạo\nhoặc chủ giao cho ai đó]
+[*] --> Open : chủ thêm việc để trống
+Open --> Doing : "Nhận" [bảng chưa khóa]\nhoặc chủ giao [bảng chưa khóa]
+Doing --> Open : người phụ trách rời hoặc bị xóa\n(kể cả khi bảng khóa)
+Doing --> Open : chủ bỏ người phụ trách [bảng chưa khóa]
+Doing --> Done : người phụ trách đánh dấu xong\nhoặc chủ [bảng chưa khóa]
+Done --> Doing : mở lại [người phụ trách,\nhoặc chủ khi bảng chưa khóa]
+Open --> [*] : chủ xóa [bảng chưa khóa]
+Doing --> [*] : chủ xóa [bảng chưa khóa]
+Done --> [*] : chủ xóa [bảng chưa khóa]
+
+Doing : agent mọi thành viên đọc việc này
+Open : agent mọi thành viên đọc việc này
+Done : không gửi cho agent
+@enduml

@@ -17,7 +17,7 @@ title Cây tính năng SpecGate Workspace
 
 * SpecGate Workspace
 ** FE-1 Tài khoản và Trang chủ
-*** Đăng nhập Google/GitHub
+*** Đăng nhập Google/GitHub, mã email
 *** Trang chủ, dấu báo thanh bên
 ** FE-2 Agent riêng
 *** API key và mô hình
@@ -35,6 +35,7 @@ left side
 *** Tham gia bằng mã, Khám phá
 *** Duyệt yêu cầu
 *** Thành viên và cài đặt
+*** Bảng phân công (cây việc 3 cấp)
 ** FE-6 Kênh thời gian thực
 *** Tin, @, lệnh
 *** Kết nối lại khi mất mạng

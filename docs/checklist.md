@@ -1,6 +1,6 @@
 # SpecGate Workspace: checklist định hướng đồ án
 
-Cập nhật: 17/11/2026 (N2 của sprint 16/11 – 04/12/2026).
+Cập nhật: 21/11/2026 (mục 2, 3, 6 đối chiếu lại với website đang chạy và SRS 0.4; mục 4, 5 giữ như bản 17/11).
 
 Tệp này đối chiếu dự án với **bảng tiêu chí chấm** (`Checklist.xls`, mẫu "Check list cho project Maintenance", thang 1–5) và với `docs/SRS.md`, `docs/SPRINT_PLAN.md`. Mỗi mục có trạng thái:
 
@@ -41,84 +41,77 @@ Bảng mẫu (nhóm Football Manager, 52 điểm) cho thấy giáo viên trừ �
 
 ## 2. Hiện trạng: chức năng so với SRS
 
-Kiểm bằng cách đọc code (`backend/app/ws/`, `web_ui/src/features/`) và chạy test ngày 17/11: **backend 82 test đạt, 1 bỏ qua**; **frontend Vitest 28 test đạt**.
+Kiểm bằng cách đọc code (`backend/app/ws/`, `web_ui/src/features/`) và chạy test ngày 21/11 trên nhánh `dev`: **backend 103 test đạt**; **frontend Vitest 54 test đạt (17 tệp)**. Mã FR, UC theo [SRS 0.4](SRS.md).
 
-### 2.1. Tài khoản (UC01)
+### 2.1. Tài khoản và Trang chủ (UC01, UC02)
 
 - [x] FR-01 Bảo vệ route, quay lại đúng trang (`web_ui/src/proxy.ts`)
-- [x] FR-02 Chỉ Google/GitHub (`backend/app/ws/routers/auth.py`: `/{provider}/start`, `/callback`)
-- [x] FR-03 Lần đầu tạo tài khoản + workspace riêng
-- [x] FR-04 Không tạo tài khoản trùng
-- [x] FR-05 Đăng xuất (`POST /api/auth/logout`)
-- [~] OAuth thật mới chạy khi cấu hình client id/secret; demo đang dùng đăng nhập giả lập (`AUTH_DEV_LOGIN`). **Cần cấu hình OAuth thật trên server demo.**
+- [x] FR-02 Ba cách đăng nhập: Google, GitHub (`routers/auth.py`: `/{provider}/start`, `/callback`) và mã email
+- [x] FR-03, FR-04 Lần đầu tạo tài khoản + workspace riêng; không tạo trùng (`upsert_identity`)
+- [x] FR-05, FR-06 Đăng xuất (`DELETE /api/v1/auth/session`); phiên 30 ngày trượt (`GET /auth/session`)
+- [x] FR-111 – FR-114 Đăng nhập bằng mã email: `POST /auth/email-codes`, `POST /auth/email-sessions`, `app/ws/email_codes.py`, `app/ws/mailer.py`, `EmailSignInForm.tsx`; test `test_ws_email_sign_in.py` (16)
+- [x] FR-115 Màn giả lập bắt xác thực email khi tạo tài khoản (`SignUpForm.tsx`, `dev-sessions` với `code`)
+- [x] FR-07 – FR-09 Trang chủ, dấu báo thanh bên và kênh (`use-workspace-badges.ts`, `channel-dot.ts`)
+- [~] OAuth thật chỉ chạy khi cấu hình client id/secret; demo đang dùng màn giả lập (`AUTH_DEV_LOGIN`). Đăng nhập bằng email cần cấu hình SMTP trên server demo. **Cần cấu hình OAuth thật và SMTP trên server demo.**
 
-### 2.2. Workspace riêng và agent riêng (UC02–UC05)
+### 2.2. Workspace riêng (UC03 – UC05)
 
-- [x] FR-10 Hai nhà cung cấp: Anthropic, kiểu OpenAI (`backend/app/ws/providers.py`)
-- [x] FR-11 Kiểm key, trả danh sách mô hình (`POST /api/me/key/verify`)
-- [x] FR-12 Key sai/429/mất kết nối báo lỗi dễ hiểu, không lưu
-- [x] FR-13 Ghi rõ gói thuê bao không phải API key
-- [x] FR-14 Chỉ hiện 4 ký tự cuối; key mã hóa Fernet (`backend/app/ws/security.py`)
-- [x] FR-15 Tạo, mở, xóa hội thoại
-- [x] FR-16, FR-17 Nhiều lượt, stream SSE (`POST /conversations/{id}/turns`)
-- [x] FR-18 Workspace riêng không có kênh/bảng
-- [x] FR-19 Tên agent "<mô hình> của <tên>"
-- [x] FR-25 Gắn/bỏ gắn hội thoại với workspace chung (`context-picker.tsx`)
-- [x] FR-26 Bộ dựng ngữ cảnh nhóm (`backend/app/ws/context.py`)
-- [x] FR-27 Khung "Agent đang đọc", bỏ highlight trong khung (`agent-context-panel.tsx`)
-- [x] FR-28 "Gửi vào kênh" và "Gửi đoạn này vào kênh" (`chat-screen.tsx`)
-- [x] FR-29 Sửa nội dung, chọn kênh trước khi gửi
+- [x] FR-10 – FR-14 Anthropic, kiểu OpenAI; kiểm key; lỗi tiếng Việt; chỉ hiện 4 ký tự cuối (`providers.py`, `KeyForm.tsx`)
+- [x] FR-116 Gợi ý địa chỉ (OpenAI, Google Gemini, OpenRouter, DeepSeek, Groq); lọc mô hình không chat được (`test_ws_providers.py`)
+- [x] FR-15 – FR-23 Chat stream, dừng, tạo lại có phiên bản, đổi tên, xóa hội thoại có hỏi giữ highlight
+- [x] FR-24 – FR-30 Highlight riêng: màu, ghi chú, lọc, sửa, dọn dẹp
 
-### 2.3. Highlight (UC06)
+### 2.3. Ngữ cảnh nhóm và riêng sang chung (UC06 – UC08)
 
-- [x] FR-20 – FR-24 Bôi đen, chọn nhãn, sửa văn bản, lưu người nói, chặn tin của mình, chỉ người tạo thấy (`highlightable-list.tsx`, `highlight-dialog.tsx`, `/chat/highlights`)
+- [x] FR-31 – FR-41 Ngữ cảnh nhóm, khung "Agent đang đọc", tóm tắt tin cũ theo khối (`context.py`)
+- [x] FR-42 – FR-49 Gửi highlight riêng vào kênh từ danh sách và bằng `@`, ba mức trung thực
+- [x] FR-50 – FR-53 "Tóm tắt cho nhóm" (bản tối thiểu)
 
-### 2.4. Tham gia workspace chung (UC07–UC09)
+### 2.4. Workspace chung (UC09 – UC11, UC16)
 
-- [x] FR-30 – FR-39 Tạo workspace, mã 7 ký tự, đổi mã, yêu cầu chờ duyệt, Khám phá, hủy, duyệt/từ chối, tự chuyển khi được duyệt (`routers/join.py`, `routers/workspaces.py`)
+- [x] FR-54 – FR-68 Tạo workspace, mã 7 ký tự, Khám phá, duyệt, màu, tên tạm (`routers/join.py`, `routers/workspaces.py`)
+- [x] FR-98 – FR-106 Thành viên, tên, vai, rời, xóa, đề bài, đổi mã, tạo kênh, đổi tên workspace (`test_ws_workspace_rename.py`)
+- [x] FR-117 – FR-126 Bảng phân công dạng cây 3 cấp, nhận, giao, khóa, `/task`, gỡ người rời, agent đọc việc chưa xong (`app/ws/tasks.py`, `routers/tasks.py`, `features/tasks/`; test `test_ws_tasks.py` (14), `task-tree.test.ts`)
 
-### 2.5. Kênh (UC10)
+### 2.5. Kênh, bảng ý tưởng và tổng hợp (UC12 – UC15)
 
-- [x] FR-40 Phân biệt người/agent/hệ thống
-- [x] FR-41 Tin mới realtime qua SSE (`channel-live.tsx`, `GET /channels/.../stream`)
-- [x] FR-42 Gợi ý `@` và `/`, chọn bằng bàn phím (`composer.tsx`)
-- [x] FR-43 Không có agent tự trả lời
-- [x] FR-44 Cột bên liệt kê agent của thành viên
-- [x] FR-49 `/help`
-
-### 2.6. Bảng ý tưởng và tổng hợp (UC11–UC13)
-
-- [x] FR-50 – FR-53 Bốn cột, `/idea` `/pin` `/note`, chốt/loại bắt buộc lý do, không chuyển ngược
-- [x] FR-54, FR-55 `/summarize`, `/brief` chỉ chủ; chạy bằng agent của chủ
-- [x] FR-56 Bản tổng hợp, tải Markdown (`GET /workspaces/{id}/brief.md`)
+- [x] FR-69 – FR-76 Kênh realtime SSE, gợi ý `@` và `/`, lệnh chỉ chạy khi người gõ
+- [x] FR-77 – FR-84 Highlight cho agent nhiều đoạn, giữ người nói
+- [x] FR-85 – FR-92 Bảng ý tưởng bốn cột, `/idea` `/note` `/pin` `/decide`, chỉ chủ đưa vào bàn
+- [x] FR-93 – FR-97 `/summarize`, `/brief`, tải Markdown (`GET /workspaces/{id}/brief.md`)
 - [ ] **Xuất báo cáo dạng PDF/in được** (tiêu chí "file báo cáo" của bảng chấm). Hiện chỉ có Markdown.
 
-### 2.7. Đội và cấu hình (UC14, UC15)
+### 2.6. Kết nối (UC17)
 
-- [x] FR-60 Sửa đề bài, tạo kênh
-- [x] FR-61 Đặt vai trong nhóm của mình
-- [x] FR-62 Danh sách thành viên, không lộ key
+- [x] FR-107 – FR-110 Dải mất kết nối, giữ chữ đang soạn, nối lại bằng `after=<seq>`
 
-### 2.8. Phần ngoài Must
+### 2.7. Phần làm sau (SRS mục 8.2)
 
-- [ ] S2 Mode 2 (chia sẻ bản chụp hội thoại) · [ ] S3 Mời qua email/GitHub · [ ] S4 Tóm tắt hội thoại
+- [ ] Lệnh `/check` · [ ] Mời qua email/GitHub · [ ] Sửa, xóa tin trong kênh
 
-**Nhận xét:** toàn bộ FR mức Must trong SRS đã có code. Việc còn lại về chức năng là **chứng minh** chúng chạy (test truy vết, e2e) chứ không phải viết thêm tính năng.
+**Nhận xét:** toàn bộ FR mức M và T trong SRS 0.4 đã có code. Việc còn lại về chức năng là **chứng minh** chúng chạy (test truy vết, e2e) chứ không phải viết thêm tính năng.
 
 ---
 
 ## 3. Hiện trạng: phi chức năng
 
+Mã NFR theo SRS 0.4 mục 7.
+
 - [x] NFR-01 Key mã hóa, chỉ ghi (Fernet). [ ] Chưa có test quét log/phản hồi để chứng minh key không lộ ở mọi endpoint
 - [x] NFR-02 Mọi lời gọi mô hình qua backend
-- [x] NFR-03, NFR-04 Kiểm quyền ở backend (`backend/app/ws/deps.py`). [~] Cần bảng quyết định phân quyền (3 vai × thao tác) có test đủ ô
-- [~] NFR-05 Tin mới dưới 2 giây: có SSE, **chưa đo**
-- [x] NFR-06 Stream ngay token đầu
-- [x] NFR-07 Ngân sách ngữ cảnh. [ ] Chưa có test theo thuộc tính (Hypothesis)
-- [x] NFR-08 Lỗi nhà cung cấp tiếng Việt
-- [~] NFR-09 Trạng thái tải/rỗng/lỗi: có `loading.tsx`, cần rà từng màn
-- [ ] NFR-10 Bàn phím + WCAG AA: chưa kiểm bằng công cụ (axe)
-- [~] NFR-11 Màn hình hẹp: có container query, chưa kiểm có hệ thống
+- [x] NFR-03 OAuth có `state` ký; mã email lưu HMAC, có giới hạn gửi và nhập sai (có test); cookie httpOnly
+- [x] NFR-04, NFR-05 Kiểm quyền ở backend (`backend/app/ws/deps.py`). [~] Cần bảng quyết định phân quyền (vai × thao tác, testplan mục 7.3) có test đủ ô
+- [~] NFR-06 Tin mới dưới 2 giây: có SSE, **chưa đo**
+- [x] NFR-07 Stream ngay chữ đầu
+- [x] NFR-08 Ngân sách ngữ cảnh. [ ] Chưa có test theo thuộc tính (Hypothesis)
+- [x] NFR-09 Lỗi nhà cung cấp tiếng Việt
+- [~] NFR-10 Trạng thái tải/rỗng/lỗi: có `loading.tsx`, cần rà từng màn
+- [x] NFR-11 Hộp xác nhận trong ứng dụng cho xóa, rời, xóa việc
+- [ ] NFR-12 Bàn phím + WCAG AA: chưa kiểm bằng công cụ (axe)
+- [~] NFR-13 Màn hình hẹp: có container query, chưa kiểm có hệ thống
+- [x] NFR-14 Chữ hiển thị trong `locales/{vi,en}.json` (`scripts/check-source-rules.mjs`)
+- [x] NFR-15 Xử lý mất kết nối theo UC17
+- [x] NFR-16 `/api/v1` và dạng lỗi `{"error":{...}}`
 
 ---
 
@@ -218,10 +211,10 @@ Chức năng Must đã xong sớm hơn lịch, nên phần thời gian còn lạ
 
 ### 6.3. Sưu liệu
 
-- [x] Đặc tả yêu cầu: `docs/SRS.md` (ca sử dụng, FR, NFR, quy tắc nghiệp vụ)
+- [x] Đặc tả yêu cầu: `docs/SRS.md` 0.4 (ca sử dụng, FR, NFR, quy tắc nghiệp vụ), `software-requirements-specification.md`, `use-cases.md`, `business-rules.md`, `vision-and-scope.md` (cập nhật 21/11 theo website đang chạy)
 - [x] Đặc tả hệ thống/dữ liệu: `uml/` (class, sequence, activity, RBAC), `backend/WORKSPACE_API.md`, OpenAPI tại `/docs`
 - [x] Đặc tả giao diện: `docs/UI_FLOW.md`, `web_ui/flow.md`, `prototype.pdf`
-- [x] Kế hoạch: `docs/SPRINT_PLAN.md`, `web_ui/testplan.md`
+- [x] Kế hoạch: `docs/SPRINT_PLAN.md`, `docs/testplan.md`
 - [ ] Mục lục cho mọi tài liệu dài — D04
 - [ ] Tài liệu khớp với code (bỏ Supabase/Vercel) — P03
 - [ ] User Guide — D01
@@ -230,8 +223,8 @@ Chức năng Must đã xong sớm hơn lịch, nên phần thời gian còn lạ
 
 ### 6.4. Kiểm thử
 
-- [x] Kiểm thử API backend (pytest, 82 test đạt)
-- [x] Kiểm thử đơn vị frontend (Vitest, 28 test đạt)
+- [x] Kiểm thử API backend (pytest, 103 test đạt ngày 21/11)
+- [x] Kiểm thử đơn vị frontend (Vitest, 54 test đạt trong 17 tệp ngày 21/11)
 - [x] Agent giả tất định để test không tốn tiền (`LLM_FAKE=true`)
 - [x] CI chạy test tự động (`.github/workflows/backend.yml`, `web.yml`)
 - [ ] Kiểm thử theo thuộc tính (Hypothesis) — T03

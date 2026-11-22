@@ -1,0 +1,19 @@
+' State diagram of an EmailCode entity: active, used, void or expired (UC01 part C).
+@startuml st-email-code
+!include ../_style.iuml
+title Biểu đồ trạng thái: Mã đăng nhập gửi qua email (EmailCode)
+
+state "Còn hiệu lực" as Active
+state "Đã dùng" as Used
+state "Hết hiệu lực" as Void
+
+[*] --> Active : gửi mã [đủ 60 giây, dưới 5 mã/giờ]\n/ lưu dạng băm, hạn 10 phút
+Active --> Active : nhập sai [số lần sai < 5]\n/ tăng số lần sai
+Active --> Active : nhập đúng [email mới, thiếu tên]\n/ hỏi tên hiển thị
+Active --> Used : nhập đúng [đủ thông tin]\n/ tạo phiên
+Active --> Void : sai lần thứ 5
+Active --> Void : quá 10 phút
+Active --> Void : gửi mã mới cho cùng email
+Used --> [*]
+Void --> [*]
+@enduml

@@ -6,7 +6,7 @@
 | Kỹ thuật cốt lõi | Human-in-the-loop context engineering |
 | Tài liệu nguồn | [flow.md](flow.md) (mô tả luồng bằng lời) |
 | Loại tài liệu | Đặc tả yêu cầu chức năng (SRS), bản nháp |
-| Ngày | 2026-11-17 |
+| Ngày | 2026-11-21 (cập nhật theo website đang chạy) |
 
 Tài liệu này chuyển nội dung của `flow.md` thành dạng đặc tả: thuật ngữ, vai trò, mô hình dữ liệu, yêu cầu có mã số, quy tắc nghiệp vụ, sơ đồ trạng thái, giới hạn và tiêu chí nghiệm thu. Khi hai tài liệu khác nhau, `flow.md` là bản gốc cho tới khi nhóm cập nhật lại. Những chỗ ghi **(đề xuất)** là phần tài liệu này tự bổ sung để đặc tả đủ chi tiết, nhóm cần duyệt lại. Những chỗ ghi **(chưa chốt)** trỏ tới mục 13.
 
@@ -60,9 +60,9 @@ Khi một nhóm cùng lên ý tưởng, mỗi người hỏi một agent AI riê
 
 | Thuật ngữ | Định nghĩa |
 |---|---|
-| Người dùng | Người có tài khoản, đăng nhập bằng Google hoặc GitHub. |
+| Người dùng | Người có tài khoản, đăng nhập bằng Google, GitHub hoặc mã một lần gửi qua email. |
 | Workspace riêng | Không gian của một người, có sẵn khi tạo tài khoản. Chỉ chứa hội thoại với agent riêng và danh sách Highlight riêng. |
-| Workspace chung | Không gian của nhóm: đề bài, kênh, bảng ý tưởng, và bản tổng hợp. Không có agent của riêng nó. |
+| Workspace chung | Không gian của nhóm: đề bài, kênh, bảng ý tưởng, bảng phân công và bản tổng hợp. Không có agent của riêng nó. |
 | Chủ workspace | Người tạo workspace chung, có thêm các quyền quản trị. |
 | Thành viên | Người đã được chủ duyệt vào workspace chung. |
 | Agent riêng | Mô hình AI người dùng chọn sau khi nhập API key. Mỗi người có đúng một agent. Agent trong workspace riêng và agent có tên trong kênh là cùng một agent. |
@@ -76,6 +76,8 @@ Khi một nhóm cùng lên ý tưởng, mỗi người hỏi một agent AI riê
 | Tin hệ thống | Tin do hệ thống tạo, ví dụ thông báo đã thêm ý lên bảng. |
 | Tên trong workspace | Tên hiển thị duy nhất của một thành viên trong một workspace chung (mặc định là tên tài khoản, hoặc biệt danh). |
 | Vai trong nhóm | Một dòng ngắn tối đa 40 ký tự mỗi thành viên tự ghi về việc mình làm. |
+| Bảng phân công | Cây việc tối đa 3 cấp của một workspace chung; mỗi việc có số riêng ("việc 3"), người phụ trách và trạng thái Đang làm hoặc Xong. |
+| Mã đăng nhập | Mã 6 chữ số gửi qua email, dùng một lần trong 10 phút, để đăng nhập hoặc xác thực email khi tạo tài khoản. |
 
 ---
 
@@ -89,8 +91,9 @@ Khi một nhóm cùng lên ý tưởng, mỗi người hỏi một agent AI riê
 | Người dùng | Đã đăng nhập. Có workspace riêng. |
 | Thành viên | Người dùng đã được duyệt vào một workspace chung. |
 | Chủ workspace | Thành viên đã tạo workspace chung đó. |
-| Nhà cung cấp AI | Anthropic hoặc dịch vụ kiểu OpenAI (OpenAI, DeepSeek, OpenRouter, Groq, Ollama). |
+| Nhà cung cấp AI | Anthropic hoặc dịch vụ kiểu OpenAI (OpenAI, Google Gemini, DeepSeek, OpenRouter, Groq, Ollama). |
 | Nhà cung cấp danh tính | Google, GitHub. |
+| Máy chủ gửi thư | Máy chủ SMTP gửi mã đăng nhập tới email. |
 
 Một người có thể đồng thời là chủ ở workspace này và thành viên ở workspace khác.
 
@@ -111,6 +114,10 @@ Một người có thể đồng thời là chủ ở workspace này và thành 
 | Tạo kênh mới | | ✓ |
 | Đổi mã tham gia | | ✓ |
 | Xem và xử lý yêu cầu tham gia | | ✓ |
+| Xem bảng phân công; thêm việc đứng tên mình; nhận việc chưa có người phụ trách; `/task` | ✓ | ✓ |
+| Đánh dấu xong, mở lại việc mình phụ trách (kể cả khi bảng khóa) | ✓ | ✓ |
+| Giao việc cho người khác, để trống, sửa, xóa việc | | ✓ |
+| Khóa, mở khóa bảng phân công | | ✓ |
 
 `?` là điểm chưa chốt (mục 13, câu 3).
 
@@ -156,13 +163,18 @@ erDiagram
     AGENT_HIGHLIGHT ||--|{ SEGMENT : "gồm"
     SEGMENT }o--|| MESSAGE : "trích từ"
     IDEA }o--o| MESSAGE : "nguồn"
+    SHARED_WORKSPACE ||--o{ TASK : "bảng phân công"
+    TASK |o--o{ TASK : "việc con"
+    MEMBERSHIP |o--o{ TASK : "phụ trách"
+    IDENTITY }o..o{ EMAIL_CODE : "xác thực bằng"
 ```
 
 ### 3.1 Thực thể và thuộc tính chính
 
 | Thực thể | Thuộc tính chính | Ràng buộc |
 |---|---|---|
-| USER | tên hiển thị, ảnh, ngày tạo | Mỗi IDENTITY (Google hoặc GitHub) ứng với đúng một USER. |
+| USER | tên hiển thị, ảnh, ngày tạo | Mỗi IDENTITY (Google, GitHub hoặc email) ứng với đúng một USER. |
+| EMAIL_CODE | email, mã đã băm, số lần nhập sai, hạn dùng, thời điểm dùng | Một lần, 10 phút, sai 5 lần thì hết hiệu lực. |
 | API_KEY | nhà cung cấp, địa chỉ dịch vụ (với loại kiểu OpenAI), key đã mã hóa, 4 ký tự cuối, mô hình đã chọn | Tối đa một key mỗi người. Không đọc lại được key đầy đủ. |
 | CONVERSATION | tên (tự lấy từ câu hỏi đầu, sửa được), thời gian cập nhật, ngữ cảnh nhóm | Ngữ cảnh nhóm là "Không có" hoặc đúng một workspace chung. |
 | TURN | vai (người hỏi hoặc agent), nội dung, tên mô hình, trạng thái (xong, đã dừng, lỗi), thời gian | Lượt lỗi không gửi lại cho agent. |
@@ -177,6 +189,7 @@ erDiagram
 | SEGMENT | tin gốc, người nói, nguyên văn | Không sửa được chữ. |
 | IDEA | số thứ tự, nội dung, người đưa lên (người hoặc agent của ai), tin và kênh nguồn, cột, lý do quyết định, người quyết định, thời điểm | Đã chốt hoặc đã loại thì không quay lại. |
 | BRIEF | nội dung Markdown, thời điểm dựng | Mọi thành viên xem được bản mới nhất. |
+| TASK | số thứ tự ("việc N"), mô tả (≤ 200 ký tự), việc cha, người phụ trách, trạng thái, người tạo, người giao | Tối đa 3 cấp; xóa việc thì xóa việc con. |
 
 ---
 
@@ -189,13 +202,16 @@ Mỗi yêu cầu có mã `FR-<nhóm>-<số>`. Mức ưu tiên: **P0** bắt bu�
 | Mã | Yêu cầu | Ưu tiên |
 |---|---|---|
 | FR-AUTH-01 | Mọi trang trừ trang đăng nhập đều yêu cầu đăng nhập. Không có chế độ khách, không có đường dẫn cho người lạ vào thẳng workspace. | P0 |
-| FR-AUTH-02 | Trang đăng nhập chỉ có hai nút: "Tiếp tục với Google" và "Tiếp tục với GitHub". Không có mật khẩu riêng. | P0 |
+| FR-AUTH-02 | Trang đăng nhập có hai thẻ "Đăng nhập" và "Tạo tài khoản"; mỗi thẻ có nút Google, nút GitHub và ô email nhận mã một lần (ô email chỉ hiện khi máy chủ cấu hình gửi thư). Không có mật khẩu riêng. | P0 |
 | FR-AUTH-03 | Lần đầu đăng nhập bằng một danh tính: tạo tài khoản kèm workspace riêng, rồi đưa tới màn nhập API key kèm lời chào. | P0 |
 | FR-AUTH-04 | Danh tính đã có: đăng nhập và đưa tới Trang chủ. Không bao giờ tạo trùng tài khoản. | P0 |
 | FR-AUTH-05 | Sau đăng nhập không tự vào workspace chung nào. Ngoại lệ: nếu người dùng mở một đường dẫn cụ thể khi chưa đăng nhập, đăng nhập xong được đưa về đúng trang đó. | P0 |
 | FR-AUTH-06 | Hủy ở trang của Google hoặc GitHub thì quay về trang đăng nhập, không tạo gì. | P0 |
 | FR-AUTH-07 | Phiên đăng nhập kéo dài 30 ngày, được tính lại từ đầu mỗi lần người dùng quay lại. | P0 |
 | FR-AUTH-08 | Đăng xuất được từ khung thông tin người dùng ở mọi trang. | P0 |
+| FR-AUTH-09 | Đăng nhập bằng email: nhập email, nhận mã 6 chữ số dùng một lần trong 10 phút, nhập mã. Email đã có tài khoản thì vào luôn; email mới thì hỏi tên hiển thị (≤ 40 ký tự) rồi tạo tài khoản. | P0 |
+| FR-AUTH-10 | Giới hạn mã: 60 giây giữa hai lần gửi, tối đa 5 mã mỗi giờ cho một email, sai 5 lần thì mã hết hiệu lực; gửi mã mới làm mã cũ hết hiệu lực; câu trả lời khi gửi mã không lộ email đã có tài khoản hay chưa. | P0 |
+| FR-AUTH-11 | Màn giả lập nhà cung cấp (khi chưa cấu hình OAuth): tạo tài khoản mới phải xác thực email bằng mã; chọn tài khoản có sẵn thì đăng nhập ngay. | P0 |
 
 ### 4.2 Trang chủ (HOME)
 
@@ -211,9 +227,9 @@ Mỗi yêu cầu có mã `FR-<nhóm>-<số>`. Mức ưu tiên: **P0** bắt bu�
 
 | Mã | Yêu cầu | Ưu tiên |
 |---|---|---|
-| FR-KEY-01 | Người dùng chọn nhà cung cấp: Anthropic, hoặc dịch vụ kiểu OpenAI (OpenAI, DeepSeek, OpenRouter, Groq, Ollama). Loại thứ hai yêu cầu nhập thêm địa chỉ dịch vụ. | P0 |
+| FR-KEY-01 | Người dùng chọn nhà cung cấp: Anthropic, hoặc dịch vụ kiểu OpenAI (OpenAI, Google Gemini, DeepSeek, OpenRouter, Groq, Ollama). Loại thứ hai yêu cầu nhập thêm địa chỉ dịch vụ; ô địa chỉ gợi ý sẵn OpenAI, Google Gemini, OpenRouter, DeepSeek, Groq. | P0 |
 | FR-KEY-02 | Khi dán key, hệ thống kiểm tra ngay với nhà cung cấp. | P0 |
-| FR-KEY-03 | Key hợp lệ: hiện danh sách mô hình của key đó để chọn. Mô hình được chọn là agent riêng. | P0 |
+| FR-KEY-03 | Key hợp lệ: hiện danh sách mô hình chat được của key đó để chọn (bỏ mô hình tạo vector, tạo ảnh, giọng nói…). Mô hình được chọn là agent riêng. | P0 |
 | FR-KEY-04 | Key sai, hết tiền hoặc không kết nối được: báo lỗi bằng tiếng Việt dễ hiểu và **không lưu** key. | P0 |
 | FR-KEY-05 | Key được lưu mã hóa. Sau khi lưu chỉ hiện 4 ký tự cuối. Không ai xem lại được key đầy đủ. | P0 |
 | FR-KEY-06 | Cùng màn hình cho phép đổi mô hình, thay key khác, xóa key. | P0 |
@@ -392,6 +408,7 @@ flowchart LR
 | `/decide` | `/decide <số ý> chốt\|loại <lý do>` | Chủ (? câu 3) | Lý do bắt buộc; ý chưa chốt/loại | Chuyển ý sang Đã chốt hoặc Đã loại | P0 |
 | `/summarize` | `/summarize` | Chủ | Chủ có API key | Tóm tắt kênh dưới tên agent của chủ | P0 (chưa chốt, câu 2) |
 | `/brief` | `/brief` | Chủ | | Dựng bản tổng hợp | P0 |
+| `/task` | `/task [@tên] <mô tả>` | Thành viên; chỉ chủ thêm `@tên` | Bảng phân công chưa khóa | Tạo việc cấp cao nhất đứng tên người gõ (hoặc người được chủ giao); tin hệ thống | P0 |
 | `/help` | `/help` | Thành viên | | Danh sách lệnh | P0 |
 
 Lệnh sai cú pháp hoặc không đủ quyền: hệ thống trả lời riêng cho người gõ, không đăng vào kênh **(đề xuất)**.
@@ -446,6 +463,14 @@ Lệnh sai cú pháp hoặc không đủ quyền: hệ thống trả lời riên
 | FR-MEM-02 | Tên trong workspace duy nhất; dùng ở mọi nơi trong workspace: kênh, tên agent ("Claude của Lan B"), người nói trong highlight, ngữ cảnh agent. | P0 |
 | FR-MEM-03 | Vai trong nhóm tối đa 40 ký tự, mỗi người chỉ sửa được vai của mình. | P0 |
 | FR-MEM-04 | Trang cài đặt của chủ: sửa đề bài, đổi tên, đổi chế độ hiển thị, tạo kênh, đổi mã tham gia. | P0 |
+| FR-MEM-05 | Mỗi workspace chung có trang "Bảng phân công": cây việc tối đa 3 cấp, mỗi việc ghi "việc N", mô tả (≤ 200 ký tự), người phụ trách hoặc "chưa có người phụ trách", trạng thái; việc cha hiện số việc con đã xong. | P0 |
+| FR-MEM-06 | Thành viên thêm việc đứng tên mình (cấp cao nhất hoặc việc con, gõ ngay trong khung), hoặc bấm "Nhận" ở việc chưa có người phụ trách; không giao việc cho người khác. | P0 |
+| FR-MEM-07 | Chủ giao việc cho bất kỳ thành viên nào, kể cả mình, hoặc để trống; sửa, giao lại, xóa việc (xóa kèm việc con, có xác nhận). | P0 |
+| FR-MEM-08 | Người phụ trách đánh dấu xong hoặc mở lại việc của mình; chủ làm được với việc người khác khi bảng chưa khóa. | P0 |
+| FR-MEM-09 | Chủ khóa và mở khóa bảng phân công; khi khóa, không ai thêm, sửa, xóa, giao hay nhận việc, kể cả bằng `/task`; người phụ trách vẫn đánh dấu xong. Mỗi lần khóa, mở có tin hệ thống ở kênh "chung". | P0 |
+| FR-MEM-10 | Mỗi việc mới có tin hệ thống ghi việc gì, thuộc việc nào, ai phụ trách, ai giao. | P0 |
+| FR-MEM-11 | Thành viên rời hoặc bị xóa: việc chưa xong của họ thành chưa có người phụ trách, kể cả khi bảng khóa; kênh "chung" có tin liệt kê. | P0 |
+| FR-MEM-12 | Agent của mọi thành viên đọc các việc chưa xong kèm người phụ trách và việc cha; việc đã xong không gửi; agent không tự tạo, nhận hay đổi trạng thái việc. | P0 |
 
 ### 4.15 Kết nối mạng (NET)
 
@@ -605,7 +630,11 @@ Các con số đều **chưa chốt** (mục 13, câu 6) và nên đặt thành 
 | Workspace làm chủ mỗi người | ~10 | Chặn tạo mới |
 | Độ dài vai trong nhóm | 40 ký tự | Chặn nhập thêm |
 | Độ dài mã tham gia | 7 ký tự | |
-| Số lượt gốc đính kèm bản tóm tắt hội thoại | Có giới hạn (chưa có số) | Chặn chọn thêm |
+| Số lượt gốc đính kèm bản tóm tắt hội thoại | 4 | Chặn chọn thêm |
+| Mã đăng nhập email | 6 chữ số, 10 phút, sai tối đa 5 lần | Mã hết hiệu lực, phải gửi mã mới |
+| Gửi mã tới một email | 60 giây giữa hai lần, tối đa 5 mã mỗi giờ | Báo đợi, không gửi |
+| Cấp của bảng phân công | 3 | Không có nút thêm việc con ở cấp 3 |
+| Mô tả một việc | 200 ký tự | Chặn lưu |
 
 ---
 
@@ -622,6 +651,7 @@ Các con số đều **chưa chốt** (mục 13, câu 6) và nên đặt thành 
 | NFR-SEC-05 | Lệnh chỉ thực thi từ tin người gõ; nội dung do agent viết không bao giờ được coi là lệnh. |
 | NFR-SEC-06 | Email hiển thị cho người khác luôn được che bớt. |
 | NFR-SEC-07 | Không thành viên nào thấy key của người khác; chỉ thấy tên mô hình. |
+| NFR-SEC-08 | Mã đăng nhập email chỉ lưu dạng băm HMAC, so khớp theo thời gian không đổi; log không bao giờ chứa mã. |
 
 ### 8.2 Thời gian thực và độ bền
 
@@ -637,7 +667,7 @@ Các con số đều **chưa chốt** (mục 13, câu 6) và nên đặt thành 
 | Mã | Yêu cầu |
 |---|---|
 | NFR-UX-01 | Toàn bộ giao diện và thông báo lỗi bằng tiếng Việt dễ hiểu. |
-| NFR-UX-02 | Trạng thái quan trọng (cột ý tưởng, "Chưa đủ dữ liệu" và "Đạt") không chỉ phân biệt bằng màu. |
+| NFR-UX-02 | Trạng thái quan trọng (cột ý tưởng, trạng thái việc trên bảng phân công) không chỉ phân biệt bằng màu. |
 | NFR-UX-03 | Gợi ý `@` và `/` dùng được hoàn toàn bằng bàn phím. |
 | NFR-UX-04 | Bốn loại tin trong kênh phân biệt được bằng mắt. |
 
@@ -645,7 +675,7 @@ Các con số đều **chưa chốt** (mục 13, câu 6) và nên đặt thành 
 
 | Mã | Yêu cầu |
 |---|---|
-| NFR-DEP-01 | Website chạy trên máy chủ, cần Internet (dữ liệu tập trung, đăng nhập qua Google/GitHub, agent ở máy chủ nhà cung cấp). |
+| NFR-DEP-01 | Website chạy trên máy chủ, cần Internet (dữ liệu tập trung, đăng nhập qua Google/GitHub hoặc mã email, agent ở máy chủ nhà cung cấp). |
 | NFR-DEP-02 | Ngoại lệ cho người phát triển: cài Sàng Ý và mô hình cục bộ (ví dụ Ollama) trong mạng nội bộ thì chat không cần Internet; đăng nhập vẫn cần. |
 
 ---
@@ -673,6 +703,14 @@ Câu chữ dưới đây là **đề xuất**; nhóm chỉnh lại theo giọng 
 | Lệnh chỉ dành cho chủ | "Đây là quyền của chủ workspace." |
 | Chủ chưa có key khi `/summarize` | "Bạn cần nhập API key trước khi tóm tắt kênh." |
 | Mất mạng | "Mất kết nối, đang thử kết nối lại." |
+| Email sai dạng | "Email chưa đúng dạng, ví dụ ten@gmail.com." |
+| Đã gửi mã | "Đã gửi mã 6 số tới <email>. Mã dùng được một lần trong 10 phút." |
+| Mã sai hoặc hết hạn | "Mã sai hoặc đã hết hạn. Gửi mã mới rồi thử lại." |
+| Gửi mã quá sớm | "Vừa gửi mã tới email này. Đợi 60 giây rồi gửi lại." |
+| Không gửi được email | "Không gửi được email. Kiểm tra địa chỉ hoặc thử lại sau." |
+| Bảng phân công đang khóa | "Bảng phân công đang khóa. Chủ workspace mở khóa thì mới thêm, sửa, giao hay nhận việc được." |
+| Thành viên giao việc cho người khác | "Chỉ chủ workspace giao việc cho người khác. Gõ /task <mô tả> để tự nhận một việc." |
+| Quá 3 cấp việc | "Bảng phân công chỉ chia tối đa 3 cấp việc." |
 
 ---
 
@@ -686,6 +724,8 @@ Câu chữ dưới đây là **đề xuất**; nhóm chỉnh lại theo giọng 
 - Nhiều key hoặc nhiều agent cho một người.
 - Chế độ ngoại tuyến.
 - Sửa tin đã gửi trong kênh.
+- Mật khẩu riêng; email chỉ dùng để nhận mã đăng nhập.
+- Hạn chót, mức ưu tiên cho việc trên bảng phân công.
 
 ---
 
@@ -693,8 +733,8 @@ Câu chữ dưới đây là **đề xuất**; nhóm chỉnh lại theo giọng 
 
 | Đợt | Nội dung |
 |---|---|
-| **Đợt này, bắt buộc (P0)** | Đăng nhập; Trang chủ; API key; chat stream; highlight riêng; ngữ cảnh nhóm và khung "Agent đang đọc"; gửi highlight vào kênh (từ danh sách và bằng `@`); tạo và tham gia workspace; kênh thời gian thực; highlight cho agent; bảng ý tưởng; `/summarize`, `/brief`; thành viên và cài đặt; xử lý mất mạng. |
-| **Đợt này, bản tối thiểu (P1)** | Tóm tắt tin cũ khi vượt ~50 tin; Dọn dẹp highlight riêng; tóm tắt hội thoại cho nhóm (nếu đủ thời gian, câu 5). |
+| **Đợt này, bắt buộc (P0)** | Đăng nhập; Trang chủ; API key; chat stream; highlight riêng; ngữ cảnh nhóm và khung "Agent đang đọc"; gửi highlight vào kênh (từ danh sách và bằng `@`); tạo và tham gia workspace; kênh thời gian thực; highlight cho agent; bảng ý tưởng; `/summarize`, `/brief`; thành viên và cài đặt; bảng phân công; đăng nhập bằng mã email; xử lý mất mạng. |
+| **Đợt này, bản tối thiểu (P1)** | Tóm tắt tin cũ khi vượt ~50 tin; Dọn dẹp highlight riêng; tóm tắt hội thoại cho nhóm (đã có trên website, câu 5). |
 | **Làm sau (P2)** | Lệnh `/check` do chủ gọi để đối chiếu ý mới với bảng; mời thành viên qua email hoặc GitHub; dùng gói thuê bao qua kết nối từ ứng dụng của nhà cung cấp. |
 
 ---
@@ -747,6 +787,8 @@ Kịch bản lấy từ "Một vòng làm việc mẫu" trong `flow.md`. Mỗi b
 | 8 | Hội thoại mới tự chọn sẵn ngữ cảnh nhóm (ví dụ workspace dùng gần nhất) hay người dùng tự chọn? | FR-CTX-01 |
 | 9 | Tin gốc bị sửa hoặc xóa thì highlight cho agent (bản chụp) xử lý thế nào? Hiện chưa có chức năng sửa tin. | FR-AHL-11 |
 | 10 | Có cho chốt hoặc loại thẳng từ cột Đề xuất không, hay bắt buộc qua Đang bàn? (do tài liệu này nêu thêm) | Mục 5.2 |
+| 11 | Giữ cả "Vai trong nhóm" và bảng phân công, hay gộp làm một? (website hiện giữ cả hai) | FR-MEM-03, FR-MEM-05 |
+| 12 | Giới hạn bao nhiêu việc chưa xong trên bảng phân công để ngữ cảnh agent không phình? (website hiện chưa giới hạn) | FR-MEM-12, mục 7 |
 
 ---
 
@@ -755,7 +797,7 @@ Kịch bản lấy từ "Một vòng làm việc mẫu" trong `flow.md`. Mỗi b
 | Mục trong `flow.md` | Yêu cầu tương ứng |
 |---|---|
 | Phần mở đầu, Hai không gian, Agent riêng, Hai loại highlight | Mục 1, 2, 3 |
-| 1. Tạo tài khoản và đăng nhập | FR-AUTH-01..08 |
+| 1. Tạo tài khoản và đăng nhập | FR-AUTH-01..11 |
 | 2. Trang chủ | FR-HOME-01..05 |
 | 3. Nhập API key | FR-KEY-01..09, NFR-SEC-01..02 |
 | 4. Chat với agent | FR-CHAT-01..12, FR-PHL-01..14 |
@@ -767,7 +809,7 @@ Kịch bản lấy từ "Một vòng làm việc mẫu" trong `flow.md`. Mỗi b
 | 10. Highlight cho agent | FR-AHL-01..12 |
 | 11. Bảng ý tưởng | FR-IDEA-01..09, mục 5.2 |
 | 12. Tóm tắt và bản tổng hợp | FR-SUM-01..06 |
-| 13. Thành viên và cài đặt | FR-MEM-01..04 |
+| 13. Thành viên và cài đặt | FR-MEM-01..12 |
 | 14. Kết nối mạng | FR-NET-01..05, NFR-DEP-01..02 |
 | Một vòng làm việc mẫu | Mục 12 |
 | Những gì website không làm | Mục 10 |

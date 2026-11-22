@@ -2,9 +2,9 @@
 
 ## cho SpecGate Workspace (Sàng Ý), bản phát hành 1
 
-Phiên bản 1.0, bản duyệt
+Phiên bản 1.1, bản duyệt
 Người lập: Nhóm SpecGate
-Ngày 18/11/2026
+Ngày 21/11/2026
 
 ---
 
@@ -25,6 +25,7 @@ Ngày 18/11/2026
 | --- | --- | --- | --- |
 | Nhóm SpecGate | 13/11/2026 | Bản nháp đầu | 1.0 nháp 1 |
 | Nhóm SpecGate | 18/11/2026 | Theo `flow.md` đã chốt; trình bày theo mẫu SRS của Wiegers, cùng nội dung với `SRS.md` 0.3 | 1.0 bản duyệt |
+| Nhóm SpecGate | 21/11/2026 | Theo website đang chạy, cùng nội dung với `SRS.md` 0.4: đăng nhập bằng mã email, Google Gemini, bảng phân công; bỏ phần dữ liệu còn sót của tính năng đã gỡ (thẻ stats/task, trạng thái chạy) | 1.1 bản duyệt |
 
 ---
 
@@ -43,13 +44,13 @@ Tài liệu đặc tả các yêu cầu chức năng và phi chức năng của 
 
 ### 1.3. Phạm vi dự án và tính năng sản phẩm (Project Scope and Product Features)
 
-SpecGate Workspace cho phép các thành viên một nhóm, mỗi người dùng một agent AI riêng bằng API key của mình, chuyển ngữ cảnh giữa chat riêng với agent và kênh nhóm mà không phải copy và dán: highlight đoạn đáng giá rồi gửi vào kênh kèm tên người nói, agent tự đọc tin của chủ nó, tin của người khác chỉ vào agent qua highlight cho agent. Nhóm ghi quyết định trên bảng ý tưởng kèm lý do. Mô tả chi tiết, mục tiêu nghiệp vụ và phạm vi từng bản phát hành nằm trong [Tài liệu Tầm nhìn và Phạm vi](vision-and-scope.md) [1]. Bản 1 gồm các tính năng FE-1 đến FE-7, với FE-3 (tóm tắt hội thoại cho nhóm) ở bản tối thiểu.
+SpecGate Workspace cho phép các thành viên một nhóm, mỗi người dùng một agent AI riêng bằng API key của mình, chuyển ngữ cảnh giữa chat riêng với agent và kênh nhóm mà không phải copy và dán: highlight đoạn đáng giá rồi gửi vào kênh kèm tên người nói, agent tự đọc tin của chủ nó, tin của người khác chỉ vào agent qua highlight cho agent. Nhóm ghi quyết định trên bảng ý tưởng kèm lý do, và chia việc trên bảng phân công. Mô tả chi tiết, mục tiêu nghiệp vụ và phạm vi từng bản phát hành nằm trong [Tài liệu Tầm nhìn và Phạm vi](vision-and-scope.md) [1]. Bản 1 gồm các tính năng FE-1 đến FE-7, với FE-3 (tóm tắt hội thoại cho nhóm) ở bản tối thiểu.
 
 ### 1.4. Tài liệu tham khảo (References)
 
 1. Nhóm SpecGate. *Tầm nhìn và Phạm vi SpecGate Workspace*, [docs/vision-and-scope.md](vision-and-scope.md).
 2. Nhóm SpecGate. *Cách website hoạt động*, [docs/flow.md](flow.md).
-3. Nhóm SpecGate. *SpecGate Workspace: Đặc tả yêu cầu phần mềm 0.3*, [docs/SRS.md](SRS.md).
+3. Nhóm SpecGate. *SpecGate Workspace: Đặc tả yêu cầu phần mềm 0.4*, [docs/SRS.md](SRS.md).
 4. Nhóm SpecGate. *Ca sử dụng*, [docs/use-cases.md](use-cases.md); *Quy tắc nghiệp vụ*, [docs/business-rules.md](business-rules.md).
 5. Nhóm SpecGate. *API của SpecGate Workspace*, [backend/WORKSPACE_API.md](../backend/WORKSPACE_API.md).
 6. Nhóm SpecGate. *Quy ước cho người và agent viết mã*, [AGENTS.md](../AGENTS.md).
@@ -61,7 +62,7 @@ SpecGate Workspace cho phép các thành viên một nhóm, mỗi người dùng
 
 ### 2.1. Góc nhìn sản phẩm (Product Perspective)
 
-SpecGate Workspace là một hệ thống mới, thay cho cách làm hiện tại: dùng song song các trang chat riêng của từng nhà cung cấp AI cộng với một ứng dụng chat nhóm, và copy, dán qua lại giữa chúng. Hình 1 là sơ đồ ngữ cảnh của bản 1: hệ thống giao tiếp với người dùng qua trình duyệt, với Google và GitHub để xác thực, và với các nhà cung cấp AI để gọi agent bằng key của từng người. Hệ thống dự kiến phát triển qua nhiều bản, thêm mời thành viên qua email, sửa và xóa tin, lệnh `/check`.
+SpecGate Workspace là một hệ thống mới, thay cho cách làm hiện tại: dùng song song các trang chat riêng của từng nhà cung cấp AI cộng với một ứng dụng chat nhóm, và copy, dán qua lại giữa chúng. Hình 1 là sơ đồ ngữ cảnh của bản 1: hệ thống giao tiếp với người dùng qua trình duyệt, với Google và GitHub để xác thực, với máy chủ gửi thư để gửi mã đăng nhập qua email, và với các nhà cung cấp AI để gọi agent bằng key của từng người. Hệ thống dự kiến phát triển qua nhiều bản, thêm mời thành viên qua email, sửa và xóa tin, lệnh `/check`.
 
 ![Sơ đồ ngữ cảnh SpecGate Workspace](../uml/img/vs-context-diagram.svg)
 
@@ -84,7 +85,7 @@ SpecGate Workspace là một hệ thống mới, thay cho cách làm hiện tạ
 
 **OE-3:** CSDL là SQLite khi phát triển và kiểm thử; Postgres 15 trở lên (Supabase) khi triển khai.
 
-**OE-4:** Người dùng truy cập qua Internet bằng HTTPS; máy chủ cần kết nối ra Internet tới Google, GitHub và các nhà cung cấp AI.
+**OE-4:** Người dùng truy cập qua Internet bằng HTTPS; máy chủ cần kết nối ra Internet tới Google, GitHub, máy chủ gửi thư (SMTP) và các nhà cung cấp AI.
 
 ### 2.4. Ràng buộc thiết kế và cài đặt (Design and Implementation Constraints)
 
@@ -96,7 +97,7 @@ SpecGate Workspace là một hệ thống mới, thay cho cách làm hiện tạ
 
 **CO-4:** API có phiên bản trong đường dẫn `/api/v1`; lỗi trả về dạng `{"error": {"code", "message", "details"}}`.
 
-**CO-5:** Chỉ đăng nhập bằng OAuth Google và GitHub; không có mật khẩu riêng.
+**CO-5:** Chỉ đăng nhập bằng OAuth Google và GitHub, hoặc mã một lần gửi qua email; không có mật khẩu riêng.
 
 **CO-6:** Máy chủ chạy một tiến trình; bộ phát tin thời gian thực nằm trong tiến trình.
 
@@ -106,9 +107,9 @@ SpecGate Workspace là một hệ thống mới, thay cho cách làm hiện tạ
 
 **AS-1:** Người dùng tự có API key hợp lệ và tự chịu chi phí của key đó.
 
-**AS-2:** Người dùng có tài khoản Google hoặc GitHub và có Internet khi làm việc.
+**AS-2:** Người dùng có tài khoản Google, GitHub, hoặc một địa chỉ email nhận được thư, và có Internet khi làm việc.
 
-**DE-1:** Hoạt động của hệ thống phụ thuộc OAuth của Google, GitHub và API của các nhà cung cấp AI.
+**DE-1:** Hoạt động của hệ thống phụ thuộc OAuth của Google, GitHub, máy chủ gửi thư (SMTP) và API của các nhà cung cấp AI.
 
 ---
 
@@ -118,20 +119,24 @@ SpecGate Workspace là một hệ thống mới, thay cho cách làm hiện tạ
 
 #### 3.1.1. Mô tả
 
-Người dùng vào website bằng tài khoản Google hoặc GitHub có sẵn; lần đầu hệ thống tạo tài khoản kèm workspace riêng. Sau khi đăng nhập, người dùng tự chọn nơi muốn vào từ một Trang chủ gọn, và biết workspace nào có việc cần làm nhờ dấu báo ở thanh bên. Ca sử dụng: UC01, UC02. Ưu tiên = Cao.
+Người dùng vào website bằng tài khoản Google hoặc GitHub có sẵn, hoặc bằng mã một lần gửi tới email; lần đầu hệ thống tạo tài khoản kèm workspace riêng. Sau khi đăng nhập, người dùng tự chọn nơi muốn vào từ một Trang chủ gọn, và biết workspace nào có việc cần làm nhờ dấu báo ở thanh bên. Ca sử dụng: UC01, UC02. Ưu tiên = Cao.
 
 #### 3.1.2. Yêu cầu chức năng
 
 | Nhãn | Yêu cầu |
 | --- | --- |
 | **Auth.Guard** | Mọi trang trừ trang đăng nhập yêu cầu đăng nhập. Chưa đăng nhập thì hệ thống chuyển về trang đăng nhập, ghi nhớ trang định mở và quay lại đúng trang đó sau khi đăng nhập. (FR-01) |
-| **Auth.Provider** | Hệ thống chỉ có hai cách đăng ký và đăng nhập: Google và GitHub, qua trang chọn tài khoản của nhà cung cấp, với tham số `state` được ký để chống giả mạo. (FR-02) |
+| **Auth.Provider** | Hệ thống có ba cách đăng ký và đăng nhập: Google và GitHub qua trang chọn tài khoản của nhà cung cấp, với tham số `state` được ký để chống giả mạo; và mã một lần gửi qua email. (FR-02) |
+| **Auth.Email.Show** | Trang đăng nhập có ô email nhận mã khi máy chủ đã cấu hình gửi thư; chưa cấu hình thì ẩn. (FR-111) |
+| **Auth.Email.Code** | Mã gồm 6 chữ số, dùng một lần, hết hạn sau 10 phút, chỉ lưu dạng băm; gửi mã mới làm mã cũ hết hiệu lực. (FR-112, BR-34) |
+| **Auth.Email.Account** | Email đã có tài khoản thì đăng nhập; email mới thì hỏi tên hiển thị (tối đa 40 ký tự) rồi tạo tài khoản và workspace riêng. (FR-113) |
+| **Auth.Email.Limit** | Gửi mã cách nhau ít nhất 60 giây, tối đa 5 mã mỗi giờ cho một email; sai 5 lần thì mã hết hiệu lực; mã sai và hết hạn cùng một câu báo; câu trả lời khi gửi mã không lộ email đã có tài khoản hay chưa. (FR-114, BR-34) |
 | **Auth.SignUp** | Lần đầu một danh tính đăng nhập, hệ thống tạo tài khoản, workspace riêng, rồi mở màn nhập key kèm lời chào. (FR-03) |
 | **Auth.SignIn** | Danh tính đã đăng ký thì hệ thống đăng nhập và mở Trang chủ; không bao giờ tạo tài khoản trùng cho cùng một danh tính. (FR-04) |
 | **Auth.Cancel** | Khách hủy ở trang nhà cung cấp thì hệ thống quay về trang đăng nhập kèm thông báo "Bạn đã hủy đăng nhập" và không tạo gì. (FR-06) |
 | **Auth.Session** | Hệ thống nhớ phiên 30 ngày trong cookie httpOnly và tính lại từ đầu mỗi lần người dùng quay lại. (FR-06, BR-26) |
 | **Auth.SignOut** | Người dùng đăng xuất được từ menu tài khoản hoặc khung người dùng; mất kết nối thì phiên trên trình duyệt vẫn bị xóa. (FR-05) |
-| **Auth.DevLogin** | Khi máy chủ chưa cấu hình OAuth và bật chế độ phát triển, hệ thống hiện màn giả lập chọn hoặc tạo tài khoản; màn này không có khi đã cấu hình OAuth thật. (UC01 1.A.A4) |
+| **Auth.DevLogin** | Khi máy chủ chưa cấu hình OAuth và bật chế độ phát triển, hệ thống hiện màn giả lập chọn hoặc tạo tài khoản; tạo tài khoản mới phải xác thực email bằng mã (Google: email đăng nhập; GitHub: email nhập thêm); màn này không có khi đã cấu hình OAuth thật. (FR-115, UC01 1.A.A4) |
 | **Home.Layout** | Trang chủ chỉ gồm thanh workspace, hình minh họa, câu chào, menu tài khoản và vài nút đi vào chức năng chính; logo ở mọi trang dẫn về Trang chủ. (FR-07, BR-03) |
 | **Home.Actions** | Nút thứ nhất là "Chat với agent của tôi", hoặc "Nhập API key để có agent" khi chưa có key; nút thứ hai là "Vào làm việc với nhóm" (mở workspace chung dùng gần nhất), hoặc "Tìm nhóm để tham gia" khi chưa vào nhóm nào. (UC02) |
 | **Home.Badges** | Thanh bên hiện chấm tin chưa đọc, chấm được nhắc tên, số yêu cầu đang chờ ở workspace mình làm chủ; tên kênh có chấm tin chưa đọc; workspace đang chờ duyệt hiện mờ. (FR-08, FR-60) |
@@ -147,8 +152,8 @@ Người dùng nhập API key của một nhà cung cấp, chọn mô hình làm
 
 | Nhãn | Yêu cầu |
 | --- | --- |
-| **Key.Provider** | Người dùng chọn nhà cung cấp Anthropic hoặc kiểu OpenAI; với kiểu OpenAI phải nhập địa chỉ API. Địa chỉ trỏ vào mạng nội bộ bị từ chối trừ khi máy chủ cho phép. (FR-10) |
-| **Key.Verify** | Hệ thống kiểm key ngay với nhà cung cấp; hợp lệ thì lưu key đã mã hóa và hiện danh sách mô hình để chọn. (FR-11) |
+| **Key.Provider** | Người dùng chọn nhà cung cấp Anthropic hoặc kiểu OpenAI; với kiểu OpenAI phải nhập địa chỉ API, ô địa chỉ gợi ý OpenAI, Google Gemini, OpenRouter, DeepSeek, Groq. Địa chỉ trỏ vào mạng nội bộ bị từ chối trừ khi máy chủ cho phép. (FR-10, FR-116) |
+| **Key.Verify** | Hệ thống kiểm key ngay với nhà cung cấp; hợp lệ thì lưu key đã mã hóa và hiện danh sách mô hình chat được để chọn (bỏ mô hình tạo vector, tạo ảnh, giọng nói…). (FR-11, FR-116) |
 | **Key.Error** | Key sai, hết tiền, hoặc không kết nối được thì hệ thống báo bằng câu tiếng Việt dễ hiểu và không lưu key. (FR-12) |
 | **Key.Note** | Màn nhập key ghi rõ gói thuê bao không phải API key. (FR-13) |
 | **Key.Mask** | Sau khi lưu, giao diện chỉ hiện 4 ký tự cuối; không phản hồi API nào chứa key đầy đủ. (FR-14, BR-05) |
@@ -231,7 +236,7 @@ Thành viên chọn một workspace chung làm ngữ cảnh cho hội thoại ri
 
 #### 3.5.1. Mô tả
 
-Người dùng tạo workspace cho nhóm; người khác xin vào bằng mã hoặc qua trang Khám phá và chờ chủ duyệt; thành viên quản lý tên, vai, tư cách; chủ cấu hình workspace. Ca sử dụng: UC09, UC10, UC11, UC16. Ưu tiên = Cao.
+Người dùng tạo workspace cho nhóm; người khác xin vào bằng mã hoặc qua trang Khám phá và chờ chủ duyệt; thành viên quản lý tên, vai, tư cách; chủ cấu hình workspace; cả nhóm chia việc trên bảng phân công. Ca sử dụng: UC09, UC10, UC11, UC16. Ưu tiên = Cao.
 
 #### 3.5.2. Yêu cầu chức năng
 
@@ -258,6 +263,15 @@ Người dùng tạo workspace cho nhóm; người khác xin vào bằng mã ho�
 | **Settings.Code** | Chủ đổi mã tham gia; mã cũ hết hiệu lực ngay. (FR-104, BR-18) |
 | **Settings.Channel** | Chủ tạo kênh mới với tên hợp lệ (chữ thường không dấu, số, gạch ngang), không trùng. (FR-105) |
 | **Settings.Visibility** | Chủ đổi tên và chế độ hiển thị của workspace. (FR-106) |
+| **Tasks.Board** | Mỗi workspace chung có trang "Bảng phân công"; mỗi việc có số riêng ghi "việc N", mô tả tối đa 200 ký tự, người phụ trách hoặc "chưa có người phụ trách", trạng thái Đang làm hoặc Xong. (FR-117, BR-35) |
+| **Tasks.Tree** | Việc xếp thành cây tối đa 3 cấp; việc con nằm trong khung việc cha; việc cha hiện số việc con đã xong; mở, thu gọn được. (FR-118, BR-37) |
+| **Tasks.Member** | Thành viên tạo việc đứng tên mình (cấp cao nhất hoặc việc con) và nhận việc chưa có người phụ trách, chưa xong; không giao cho người khác. (FR-119, BR-36) |
+| **Tasks.Owner** | Chủ giao việc cho bất kỳ thành viên nào, kể cả chính mình, hoặc để trống; sửa, giao lại, xóa việc; xóa kèm mọi việc con, có hộp xác nhận. (FR-120, BR-36, BR-37) |
+| **Tasks.Status** | Người phụ trách đánh dấu xong hoặc mở lại việc của mình; chủ đổi trạng thái việc của người khác khi bảng chưa khóa. (FR-121, BR-36) |
+| **Tasks.Command** | `/task <mô tả>` tạo việc cấp cao nhất đứng tên người gõ; chủ thêm `@tên` để giao; mỗi việc mới có tin hệ thống. `/task` trong lời agent không chạy. (FR-122, BR-35) |
+| **Tasks.Lock** | Chủ khóa, mở khóa bảng; khi khóa không ai thêm, sửa, xóa, giao lại, nhận việc, kể cả bằng `/task`; người phụ trách vẫn đánh dấu xong; mỗi lần khóa, mở có tin hệ thống ở kênh "chung". (FR-123, BR-38) |
+| **Tasks.Leave** | Thành viên rời hoặc bị xóa thì việc chưa xong của họ thành chưa có người phụ trách, kể cả khi bảng khóa; kênh "chung" có tin liệt kê. (FR-124, BR-38) |
+| **Tasks.Context** | Ngữ cảnh agent của mọi thành viên gồm các việc chưa xong kèm người phụ trách và việc cha; khung "Agent đang đọc" hiện đúng mục này. (FR-125, FR-126, BR-39) |
 
 ### 3.6. Kênh chat thời gian thực (FE-6)
 
@@ -324,10 +338,14 @@ Hình 2 là mô hình dữ liệu của bản 1: mỗi lớp là một bảng `w
 | user | một người có tài khoản SpecGate | user id + display name + 1:m{oauth account} + last workspace id | | |
 | user id | mã duy nhất của người dùng | chuỗi `u_` + 16 ký tự hex | 18 | |
 | display name | tên hiển thị của tài khoản, lấy từ nhà cung cấp danh tính | chữ | 40 | |
-| oauth account | danh tính Google hoặc GitHub gắn với một người dùng | provider + subject + login | | (provider, subject) duy nhất |
-| provider | nhà cung cấp danh tính | chữ | 6 | google, github |
-| login | email Google hoặc tên GitHub, để hiển thị tài khoản gốc | chữ và số | 254 | email được che bớt khi hiển thị cho người khác |
-| workspace | một không gian làm việc | workspace id + kind + name + brief + visibility + owner id + join code + 1:m{member} + 1:m{channel} | | |
+| oauth account | danh tính Google, GitHub hoặc email gắn với một người dùng | provider + subject + login | | (provider, subject) duy nhất |
+| provider | nhà cung cấp danh tính | chữ | 6 | google, github, email |
+| login | email Google, tên GitHub, hoặc địa chỉ email, để hiển thị tài khoản gốc | chữ và số | 254 | email được che bớt khi hiển thị cho người khác |
+| email code | mã đăng nhập một lần gửi qua email | email + code hash + attempt count + created at + expires at + consumed at | | mã mới nhất chưa dùng, chưa hết hạn là mã có hiệu lực |
+| code hash | HMAC-SHA256 của mã 6 chữ số | chữ hex | 64 | mã gốc không lưu |
+| attempt count | số lần nhập sai | số nguyên | | 5 lần thì mã hết hiệu lực |
+| workspace | một không gian làm việc | workspace id + kind + name + brief + visibility + owner id + join code + tasks locked + 1:m{member} + 1:m{channel} + 1:m{task} | | |
+| tasks locked | bảng phân công đang khóa | boolean | | mặc định không khóa |
 | kind | loại workspace | chữ | 8 | personal, shared |
 | name | tên workspace | chữ | 80 | không trùng với workspace khác cùng chủ |
 | brief | đề bài của workspace chung | chữ | 4000 | bắt buộc với workspace chung |
@@ -357,7 +375,7 @@ Hình 2 là mô hình dữ liệu của bản 1: mỗi lớp là một bảng `w
 | message | tin trong kênh | seq + sender kind + sender id + agent model + text + body + reply to id + 0:m{card} | | |
 | seq | thứ tự toàn cục của tin, dùng nối lại thời gian thực | số nguyên | | tăng dần |
 | sender kind | loại người gửi | chữ | 6 | human, agent, system |
-| card | bản chụp đi kèm tin | type + nội dung | | quote, conversation-summary, stats, task |
+| card | bản chụp đi kèm tin | type + nội dung | | quote, conversation-summary |
 | agent highlight | highlight cho agent | label + note + 1:m{segment} | | tối đa khoảng 30 mỗi người mỗi workspace |
 | segment | một đoạn trong highlight cho agent | speaker + text + message id + run | | chữ là chuỗi con liền của tin gốc |
 | label | nhãn của highlight cho agent | chữ | 9 | important, review |
@@ -366,7 +384,11 @@ Hình 2 là mô hình dữ liệu của bản 1: mỗi lớp là một bảng `w
 | board item | một ý hoặc ghi chú trên bảng | number + kind + body + status + reason + created by + author label + parts + decided by + decided at | | (workspace, number) duy nhất |
 | board item status | trạng thái ý | chữ | 10 | proposed, discussing, decided, rejected; decided, rejected bắt buộc reason |
 | brief snapshot | bản tổng hợp | built by + built at + data + markdown | | bản mới nhất là bản hiển thị |
-| run status | trạng thái chạy | chữ | 7 | running, done, failed |
+| task | một việc trên bảng phân công | number + body + parent id + assignee id + status + created by + assigned by + done at | | (workspace, number) duy nhất |
+| task number | số của việc, ghi "việc N" | số nguyên | | tăng dần trong workspace, tách khỏi số ý |
+| task body | mô tả việc | chữ | 200 | không được trống |
+| parent id | việc cha | mã việc | | rỗng = việc cấp cao nhất; tối đa 3 cấp |
+| task status | trạng thái việc | chữ | 5 | doing, done |
 | session token | phiên đăng nhập trong cookie `sg_session` | user id + hạn, ký HMAC | | hạn 30 ngày |
 
 ### 4.3. Báo cáo (Reports)
@@ -404,7 +426,11 @@ Hình 2 là mô hình dữ liệu của bản 1: mỗi lớp là một bảng `w
 
 **DI-6:** Bản tổng hợp cũ được giữ; trang hiển thị bản mới nhất.
 
-**DI-7:** Thứ tự tin (`seq`) và số ý trên bảng (`number`) không trùng và không đổi sau khi tạo.
+**DI-7:** Thứ tự tin (`seq`), số ý trên bảng và số việc trên bảng phân công (`number`) không trùng và không đổi sau khi tạo.
+
+**DI-8:** Xóa một việc trên bảng phân công xóa luôn mọi việc con (BR-37). Thành viên rời thì việc chưa xong của họ bỏ trống người phụ trách; việc đã xong giữ tên (BR-38).
+
+**DI-9:** Mã đăng nhập email chỉ lưu dạng băm; mã đã dùng, hết hạn hoặc bị thay được giữ làm căn cứ giới hạn gửi (BR-34).
 
 ---
 
@@ -420,7 +446,7 @@ Hình 2 là mô hình dữ liệu của bản 1: mỗi lớp là một bảng `w
 
 **UI-4:** Mỗi màn có trạng thái đang tải, rỗng và lỗi; thao tác xóa và rời có hộp xác nhận trong ứng dụng, không dùng hộp thoại mặc định của trình duyệt.
 
-**UI-5:** Trạng thái không truyền đạt chỉ bằng màu: ý trên bảng phân biệt bằng cột và chữ; "Chưa đủ dữ liệu" khác "Đạt" cả về chữ lẫn ký hiệu.
+**UI-5:** Trạng thái không truyền đạt chỉ bằng màu: ý trên bảng phân biệt bằng cột và chữ; việc trên bảng phân công ghi "Xong" hay "Đang làm" và người phụ trách bằng chữ.
 
 ### 5.2. Giao tiếp phần mềm (Software Interfaces)
 
@@ -434,6 +460,11 @@ Hình 2 là mô hình dữ liệu của bản 1: mỗi lớp là một bảng `w
 
 - SI-2.1: Chuyển người dùng tới trang cấp quyền với `state` đã ký; nhận `code` tại `/api/v1/auth/{provider}/callback`.
 - SI-2.2: Đổi `code` lấy token, đọc danh tính (Google: `sub`, email, tên; GitHub: id, login, tên).
+
+**SI-4: Máy chủ gửi thư (SMTP)**
+
+- SI-4.1: Hệ thống gửi thư chứa mã đăng nhập qua SMTP cấu hình bằng `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM_ADDRESS`; cổng 465 dùng TLS ngay từ đầu, cổng khác dùng STARTTLS.
+- SI-4.2: Lỗi gửi thư được báo bằng câu tiếng Việt; log chỉ ghi loại lỗi, không ghi mã hay mật khẩu.
 
 **SI-3: CSDL**
 
@@ -451,7 +482,7 @@ Chưa xác định giao tiếp phần cứng nào.
 
 **CI-3:** Phiên đăng nhập gửi bằng cookie httpOnly `sg_session`.
 
-**CI-4:** Hệ thống không gửi email hay tin nhắn; mọi thông báo hiện trong ứng dụng (dấu báo ở thanh bên, trang chờ duyệt).
+**CI-4:** Email duy nhất hệ thống gửi là thư chứa mã đăng nhập; hệ thống không gửi tin nhắn hay email thông báo; mọi thông báo khác hiện trong ứng dụng (dấu báo ở thanh bên, trang chờ duyệt, tin hệ thống trong kênh).
 
 ---
 
@@ -483,7 +514,7 @@ Chưa xác định giao tiếp phần cứng nào.
 
 **SEC-2:** Mọi lời gọi mô hình đi qua máy chủ SpecGate. (NFR-02)
 
-**SEC-3:** Đăng nhập dùng OAuth Google, GitHub với `state` chống giả mạo; phiên lưu trong cookie httpOnly. (NFR-03)
+**SEC-3:** Đăng nhập dùng OAuth Google, GitHub với `state` chống giả mạo, hoặc mã email lưu dạng băm HMAC có giới hạn gửi và giới hạn nhập sai; phiên lưu trong cookie httpOnly. (NFR-03, BR-34)
 
 **SEC-4:** Mỗi thao tác kiểm quyền ở máy chủ (thành viên, chủ workspace, chủ hội thoại, chủ highlight), không dựa vào việc ẩn nút. (NFR-04)
 
@@ -497,7 +528,7 @@ Chưa xác định giao tiếp phần cứng nào.
 
 **SAF-1:** Không lời gọi mô hình nào chạy khi người dùng chưa bấm, để người dùng không bị tính tiền key ngoài ý muốn; ngữ cảnh nhóm có giới hạn kích thước. (NFR-08)
 
-**SAF-2:** Agent không thể gây ra thay đổi trong nhóm: không tự gửi tin, không tự chốt hay loại ý, lệnh trong lời agent không được thực hiện. (BR-19, BR-20)
+**SAF-2:** Agent không thể gây ra thay đổi trong nhóm: không tự gửi tin, không tự chốt hay loại ý, không tự tạo, nhận hay đổi trạng thái việc; lệnh trong lời agent không được thực hiện. (BR-19, BR-20, BR-35)
 
 ### 6.5. Yêu cầu sẵn sàng (Availability Requirements)
 
@@ -535,4 +566,4 @@ Các biểu đồ chuyển trạng thái của thực thể:
 
 *Hình 4. Biểu đồ chuyển trạng thái của một ý trên bảng ý tưởng.*
 
-Các biểu đồ trạng thái khác: [agent riêng theo API key](../uml/img/st-provider-key.svg), [câu trả lời của agent](../uml/img/st-answer-turn.svg), [Highlight riêng](../uml/img/st-private-highlight.svg), [Highlight cho agent](../uml/img/st-agent-highlight.svg), [thành viên](../uml/img/st-member.svg), [kết nối của trình duyệt](../uml/img/st-connection.svg).
+Các biểu đồ trạng thái khác: [mã đăng nhập email](../uml/img/st-email-code.svg), [việc trên bảng phân công](../uml/img/st-task.svg), [agent riêng theo API key](../uml/img/st-provider-key.svg), [câu trả lời của agent](../uml/img/st-answer-turn.svg), [Highlight riêng](../uml/img/st-private-highlight.svg), [Highlight cho agent](../uml/img/st-agent-highlight.svg), [thành viên](../uml/img/st-member.svg), [kết nối của trình duyệt](../uml/img/st-connection.svg).

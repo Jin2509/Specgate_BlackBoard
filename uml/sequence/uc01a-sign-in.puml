@@ -39,4 +39,16 @@ else đồng ý
     end
   end
 end
+opt A.A4 - chưa cấu hình OAuth (màn giả lập)
+  A -> UI : chọn tài khoản có sẵn, hoặc nhập\nthông tin tài khoản mới
+  UI -> C : POST /auth/email-codes (chỉ khi tạo mới)
+  C --> UI : đã gửi mã tới email
+  A -> UI : nhập mã 6 số
+  UI -> C : POST /auth/dev-sessions {provider, login, email?, displayName, code}
+  alt A.E4 - mã sai hoặc thông tin không hợp lệ
+    C --> UI : 400, không tạo tài khoản
+  else
+    C --> UI : cookie phiên; tài khoản mới thì mở màn nhập API key
+  end
+end
 @enduml

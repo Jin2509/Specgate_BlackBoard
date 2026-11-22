@@ -14,11 +14,18 @@ package "Danh tính" {
     created_at: datetime
   }
   class OAuthAccount <<ws_oauth_accounts>> {
-    provider: google | github
+    provider: google | github | email
     subject: str
     login: str
     --
     unique(provider, subject)
+  }
+  class EmailCode <<ws_email_codes>> {
+    email: str[254]
+    code_hash: str <<HMAC, không lưu mã>>
+    attempt_count: int
+    created_at, expires_at: datetime
+    consumed_at: datetime?
   }
 }
 
@@ -81,6 +88,8 @@ package "Workspace chung" {
     visibility: hidden | discoverable
     join_code: str[7]? <<unique>>
     board_seq: int
+    task_seq: int
+    tasks_locked: bool
   }
   class Member <<ws_members>> {
     role: owner | member
@@ -135,6 +144,16 @@ package "Workspace chung" {
     parts: json[]? <<"Ghim cả hai">>
     decided_by, decided_at
   }
+  class Task <<ws_tasks>> {
+    number: int <<"việc N">>
+    body: str[200]
+    parent_id: str? <<tối đa 3 cấp>>
+    assignee_id: str?
+    status: doing | done
+    created_by, assigned_by, done_at
+    --
+    unique(workspace_id, number)
+  }
   class Brief <<ws_briefs>> {
     built_by: str
     built_at: datetime
@@ -167,6 +186,10 @@ Highlight ..> Message : nguồn (bản chụp)
 Workspace "1" *-- "0..*" BoardItem
 BoardItem ..> Message : tin nguồn
 Workspace "1" *-- "0..*" Brief
+Workspace "1" *-- "0..*" Task : bảng phân công
+Task "0..1" -- "0..*" Task : việc cha >
+Member "0..1" -- "0..*" Task : người phụ trách >
+EmailCode ..> OAuthAccount : xác thực email
 Message ..> PrivateHighlight : thẻ trích dẫn
 
 note bottom of Highlight
@@ -176,6 +199,10 @@ end note
 note bottom of PrivateHighlight
   Chỉ người tạo thấy, không tự đi đâu (BR-08).
   Chỉ bị xóa khi chủ xóa (BR-09). Tối đa ~200.
+end note
+note bottom of Task
+  Agent chỉ đọc việc chưa xong (BR-39).
+  Khóa bảng không chặn đánh dấu xong (BR-38).
 end note
 note bottom of BoardItem
   decided/rejected bắt buộc reason, không quay ngược,

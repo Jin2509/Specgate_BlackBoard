@@ -1,6 +1,6 @@
 # Biểu đồ UML của SpecGate Workspace
 
-Mã nguồn PlantUML cho các ca sử dụng trong [SRS 0.3](../docs/SRS.md), dựa trên [flow.md](../docs/flow.md) và mã đang chạy trong `backend/`, `web_ui/`. Cách đọc đầy đủ: [docs/diagram-reading-guide.md](../docs/diagram-reading-guide.md).
+Mã nguồn PlantUML cho các ca sử dụng trong [SRS 0.4](../docs/SRS.md), dựa trên [flow.md](../docs/flow.md) và mã đang chạy trong `backend/`, `web_ui/`. Cách đọc đầy đủ: [docs/diagram-reading-guide.md](../docs/diagram-reading-guide.md).
 
 - **Mỗi phần luồng có một cặp biểu đồ.** Mỗi ca không chia phần, và mỗi Phần A, B, C của ca có chia phần, có đúng một biểu đồ hoạt động (`act-`) và một biểu đồ tuần tự (`seq-`). Tên tệp mang mã ca và chữ của phần: `uc04b-…` là UC04 phần B.
 - **Biểu đồ hoạt động** chia làn theo tác nhân, Hệ thống và hệ thống ngoài; mỗi hộp mở đầu bằng mã luồng của SRS: `(3)` bước của luồng chính, `[A.E1]` luồng thay thế hoặc ngoại lệ.
@@ -12,11 +12,12 @@ Mã nguồn PlantUML cho các ca sử dụng trong [SRS 0.3](../docs/SRS.md), d�
 
 | Loại | Tên biểu đồ | Mã nguồn | Ảnh |
 |---|---|---|---|
-| Ca sử dụng | Sơ đồ ca sử dụng tổng quát (SRS 0.3) | [00-overview.puml](use-case/00-overview.puml) | [SVG](img/uc-00-overview.svg) |
+| Ca sử dụng | Sơ đồ ca sử dụng tổng quát (SRS 0.4) | [00-overview.puml](use-case/00-overview.puml) | [SVG](img/uc-00-overview.svg) |
 | Ca sử dụng | Ca sử dụng chi tiết: workspace riêng và đường riêng sang chung | [01-private-workspace.puml](use-case/01-private-workspace.puml) | [SVG](img/uc-01-private-workspace.svg) |
 | Ca sử dụng | Ca sử dụng chi tiết: workspace chung, kênh và bảng | [02-shared-workspace.puml](use-case/02-shared-workspace.puml) | [SVG](img/uc-02-shared-workspace.svg) |
 | Hoạt động | Biểu đồ hoạt động UC01 - Phần A: Đăng ký hoặc đăng nhập | [uc01a-sign-in.puml](activity/uc01a-sign-in.puml) | [SVG](img/act-uc01a.svg) |
 | Hoạt động | Biểu đồ hoạt động UC01 - Phần B: Đăng xuất | [uc01b-sign-out.puml](activity/uc01b-sign-out.puml) | [SVG](img/act-uc01b.svg) |
+| Hoạt động | Biểu đồ hoạt động UC01 - Phần C: Đăng nhập bằng mã gửi qua email | [uc01c-email-sign-in.puml](activity/uc01c-email-sign-in.puml) | [SVG](img/act-uc01c.svg) |
 | Hoạt động | Biểu đồ hoạt động UC02: Dùng Trang chủ và dấu báo ở thanh bên | [uc02-home-badges.puml](activity/uc02-home-badges.puml) | [SVG](img/act-uc02.svg) |
 | Hoạt động | Biểu đồ hoạt động UC03: Thiết lập API key và chọn mô hình | [uc03-api-key.puml](activity/uc03-api-key.puml) | [SVG](img/act-uc03.svg) |
 | Hoạt động | Biểu đồ hoạt động UC04 - Phần A: Chat với agent riêng | [uc04a-chat.puml](activity/uc04a-chat.puml) | [SVG](img/act-uc04a.svg) |
@@ -42,9 +43,11 @@ Mã nguồn PlantUML cho các ca sử dụng trong [SRS 0.3](../docs/SRS.md), d�
 | Hoạt động | Biểu đồ hoạt động UC15 - Phần B: Dựng và tải bản tổng hợp (/brief) | [uc15b-brief.puml](activity/uc15b-brief.puml) | [SVG](img/act-uc15b.svg) |
 | Hoạt động | Biểu đồ hoạt động UC16 - Phần A: Quản lý tên, vai và tư cách thành viên | [uc16a-members.puml](activity/uc16a-members.puml) | [SVG](img/act-uc16a.svg) |
 | Hoạt động | Biểu đồ hoạt động UC16 - Phần B: Cấu hình workspace chung | [uc16b-settings.puml](activity/uc16b-settings.puml) | [SVG](img/act-uc16b.svg) |
+| Hoạt động | Biểu đồ hoạt động UC16 - Phần C: Bảng phân công | [uc16c-task-board.puml](activity/uc16c-task-board.puml) | [SVG](img/act-uc16c.svg) |
 | Hoạt động | Biểu đồ hoạt động UC17: Tiếp tục làm việc khi mạng chập chờn | [uc17-connection.puml](activity/uc17-connection.puml) | [SVG](img/act-uc17.svg) |
 | Tuần tự | Biểu đồ tuần tự UC01 - Phần A: Đăng ký hoặc đăng nhập | [uc01a-sign-in.puml](sequence/uc01a-sign-in.puml) | [SVG](img/seq-uc01a.svg) |
 | Tuần tự | Biểu đồ tuần tự UC01 - Phần B: Đăng xuất | [uc01b-sign-out.puml](sequence/uc01b-sign-out.puml) | [SVG](img/seq-uc01b.svg) |
+| Tuần tự | Biểu đồ tuần tự UC01 - Phần C: Đăng nhập bằng mã gửi qua email | [uc01c-email-sign-in.puml](sequence/uc01c-email-sign-in.puml) | [SVG](img/seq-uc01c.svg) |
 | Tuần tự | Biểu đồ tuần tự UC02: Dùng Trang chủ và dấu báo ở thanh bên | [uc02-home.puml](sequence/uc02-home.puml) | [SVG](img/seq-uc02.svg) |
 | Tuần tự | Biểu đồ tuần tự UC03: Thiết lập API key và chọn mô hình | [uc03-api-key.puml](sequence/uc03-api-key.puml) | [SVG](img/seq-uc03.svg) |
 | Tuần tự | Biểu đồ tuần tự UC04 - Phần A: Chat với agent riêng | [uc04a-chat.puml](sequence/uc04a-chat.puml) | [SVG](img/seq-uc04a.svg) |
@@ -70,15 +73,18 @@ Mã nguồn PlantUML cho các ca sử dụng trong [SRS 0.3](../docs/SRS.md), d�
 | Tuần tự | Biểu đồ tuần tự UC15 - Phần B: Dựng và tải bản tổng hợp (/brief) | [uc15b-brief.puml](sequence/uc15b-brief.puml) | [SVG](img/seq-uc15b.svg) |
 | Tuần tự | Biểu đồ tuần tự UC16 - Phần A: Quản lý tên, vai và tư cách thành viên | [uc16a-members.puml](sequence/uc16a-members.puml) | [SVG](img/seq-uc16a.svg) |
 | Tuần tự | Biểu đồ tuần tự UC16 - Phần B: Cấu hình workspace chung | [uc16b-settings.puml](sequence/uc16b-settings.puml) | [SVG](img/seq-uc16b.svg) |
+| Tuần tự | Biểu đồ tuần tự UC16 - Phần C: Bảng phân công | [uc16c-task-board.puml](sequence/uc16c-task-board.puml) | [SVG](img/seq-uc16c.svg) |
 | Tuần tự | Biểu đồ tuần tự UC17: Tiếp tục làm việc khi mạng chập chờn | [uc17-connection.puml](sequence/uc17-connection.puml) | [SVG](img/seq-uc17.svg) |
 | Trạng thái | Biểu đồ trạng thái: Highlight cho agent (Highlight) | [agent-highlight.puml](state/agent-highlight.puml) | [SVG](img/st-agent-highlight.svg) |
 | Trạng thái | Biểu đồ trạng thái: Câu trả lời của agent (Turn) | [answer-turn.puml](state/answer-turn.puml) | [SVG](img/st-answer-turn.svg) |
 | Trạng thái | Biểu đồ trạng thái: Ý trên bảng ý tưởng (BoardItem) | [board-item.puml](state/board-item.puml) | [SVG](img/st-board-item.svg) |
 | Trạng thái | Biểu đồ trạng thái: Kết nối của trình duyệt | [connection.puml](state/connection.puml) | [SVG](img/st-connection.svg) |
+| Trạng thái | Biểu đồ trạng thái: Mã đăng nhập gửi qua email (EmailCode) | [email-code.puml](state/email-code.puml) | [SVG](img/st-email-code.svg) |
 | Trạng thái | Biểu đồ trạng thái: Yêu cầu tham gia (JoinRequest) | [join-request.puml](state/join-request.puml) | [SVG](img/st-join-request.svg) |
 | Trạng thái | Biểu đồ trạng thái: Thành viên workspace (Member) | [member.puml](state/member.puml) | [SVG](img/st-member.svg) |
 | Trạng thái | Biểu đồ trạng thái: Highlight riêng (PrivateHighlight) | [private-highlight.puml](state/private-highlight.puml) | [SVG](img/st-private-highlight.svg) |
 | Trạng thái | Biểu đồ trạng thái: Agent riêng theo API key (ProviderKey) | [provider-key.puml](state/provider-key.puml) | [SVG](img/st-provider-key.svg) |
+| Trạng thái | Biểu đồ trạng thái: Việc trên bảng phân công (Task) | [task.puml](state/task.puml) | [SVG](img/st-task.svg) |
 | Lớp | SpecGate: kiến trúc thành phần (web_ui → backend → CSDL) | [architecture.puml](class/architecture.puml) | [SVG](img/cls-architecture.svg) |
 | Lớp | SpecGate: sơ đồ lớp miền dữ liệu (bảng ws_* trong backend) | [domain.puml](class/domain.puml) | [SVG](img/cls-domain.svg) |
 | Tầm nhìn | Cây tính năng SpecGate Workspace | [feature-tree.puml](vision/feature-tree.puml) | [SVG](img/vs-feature-tree.svg) |
@@ -101,9 +107,9 @@ Hoặc dùng extension PlantUML trong VS Code (Alt+D để xem trước).
 
 ## Biểu đồ ca sử dụng
 
-### Sơ đồ ca sử dụng tổng quát (SRS 0.3)
+### Sơ đồ ca sử dụng tổng quát (SRS 0.4)
 
-![Sơ đồ ca sử dụng tổng quát (SRS 0.3)](img/uc-00-overview.svg)
+![Sơ đồ ca sử dụng tổng quát (SRS 0.4)](img/uc-00-overview.svg)
 
 ### Ca sử dụng chi tiết: workspace riêng và đường riêng sang chung
 
@@ -122,6 +128,10 @@ Hoặc dùng extension PlantUML trong VS Code (Alt+D để xem trước).
 ### Biểu đồ hoạt động UC01 - Phần B: Đăng xuất
 
 ![Biểu đồ hoạt động UC01 - Phần B: Đăng xuất](img/act-uc01b.svg)
+
+### Biểu đồ hoạt động UC01 - Phần C: Đăng nhập bằng mã gửi qua email
+
+![Biểu đồ hoạt động UC01 - Phần C: Đăng nhập bằng mã gửi qua email](img/act-uc01c.svg)
 
 ### Biểu đồ hoạt động UC02: Dùng Trang chủ và dấu báo ở thanh bên
 
@@ -223,6 +233,10 @@ Hoặc dùng extension PlantUML trong VS Code (Alt+D để xem trước).
 
 ![Biểu đồ hoạt động UC16 - Phần B: Cấu hình workspace chung](img/act-uc16b.svg)
 
+### Biểu đồ hoạt động UC16 - Phần C: Bảng phân công
+
+![Biểu đồ hoạt động UC16 - Phần C: Bảng phân công](img/act-uc16c.svg)
+
 ### Biểu đồ hoạt động UC17: Tiếp tục làm việc khi mạng chập chờn
 
 ![Biểu đồ hoạt động UC17: Tiếp tục làm việc khi mạng chập chờn](img/act-uc17.svg)
@@ -236,6 +250,10 @@ Hoặc dùng extension PlantUML trong VS Code (Alt+D để xem trước).
 ### Biểu đồ tuần tự UC01 - Phần B: Đăng xuất
 
 ![Biểu đồ tuần tự UC01 - Phần B: Đăng xuất](img/seq-uc01b.svg)
+
+### Biểu đồ tuần tự UC01 - Phần C: Đăng nhập bằng mã gửi qua email
+
+![Biểu đồ tuần tự UC01 - Phần C: Đăng nhập bằng mã gửi qua email](img/seq-uc01c.svg)
 
 ### Biểu đồ tuần tự UC02: Dùng Trang chủ và dấu báo ở thanh bên
 
@@ -337,6 +355,10 @@ Hoặc dùng extension PlantUML trong VS Code (Alt+D để xem trước).
 
 ![Biểu đồ tuần tự UC16 - Phần B: Cấu hình workspace chung](img/seq-uc16b.svg)
 
+### Biểu đồ tuần tự UC16 - Phần C: Bảng phân công
+
+![Biểu đồ tuần tự UC16 - Phần C: Bảng phân công](img/seq-uc16c.svg)
+
 ### Biểu đồ tuần tự UC17: Tiếp tục làm việc khi mạng chập chờn
 
 ![Biểu đồ tuần tự UC17: Tiếp tục làm việc khi mạng chập chờn](img/seq-uc17.svg)
@@ -359,6 +381,10 @@ Hoặc dùng extension PlantUML trong VS Code (Alt+D để xem trước).
 
 ![Biểu đồ trạng thái: Kết nối của trình duyệt](img/st-connection.svg)
 
+### Biểu đồ trạng thái: Mã đăng nhập gửi qua email (EmailCode)
+
+![Biểu đồ trạng thái: Mã đăng nhập gửi qua email (EmailCode)](img/st-email-code.svg)
+
 ### Biểu đồ trạng thái: Yêu cầu tham gia (JoinRequest)
 
 ![Biểu đồ trạng thái: Yêu cầu tham gia (JoinRequest)](img/st-join-request.svg)
@@ -374,6 +400,10 @@ Hoặc dùng extension PlantUML trong VS Code (Alt+D để xem trước).
 ### Biểu đồ trạng thái: Agent riêng theo API key (ProviderKey)
 
 ![Biểu đồ trạng thái: Agent riêng theo API key (ProviderKey)](img/st-provider-key.svg)
+
+### Biểu đồ trạng thái: Việc trên bảng phân công (Task)
+
+![Biểu đồ trạng thái: Việc trên bảng phân công (Task)](img/st-task.svg)
 
 ## Biểu đồ lớp và thành phần
 
@@ -416,7 +446,7 @@ Vai trò tính **theo từng workspace**: một người có thể là chủ wor
 
 | Nhóm | Quyền | Khách | Người dùng | Người xin | Thành viên | Chủ WS | Agent riêng |
 |---|---|:-:|:-:|:-:|:-:|:-:|:-:|
-| Tài khoản | Đăng nhập / đăng ký Google, GitHub | ✔ | – | – | – | – | ✘ |
+| Tài khoản | Đăng nhập / đăng ký Google, GitHub, mã email | ✔ | – | – | – | – | ✘ |
 | Tài khoản | Đăng xuất | ✘ | ✔ | ✔ | ✔ | ✔ | ✘ |
 | WS riêng | Lưu / đổi / xóa API key của mình (tạo agent riêng) | ✘ | ✔ | ✔ | ✔ | ✔ | ✘ |
 | WS riêng | Xem key gốc (chỉ thấy 4 ký tự cuối) | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ |
@@ -450,6 +480,11 @@ Vai trò tính **theo từng workspace**: một người có thể là chủ wor
 | Bảng | Mở lại ý đã chốt / loại | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ |
 | Tổng hợp | Dựng lại bản tổng hợp | ✘ | ✘ | ✘ | ✘ | ✔ | ✘ |
 | Tổng hợp | Xem, tải bản tổng hợp Markdown | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
+| Phân công | Xem bảng phân công | ✘ | ✘ | ✘ | ✔ | ✔ | ◐¹ |
+| Phân công | Thêm việc đứng tên mình, nhận việc trống, /task | ✘ | ✘ | ✘ | ✔⁹ | ✔⁹ | ✘ |
+| Phân công | Giao việc cho người khác, để trống, sửa, xóa | ✘ | ✘ | ✘ | ✘ | ✔⁹ | ✘ |
+| Phân công | Đánh dấu xong / mở lại việc của mình | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
+| Phân công | Khóa / mở khóa bảng phân công | ✘ | ✘ | ✘ | ✘ | ✔ | ✘ |
 
 1. Agent riêng chỉ "đọc" qua bộ dựng ngữ cảnh khi chủ nó hỏi trong hội thoại chọn workspace: đề bài, thành viên và vai, ý chốt/loại, tin của chủ nó, highlight cho agent của chủ nó kèm người nói.
 2. Gửi lại thì cập nhật yêu cầu đang chờ, không tạo trùng.
@@ -459,6 +494,7 @@ Vai trò tính **theo từng workspace**: một người có thể là chủ wor
 6. Agent không tự gửi: lời agent chỉ vào kênh khi chủ nó gửi một Highlight riêng hoặc bản tóm tắt (BR-15); lệnh trong lời agent không thực hiện.
 7. Chỉ chạy khi chủ agent bấm, bằng key của chủ agent; /summarize dùng agent và key của chủ workspace (BR-06).
 8. Phương án đang áp dụng của điểm mở 9.3 (BR-21).
+9. Chỉ khi bảng phân công chưa khóa (BR-38); chủ đổi trạng thái việc của người khác cũng chỉ khi chưa khóa.
 
 ### Ghi chú cài đặt
 

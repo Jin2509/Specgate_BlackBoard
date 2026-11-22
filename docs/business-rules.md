@@ -2,9 +2,9 @@
 
 ## cho SpecGate Workspace (Sàng Ý), bản phát hành 1
 
-Phiên bản 1.0, bản duyệt
+Phiên bản 1.1, bản duyệt
 Người lập: Nhóm SpecGate
-Ngày 18/11/2026
+Ngày 21/11/2026
 
 ## Lịch sử sửa đổi
 
@@ -12,6 +12,7 @@ Ngày 18/11/2026
 | --- | --- | --- | --- |
 | Nhóm SpecGate | 13/11/2026 | Bản nháp đầu, cùng SRS 0.2 | 1.0 nháp 1 |
 | Nhóm SpecGate | 18/11/2026 | Theo `flow.md` đã chốt; thêm BR-26 – BR-33 cho các giới hạn và quy tắc tính toán | 1.0 bản duyệt |
+| Nhóm SpecGate | 21/11/2026 | Theo website đang chạy và SRS 0.4: BR-01 thêm đăng nhập bằng email; thêm BR-34 (mã đăng nhập email) và BR-35 – BR-39 (bảng phân công) | 1.1 bản duyệt |
 
 ## Quy ước
 
@@ -26,7 +27,7 @@ Ngày 18/11/2026
 
 | Mã | Định nghĩa quy tắc | Loại | Tĩnh hay động | Nguồn |
 | --- | --- | --- | --- | --- |
-| BR-01 | Tài khoản chỉ tạo bằng Google hoặc GitHub; mỗi tài khoản Google hoặc GitHub ứng với đúng một tài khoản SpecGate. | Constraint | Static | `flow.md` §1 |
+| BR-01 | Tài khoản chỉ tạo bằng Google, GitHub hoặc một địa chỉ email đã xác thực bằng mã; mỗi danh tính (một tài khoản Google, một tài khoản GitHub, một địa chỉ email) ứng với đúng một tài khoản SpecGate; ba loại danh tính không tự gộp với nhau. | Constraint | Static | `flow.md` §1 |
 | BR-02 | Không có chế độ khách; không có đường dẫn cho người chưa là thành viên vào thẳng một workspace chung. | Constraint | Static | `flow.md` §1, §8 |
 | BR-03 | Trang chủ chỉ có thanh bên, hình minh họa, câu chào và vài nút chức năng; thông báo nằm ở thanh bên, không nằm ở Trang chủ. | Constraint | Static | `flow.md` §2 |
 | BR-04 | Mỗi người có đúng một key và một agent; agent chat ở workspace riêng và agent mang tên người đó trong kênh là một. | Fact | Static | `flow.md` §3, phần "Agent riêng làm được gì" |
@@ -59,12 +60,18 @@ Ngày 18/11/2026
 | BR-31 | Người nói của đoạn lấy từ bản tóm tắt là "Bản tóm tắt do ‹agent› viết (chưa lọc)" (tóm tắt hội thoại) hoặc "Bản tóm tắt kênh do ‹agent› viết (chưa lọc)" (tóm tắt kênh); đoạn lấy từ lượt gốc đính kèm giữ người nói của lượt đó. | Inference | Static | `flow.md` §6, §12 |
 | BR-32 | Vai trong nhóm và tên trong workspace dài tối đa 40 ký tự; mỗi người chỉ sửa được vai và tên của chính mình; màu ảnh đại diện không trùng giữa các thành viên trong cùng workspace. | Constraint | Static | `flow.md` §9, §13 |
 | BR-33 | Bản tóm tắt hội thoại cho nhóm đính kèm tối đa 4 lượt hỏi đáp gốc. | Constraint | Dynamic | `flow.md` §6 |
+| BR-34 | Mã đăng nhập gửi qua email gồm 6 chữ số, dùng một lần, hết hạn sau 10 phút và chỉ lưu ở dạng băm; gửi mã mới làm mã cũ hết hiệu lực; hai lần gửi tới cùng email cách nhau ít nhất 60 giây, tối đa 5 mã mỗi giờ; nhập sai 5 lần thì mã hết hiệu lực. Tạo tài khoản trên màn giả lập cũng phải qua mã này. | Constraint | Dynamic | `flow.md` §1; cấu hình máy chủ (`EMAIL_CODE_*`) |
+| BR-35 | Bảng phân công do con người viết và giao; agent không tự tạo, tự nhận hay tự đổi trạng thái việc, và `/task` nằm trong lời agent không chạy. Số việc tách khỏi số ý và luôn được ghi "việc N". | Constraint | Static | `flow.md` §13 |
+| BR-36 | Chủ workspace giao việc cho bất kỳ thành viên nào, kể cả chính mình, hoặc để chưa có người phụ trách, và sửa, giao lại, xóa mọi việc. Thành viên chỉ tự nhận việc cho mình (tạo việc đứng tên mình hoặc nhận việc chưa có người phụ trách). Chỉ người phụ trách, hoặc chủ khi bảng chưa khóa, đổi được trạng thái việc. | Constraint | Static | `flow.md` §13 |
+| BR-37 | Cây việc chia tối đa 3 cấp; xóa một việc thì xóa luôn mọi việc con; mô tả mỗi việc tối đa 200 ký tự. | Constraint | Dynamic | `flow.md` §13 |
+| BR-38 | Khi bảng phân công bị khóa, không ai thêm, sửa, xóa, giao lại hay nhận việc; người phụ trách vẫn đánh dấu xong được; khi thành viên rời hoặc bị xóa, hệ thống vẫn chuyển việc chưa xong của họ thành chưa có người phụ trách và báo ở kênh "chung". | Action Enabler | Static | `flow.md` §13 |
+| BR-39 | Agent của mọi thành viên chỉ nhận các việc chưa xong, mỗi việc kèm người phụ trách và việc cha nếu có; việc đã xong không gửi. | Computation | Static | `flow.md` §13 |
 
 ## Truy vết quy tắc và ca sử dụng
 
 | Quy tắc | Ca sử dụng áp dụng |
 | --- | --- |
-| BR-01, BR-02, BR-26 | UC01 |
+| BR-01, BR-02, BR-26, BR-34 | UC01 |
 | BR-03 | UC02 |
 | BR-04, BR-05 | UC03 |
 | BR-06, BR-07, BR-09, BR-13 | UC04 |
@@ -75,9 +82,9 @@ Ngày 18/11/2026
 | BR-17, BR-27, BR-28 | UC09 |
 | BR-18, BR-27 | UC10 |
 | BR-18, BR-25, BR-32 | UC11 |
-| BR-19, BR-20 | UC12 |
+| BR-19, BR-20, BR-35 | UC12 |
 | BR-11, BR-12, BR-22, BR-28, BR-31 | UC13 |
 | BR-20, BR-21, BR-23, BR-31 | UC14 |
 | BR-14, BR-24, BR-31 | UC15 |
-| BR-17, BR-18, BR-25, BR-32 | UC16 |
+| BR-17, BR-18, BR-25, BR-32, BR-35, BR-36, BR-37, BR-38, BR-39 | UC16 |
 | BR-26 | UC17 |

@@ -1,11 +1,11 @@
-' Renders the role and permission matrix of SRS 0.3 as an image.
+' Renders the role and permission matrix of SRS 0.4 as an image.
 @startuml rbac
 !include ../_style.iuml
 title Bảng RBAC SpecGate (✔ được, ✘ không, ◐ có điều kiện)
 
 legend top left
 |= Nhóm |= Quyền |= Khách |= Người dùng |= Người xin |= Thành viên |= Chủ WS |= Agent riêng |
-| Tài khoản | Đăng nhập / đăng ký Google, GitHub | ✔ | – | – | – | – | ✘ |
+| Tài khoản | Đăng nhập / đăng ký Google, GitHub, mã email | ✔ | – | – | – | – | ✘ |
 | Tài khoản | Đăng xuất | ✘ | ✔ | ✔ | ✔ | ✔ | ✘ |
 | WS riêng | Lưu / đổi / xóa API key của mình (tạo agent riêng) | ✘ | ✔ | ✔ | ✔ | ✔ | ✘ |
 | WS riêng | Xem key gốc (chỉ thấy 4 ký tự cuối) | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ |
@@ -39,6 +39,11 @@ legend top left
 | Bảng | Mở lại ý đã chốt / loại | ✘ | ✘ | ✘ | ✘ | ✘ | ✘ |
 | Tổng hợp | Dựng lại bản tổng hợp | ✘ | ✘ | ✘ | ✘ | ✔ | ✘ |
 | Tổng hợp | Xem, tải bản tổng hợp Markdown | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
+| Phân công | Xem bảng phân công | ✘ | ✘ | ✘ | ✔ | ✔ | ◐¹ |
+| Phân công | Thêm việc đứng tên mình, nhận việc trống, /task | ✘ | ✘ | ✘ | ✔⁹ | ✔⁹ | ✘ |
+| Phân công | Giao việc cho người khác, để trống, sửa, xóa | ✘ | ✘ | ✘ | ✘ | ✔⁹ | ✘ |
+| Phân công | Đánh dấu xong / mở lại việc của mình | ✘ | ✘ | ✘ | ✔ | ✔ | ✘ |
+| Phân công | Khóa / mở khóa bảng phân công | ✘ | ✘ | ✘ | ✘ | ✔ | ✘ |
 endlegend
 
 caption
@@ -50,5 +55,6 @@ caption
  ⁶ Agent không tự gửi: lời agent chỉ vào kênh khi chủ nó gửi một Highlight riêng hoặc bản tóm tắt (BR-15); lệnh trong lời agent không thực hiện.
  ⁷ Chỉ chạy khi chủ agent bấm, bằng key của chủ agent; /summarize dùng agent và key của chủ workspace (BR-06).
  ⁸ Phương án đang áp dụng của điểm mở 9.3 (BR-21).
+ ⁹ Chỉ khi bảng chưa khóa (BR-38); chủ đổi trạng thái việc của người khác cũng chỉ khi chưa khóa.
 endcaption
 @enduml

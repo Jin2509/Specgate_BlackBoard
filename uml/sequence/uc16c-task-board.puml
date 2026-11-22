@@ -1,0 +1,58 @@
+' Sequence diagram of UC16 part C: the task board routes, the /task command and leaving members.
+@startuml seq-uc16c
+!include ../_style.iuml
+title Biểu đồ tuần tự UC16 - Phần C: Bảng phân công
+autonumber
+
+actor "Thành viên" as A
+boundary "Trang Bảng phân công" as UI
+control "TaskController" as C
+control "ChannelController" as CC
+entity "Workspace" as W
+entity "Task" as T
+entity "Message" as M
+
+A -> UI : mở trang
+UI -> C : GET /workspaces/{id}/tasks
+C --> UI : {locked, tasks}
+A -> UI : (2) gõ mô tả, thêm (việc con: kèm số việc cha)
+UI -> C : POST /workspaces/{id}/tasks {body, assigneeId?, parentNumber?}
+C -> W : bảng có khóa?
+alt C.E1 - bảng đang khóa
+  C --> UI : 409 TASKS_LOCKED
+else C.E2 - thành viên giao cho người khác
+  C --> UI : 403 FORBIDDEN
+else C.E3 - việc cha đã ở cấp 3
+  C --> UI : 400 TOO_DEEP
+else
+  C -> W : tăng số việc
+  C -> T : (3) tạo việc N, Đang làm
+  C -> M : (4) tin hệ thống ở "chung"
+  C --> UI : 201 việc mới
+end
+opt C.A3 - nhận việc
+  UI -> C : POST /tasks/{N}/claim
+  C --> UI : việc đứng tên người nhận, hoặc 409 TASK_TAKEN / TASK_DONE
+end
+opt C.A4 - đánh dấu xong, mở lại
+  UI -> C : PUT /tasks/{N}/status {doing|done}
+  C --> UI : việc đã cập nhật
+end
+opt C.A5, C.A6 - chủ sửa, giao lại, xóa
+  UI -> C : PATCH /tasks/{N} hoặc DELETE /tasks/{N}
+  C -> T : lưu, hoặc xóa việc và mọi việc con
+end
+opt C.A8 - chủ khóa, mở khóa
+  UI -> C : PUT /tasks/lock {locked}
+  C -> M : tin hệ thống ở "chung"
+end
+opt C.A7 - lệnh trong kênh
+  A -> CC : POST /channels/{tên}/messages "/task @Long dựng runner"
+  CC -> T : tạo việc cấp cao nhất
+  CC -> M : tin hệ thống trong kênh đó
+end
+opt C.A9 - thành viên rời hoặc bị xóa
+  C -> T : bỏ người phụ trách ở việc chưa xong
+  C -> M : "Long đã rời workspace. Việc 3 và việc 5\nhiện chưa có người phụ trách."
+end
+@enduml

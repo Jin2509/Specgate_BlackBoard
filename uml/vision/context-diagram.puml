@@ -9,11 +9,13 @@ actor "Người dùng\n(Thành viên, Chủ workspace)" as User
 rectangle "SpecGate Workspace" as System
 rectangle "Google / GitHub\n(OAuth)" as Idp
 rectangle "Nhà cung cấp AI\n(Anthropic, kiểu OpenAI)" as Ai
+rectangle "Máy chủ gửi thư\n(SMTP)" as Mail
 
-User --> System : câu hỏi cho agent, tin trong kênh,\nhighlight, ý tưởng, quyết định
+User --> System : câu hỏi cho agent, tin trong kênh,\nhighlight, ý tưởng, quyết định,\nviệc trên bảng phân công
 System --> User : câu trả lời, tin mới (SSE),\nngữ cảnh "Agent đang đọc", bản tổng hợp
 System --> Idp : yêu cầu xác thực
 Idp --> System : danh tính
+System --> Mail : thư chứa mã đăng nhập
 System --> Ai : ngữ cảnh + câu hỏi\n(bằng key của người hỏi)
 Ai --> System : câu trả lời từng phần,\ndanh sách mô hình
 @enduml

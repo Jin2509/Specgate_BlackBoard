@@ -2,11 +2,11 @@
 
 | Mục | Nội dung |
 | --- | --- |
-| Phiên bản | 0.3 |
-| Ngày | 18/11/2026 |
+| Phiên bản | 0.4 |
+| Ngày | 21/11/2026 |
 | Nguồn | `flow.md` (bản đã chốt), mã nguồn `web_ui/` và `backend/` |
 | Trạng thái | Bản đặc tả theo flow đã chốt; các điểm còn mở ghi ở mục 9 |
-| Thay thế | Bản 0.2 (13/11/2026); khác biệt ghi ở mục 11 |
+| Thay thế | Bản 0.3 (18/11/2026); khác biệt ghi ở mục 11 |
 
 ## Mục lục
 
@@ -20,7 +20,7 @@
 8. [Ngoài phạm vi và việc làm sau](#8-ngoài-phạm-vi-và-việc-làm-sau)
 9. [Điểm còn mở](#9-điểm-còn-mở)
 10. [Ma trận truy vết](#10-ma-trận-truy-vết)
-11. [Thay đổi so với bản 0.2](#11-thay-đổi-so-với-bản-02)
+11. [Thay đổi so với các bản trước](#11-thay-đổi-so-với-các-bản-trước)
 12. [Phụ lục: sơ đồ UML](#12-phụ-lục-sơ-đồ-uml)
 
 ---
@@ -47,9 +47,9 @@ SpecGate bỏ vòng copy và dán đó bằng ba ý:
 
 Trong phạm vi:
 
-- Tài khoản bằng Google hoặc GitHub, Trang chủ, thông báo ở thanh bên.
+- Tài khoản bằng Google, GitHub hoặc mã một lần gửi qua email, Trang chủ, thông báo ở thanh bên.
 - Workspace riêng: API key, chat với agent, highlight riêng, ngữ cảnh nhóm, tóm tắt tin cũ, gửi kết quả vào kênh.
-- Workspace chung: tạo, tham gia, kênh chat thời gian thực, highlight cho agent, bảng ý tưởng, tóm tắt kênh, bản tổng hợp, thành viên và cài đặt.
+- Workspace chung: tạo, tham gia, kênh chat thời gian thực, highlight cho agent, bảng ý tưởng, tóm tắt kênh, bản tổng hợp, bảng phân công, thành viên và cài đặt.
 - Hành vi khi mất kết nối mạng.
 
 Ngoài phạm vi: xem mục 8.
@@ -79,6 +79,9 @@ Ngoài phạm vi: xem mục 8.
 | Mã tham gia | Mã 7 ký tự chữ và số để xin vào một workspace chung |
 | Tên trong workspace | Tên dùng ở mọi nơi trong một workspace, duy nhất trong workspace đó; mặc định là tên hiển thị của tài khoản |
 | Vai trong nhóm | Một dòng tối đa 40 ký tự mỗi thành viên tự ghi về việc của mình, ví dụ "Dựng khung" |
+| Bảng phân công | Cây việc của một workspace chung, tối đa 3 cấp, cho biết ai đang làm việc gì. Mỗi việc có số riêng, luôn viết "việc 3" để không nhầm với "ý 3" trên bảng ý tưởng |
+| Người phụ trách | Thành viên đứng tên một việc trên bảng phân công; việc không có ai đứng tên là "chưa có người phụ trách" |
+| Mã đăng nhập | Mã 6 chữ số hệ thống gửi tới email để đăng nhập, hoặc để xác thực email khi tạo tài khoản; dùng một lần, hết hạn sau 10 phút |
 
 ---
 
@@ -90,7 +93,7 @@ Ngoài phạm vi: xem mục 8.
 | --- | --- | --- |
 | Số lượng | Đúng một cho mỗi người | Không giới hạn số workspace tham gia; làm chủ tối đa khoảng 10 |
 | Ai thấy | Chỉ chủ tài khoản | Các thành viên |
-| Nội dung | Hội thoại với agent, Highlight riêng, Highlight cho agent, Key và mô hình | Đề bài, kênh, bảng ý tưởng, bản tổng hợp, thành viên |
+| Nội dung | Hội thoại với agent, Highlight riêng, Highlight cho agent, Key và mô hình | Đề bài, kênh, bảng ý tưởng, bảng phân công, bản tổng hợp, thành viên |
 | Agent | Agent riêng của người đó | Không có agent riêng của workspace; mỗi thành viên mang agent của mình |
 
 ### 2.2. Ngữ cảnh đi theo hai chiều
@@ -109,14 +112,15 @@ Hai chiều nối thành một vòng: đoạn Lan gửi vào kênh là tin của
 | Thành viên | Người | Người dùng thuộc một workspace chung |
 | Chủ workspace | Người | Thành viên đã tạo workspace; có thêm quyền quản lý |
 | Nhà cung cấp danh tính | Hệ thống ngoài | Google, GitHub (OAuth) |
-| Nhà cung cấp AI | Hệ thống ngoài | Anthropic, hoặc dịch vụ theo kiểu OpenAI (OpenAI, DeepSeek, OpenRouter, Groq, Ollama…) |
+| Máy chủ gửi thư | Hệ thống ngoài | Máy chủ SMTP (ví dụ Gmail) gửi mã đăng nhập tới email người dùng |
+| Nhà cung cấp AI | Hệ thống ngoài | Anthropic, hoặc dịch vụ theo kiểu OpenAI (OpenAI, Google Gemini, DeepSeek, OpenRouter, Groq, Ollama…) |
 | Hệ thống | Hệ thống | SpecGate Workspace |
 
 Một người có thể là chủ ở workspace này và là thành viên ở workspace khác.
 
 ### 2.4. Ràng buộc
 
-- Chỉ đăng nhập bằng Google hoặc GitHub; không có mật khẩu riêng, không có chế độ khách.
+- Chỉ đăng nhập bằng Google, GitHub hoặc mã một lần gửi qua email; không có mật khẩu riêng, không có chế độ khách. Ô đăng nhập bằng email chỉ hiện khi máy chủ đã cấu hình gửi thư.
 - Chỉ dùng API key; gói thuê bao (ChatGPT Plus, Claude Pro…) không dùng được.
 - Hai bộ chuyển đổi mô hình: Anthropic và định dạng kiểu OpenAI.
 - Mọi lời gọi mô hình đi qua máy chủ SpecGate, không gọi từ trình duyệt.
@@ -142,6 +146,11 @@ Một người có thể là chủ ở workspace này và là thành viên ở w
 | Lượt hỏi đáp đính kèm một bản tóm tắt hội thoại | 4 |
 | Độ dài vai trong nhóm, tên trong workspace | 40 ký tự |
 | Mã tham gia | 7 ký tự chữ và số, không dùng ký tự dễ nhầm (O và 0…) |
+| Mã đăng nhập gửi qua email | 6 chữ số, dùng một lần, hết hạn sau 10 phút; sai 5 lần thì mã hết hiệu lực |
+| Gửi mã tới một email | cách nhau ít nhất 60 giây, tối đa 5 mã trong một giờ |
+| Tên hiển thị của tài khoản | 40 ký tự |
+| Cấp của bảng phân công | tối đa 3 cấp (việc, việc con, việc con của việc con) |
+| Mô tả một việc trên bảng phân công | 200 ký tự |
 
 Các con số "khoảng" là đề xuất, nhóm có thể điều chỉnh (mục 9).
 
@@ -182,12 +191,12 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 | Thuộc tính | Nội dung |
 | --- | --- |
 | Tác nhân chính | Khách (đăng nhập, đăng ký); Người dùng (đăng xuất) |
-| Tác nhân phụ | Google hoặc GitHub |
-| Mục tiêu | Vào website bằng tài khoản Google/GitHub có sẵn, và rời phiên khi muốn |
-| Tiền điều kiện | Chưa đăng nhập (phần A); đã đăng nhập (phần B) |
+| Tác nhân phụ | Google hoặc GitHub; máy chủ gửi thư |
+| Mục tiêu | Vào website bằng tài khoản Google/GitHub có sẵn hoặc bằng email, và rời phiên khi muốn |
+| Tiền điều kiện | Chưa đăng nhập (phần A, C); đã đăng nhập (phần B) |
 | Hậu điều kiện thành công | Có phiên 30 ngày; lần đầu thì có tài khoản và workspace riêng; đăng xuất thì phiên bị xóa |
 | Hậu điều kiện thất bại | Không tạo tài khoản, không có phiên |
-| Yêu cầu | FR-01 – FR-06 |
+| Yêu cầu | FR-01 – FR-06, FR-111 – FR-115 |
 
 ##### Phần A. Đăng ký hoặc đăng nhập bằng Google/GitHub
 
@@ -197,7 +206,7 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 **Luồng chính**
 
 1. Khách mở một trang bất kỳ. Hệ thống chuyển về trang đăng nhập và ghi nhớ trang định mở.
-2. Trang đăng nhập có hai chế độ (Đăng nhập, Tạo tài khoản) và đúng hai nút: "Tiếp tục với Google", "Tiếp tục với GitHub".
+2. Trang đăng nhập có hai thẻ (Đăng nhập, Tạo tài khoản), hai nút "Tiếp tục với Google", "Tiếp tục với GitHub" (ở thẻ Tạo tài khoản là "Đăng ký với …"), và ô nhập email để nhận mã một lần (phần C) khi máy chủ đã cấu hình gửi thư.
 3. Khách bấm một nút. Hệ thống chuyển sang trang chọn tài khoản của nhà cung cấp.
 4. Khách chọn tài khoản và đồng ý chia sẻ tên, email (hoặc tên GitHub).
 5. Nhà cung cấp trả danh tính về hệ thống.
@@ -209,13 +218,14 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 - **A.A1. Lần đầu dùng danh tính này** (thay bước 6): hệ thống tạo tài khoản SpecGate kèm workspace riêng, rồi đưa người dùng tới màn nhập API key kèm lời chào (UC03).
 - **A.A2. Có trang định mở** (thay bước 6): ví dụ đường dẫn tới một kênh bạn bè gửi; đăng nhập xong hệ thống đưa người dùng tới đúng trang đó thay vì Trang chủ.
 - **A.A3. Quay lại trong 30 ngày**: người dùng mở website khi phiên còn hạn; hệ thống bỏ qua trang đăng nhập và tính lại 30 ngày từ đầu.
-- **A.A4. Môi trường phát triển chưa cấu hình OAuth**: hệ thống hiện màn giả lập bước chọn tài khoản của nhà cung cấp (chọn tài khoản đã đăng ký, hoặc nhập tên GitHub/email và tên hiển thị để tạo mới). Màn này có nút "Hủy đăng ký" quay về trang đăng nhập. Màn giả lập không có khi đã cấu hình OAuth thật.
+- **A.A4. Môi trường phát triển chưa cấu hình OAuth**: hệ thống hiện màn giả lập bước chọn tài khoản của nhà cung cấp. Chọn một tài khoản đã đăng ký thì đăng nhập ngay. Tạo tài khoản mới thì bắt buộc xác thực email: người dùng nhập email Google (hoặc tên GitHub kèm "Email nhận mã xác thực") và tên hiển thị, bấm "Gửi mã xác thực tới email", nhập mã 6 số rồi bấm "Xác nhận mã và tạo tài khoản". Bước nhập mã có "Sửa thông tin" và "Gửi lại mã"; mã theo cùng quy tắc với phần C (BR-34). Màn này có nút "Hủy đăng ký" quay về trang đăng nhập. Màn giả lập không có khi đã cấu hình OAuth thật, và khi đó tạo tài khoản bằng Google/GitHub không cần mã email.
 
 **Ngoại lệ**
 
 - **A.E1. Khách hủy ở trang của nhà cung cấp**: quay về trang đăng nhập kèm thông báo "Bạn đã hủy đăng nhập", không tạo gì.
 - **A.E2. Nhà cung cấp lỗi hoặc trả dữ liệu không hợp lệ**: quay về trang đăng nhập kèm thông báo lỗi dễ hiểu.
 - **A.E3. Không kết nối được máy chủ SpecGate**: trang đăng nhập báo máy chủ tạm không phản hồi; không đăng xuất phiên đang có.
+- **A.E4. Màn giả lập: mã xác thực sai hoặc hết hạn, tên GitHub hay email sai dạng, tên hiển thị trống hoặc quá 40 ký tự**: báo lỗi ở đúng ô, không tạo tài khoản.
 
 **Quy tắc:** BR-01, BR-02.
 
@@ -256,6 +266,54 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 ![Biểu đồ tuần tự UC01 - Phần B: Đăng xuất](../uml/img/seq-uc01b.svg)
 
 *Biểu đồ tuần tự UC01 - Phần B: Đăng xuất. Mã nguồn: [uc01b-sign-out.puml](../uml/sequence/uc01b-sign-out.puml)*
+
+##### Phần C. Đăng ký hoặc đăng nhập bằng mã gửi qua email
+
+*Kích hoạt:* Khách nhập email ở trang đăng nhập (thẻ Đăng nhập hoặc Tạo tài khoản)  
+*Tiền điều kiện:* Chưa đăng nhập; máy chủ đã cấu hình gửi thư
+
+**Luồng chính**
+
+1. Khách nhập email và bấm "Gửi mã đăng nhập".
+2. Hệ thống kiểm dạng email, làm mất hiệu lực các mã chưa dùng của email đó, tạo mã 6 chữ số hết hạn sau 10 phút, lưu mã ở dạng băm và gửi mã tới email. Câu trả lời như nhau dù email đã có tài khoản hay chưa.
+3. Trang chuyển sang bước nhập mã và báo "Đã gửi mã 6 số tới ‹email›. Mã dùng được một lần trong 10 phút."
+4. Khách nhập mã và bấm "Xác nhận và đăng nhập".
+5. Mã đúng và email đã có tài khoản: hệ thống đánh dấu mã đã dùng, tạo phiên 30 ngày và đưa người dùng tới Trang chủ (UC02), hoặc tới trang định mở như A.A2.
+
+**Luồng thay thế**
+
+- **C.A1. Email chưa có tài khoản** (thay bước 5): hệ thống báo cần tên hiển thị và hiện ô "Tên hiển thị"; mã chưa bị dùng. Khách nhập tên (tối đa 40 ký tự) và xác nhận lại. Hệ thống tạo tài khoản kèm workspace riêng rồi đưa người dùng tới màn nhập API key kèm lời chào (UC03).
+- **C.A2. Gửi lại mã**: khách bấm "Gửi lại mã"; hệ thống gửi mã mới và báo "Đã gửi mã mới. Mã cũ không còn dùng được."
+- **C.A3. Đổi email**: khách bấm "Đổi email"; trang quay về bước 1.
+
+**Ngoại lệ**
+
+- **C.E1. Email sai dạng**: báo "Email chưa đúng dạng, ví dụ ten@gmail.com."; không gửi mã.
+- **C.E2. Gửi mã quá dày**: chưa đủ 60 giây từ lần gửi trước, hoặc email đã nhận 5 mã trong một giờ; báo khách đợi; không gửi mã.
+- **C.E3. Mã sai hoặc đã hết hạn**: báo "Mã sai hoặc đã hết hạn. Gửi mã mới rồi thử lại."; mỗi lần sai được đếm, sai đến lần thứ 5 thì mã hết hiệu lực.
+- **C.E4. Máy chủ thư không gửi được**: báo "Không gửi được email. Kiểm tra địa chỉ hoặc thử lại sau."
+- **C.E5. Tên hiển thị quá 40 ký tự**: không tạo tài khoản.
+- **C.E6. Máy chủ chưa cấu hình gửi thư**: trang đăng nhập không có ô email; khách dùng Google hoặc GitHub (phần A).
+
+**Quy tắc:** BR-01, BR-26, BR-34.
+
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC01 - Phần C: Đăng nhập bằng mã gửi qua email](../uml/img/act-uc01c.svg)
+
+*Biểu đồ hoạt động UC01 - Phần C: Đăng nhập bằng mã gửi qua email. Mã nguồn: [uc01c-email-sign-in.puml](../uml/activity/uc01c-email-sign-in.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC01 - Phần C: Đăng nhập bằng mã gửi qua email](../uml/img/seq-uc01c.svg)
+
+*Biểu đồ tuần tự UC01 - Phần C: Đăng nhập bằng mã gửi qua email. Mã nguồn: [uc01c-email-sign-in.puml](../uml/sequence/uc01c-email-sign-in.puml)*
+
+**Biểu đồ trạng thái** (vòng đời của thực thể chính trong ca này)
+
+![Biểu đồ trạng thái: Mã đăng nhập gửi qua email (EmailCode)](../uml/img/st-email-code.svg)
+
+*Biểu đồ trạng thái: Mã đăng nhập gửi qua email (EmailCode). Mã nguồn: [email-code.puml](../uml/state/email-code.puml)*
 
 #### UC02. Dùng Trang chủ và dấu báo ở thanh bên
 
@@ -315,15 +373,15 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 | Kích hoạt | Đăng ký lần đầu (UC01 A.A1), bấm ô "Agent của bạn" ở cột bên, hoặc mở "Key và mô hình" |
 | Hậu điều kiện thành công | Key được lưu mã hóa; mô hình đã chọn là agent riêng; giao diện chỉ còn hiện 4 ký tự cuối của key |
 | Hậu điều kiện thất bại | Key không được lưu |
-| Yêu cầu | FR-10 – FR-14 |
+| Yêu cầu | FR-10 – FR-14, FR-116 |
 
 **Luồng chính**
 
 1. Người dùng chọn nhà cung cấp: Anthropic, hoặc "Kiểu OpenAI".
-2. Với "Kiểu OpenAI", người dùng nhập thêm địa chỉ API của dịch vụ.
+2. Với "Kiểu OpenAI", người dùng nhập thêm địa chỉ API của dịch vụ. Ô địa chỉ gợi ý sẵn địa chỉ của OpenAI, Google Gemini, OpenRouter, DeepSeek và Groq.
 3. Người dùng dán API key và bấm "Kiểm và lưu key".
 4. Hệ thống kiểm key ngay với nhà cung cấp.
-5. Key dùng được: hệ thống lưu key đã mã hóa và lấy danh sách mô hình của key.
+5. Key dùng được: hệ thống lưu key đã mã hóa và lấy danh sách mô hình của key, bỏ các mô hình không chat được (tạo vector, tạo ảnh, giọng nói, kiểm duyệt…).
 6. Người dùng chọn một mô hình. Mô hình này là agent riêng của người dùng.
 
 **Luồng thay thế**
@@ -1294,11 +1352,11 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 
 | Thuộc tính | Nội dung |
 | --- | --- |
-| Tác nhân chính | Thành viên (tên, vai, rời nhóm); Chủ workspace (đề bài, mã, kênh, xóa thành viên) |
+| Tác nhân chính | Thành viên (tên, vai, rời nhóm, nhận việc); Chủ workspace (đề bài, mã, kênh, xóa thành viên, giao việc, khóa bảng phân công) |
 | Mục tiêu | Giữ danh tính rõ ràng trong nhóm cho cả người lẫn agent, và giữ thông tin workspace đúng |
 | Tiền điều kiện | Là thành viên; một số thao tác yêu cầu là chủ |
 | Hậu điều kiện thành công | Thay đổi có hiệu lực ngay ở mọi nơi trong workspace và trong ngữ cảnh agent từ câu hỏi tiếp theo |
-| Yêu cầu | FR-98 – FR-106 |
+| Yêu cầu | FR-98 – FR-106, FR-117 – FR-126 |
 
 ##### Phần A. Quản lý tên, vai và tư cách thành viên
 
@@ -1373,11 +1431,64 @@ Mỗi ca dùng cùng một mẫu: bảng thuộc tính, luồng chính, luồng 
 
 *Biểu đồ tuần tự UC16 - Phần B: Cấu hình workspace chung. Mã nguồn: [uc16b-settings.puml](../uml/sequence/uc16b-settings.puml)*
 
+##### Phần C. Bảng phân công
+
+*Kích hoạt:* Mở trang "Bảng phân công" trên cột bên, hoặc gõ `/task` trong kênh  
+*Tiền điều kiện:* Là thành viên workspace chung
+
+**Luồng chính (thêm việc trên trang)**
+
+1. Thành viên mở trang "Bảng phân công". Trang hiện cây việc: mỗi việc là một khung có "việc N", mô tả, người phụ trách (hoặc "Chưa có người phụ trách") và trạng thái; việc con nằm trong khung của việc cha, việc cha hiện "x/y việc con xong". Đầu trang ghi số việc đang làm, số việc xong và số việc của người đang xem.
+2. Thành viên gõ mô tả (tối đa 200 ký tự) vào ô ở cuối cây ("Thêm việc lớn, ví dụ: tìm ý tưởng đề tài") và thêm.
+3. Hệ thống tạo việc ở cấp cao nhất, đứng tên người tạo, trạng thái "Đang làm", số việc tăng dần trong workspace.
+4. Kênh "chung" hiện tin hệ thống, ví dụ "Long tự nhận việc 4: dựng runner."
+5. Từ câu hỏi tiếp theo, agent của mọi thành viên đọc được việc mới (khung "Agent đang đọc" có mục Bảng phân công).
+
+**Luồng thay thế**
+
+- **C.A1. Thêm việc con**: thành viên bấm nút thêm việc con trên khung của một việc cấp 1 hoặc cấp 2 và gõ ngay trong khung đó, không mở hộp thoại. Tin hệ thống ghi việc cha, ví dụ "việc 5 (thuộc việc 1)".
+- **C.A2. Chủ giao việc khi thêm**: chủ chọn người phụ trách là một thành viên bất kỳ, "Tôi (‹tên›)", hoặc "Chưa có người phụ trách". Tin hệ thống ghi "‹chủ› đã giao việc N cho ‹tên›: …" hoặc "… Việc này chưa có người phụ trách."
+- **C.A3. Nhận việc**: thành viên bấm "Nhận" ở một việc chưa có người phụ trách và chưa xong; việc đứng tên người đó.
+- **C.A4. Đánh dấu xong, mở lại**: người phụ trách đánh dấu việc của mình là xong hoặc mở lại, kể cả khi bảng đang khóa. Chủ đổi được trạng thái việc của người khác khi bảng chưa khóa.
+- **C.A5. Chủ sửa hoặc giao lại**: chủ chọn "Sửa việc N", đổi mô tả hoặc người phụ trách (kể cả giao cho chính mình hoặc để trống).
+- **C.A6. Chủ xóa việc**: chủ chọn xóa và xác nhận "Xóa việc N?"; việc đó và mọi việc con của nó bị xóa.
+- **C.A7. Lệnh trong kênh**: thành viên gõ `/task <mô tả>`; hệ thống tạo việc cấp cao nhất đứng tên người gõ và kênh hiện tin hệ thống. Chủ gõ `/task @tên <mô tả>` để giao việc cho người đó.
+- **C.A8. Khóa và mở khóa**: chủ bấm "Khóa bảng" hoặc "Mở khóa"; kênh "chung" hiện tin hệ thống. Khi khóa, trang hiện dải "Bảng đang khóa. Người phụ trách vẫn đánh dấu xong được việc của mình."
+- **C.A9. Thành viên rời hoặc bị xóa** (A.A4, A.A5): các việc chưa xong của người đó thành chưa có người phụ trách, kể cả khi bảng đang khóa; việc đã xong giữ tên. Kênh "chung" hiện tin, ví dụ "Long đã rời workspace. Việc 3 và việc 5 hiện chưa có người phụ trách."
+
+**Ngoại lệ**
+
+- **C.E1. Bảng đang khóa**: thêm, sửa, xóa, giao lại và nhận việc đều bị từ chối, kể cả bằng `/task`; hệ thống báo "Bảng phân công đang khóa. Chủ workspace mở khóa thì mới thêm, sửa, giao hay nhận việc được."
+- **C.E2. Thành viên không phải chủ giao việc cho người khác** (`/task @tên`): hệ thống trả lời "Chỉ chủ workspace giao việc cho người khác. Gõ /task <mô tả> để tự nhận một việc." Trên trang, thành viên không có ô chọn người phụ trách; nút sửa, xóa, khóa chỉ chủ thấy, và máy chủ vẫn kiểm quyền.
+- **C.E3. Thêm việc con dưới việc cấp 3**: không có nút; máy chủ báo "Bảng phân công chỉ chia tối đa 3 cấp việc."
+- **C.E4. Nhận việc đã có người phụ trách hoặc đã xong**: báo "Việc N đã có người phụ trách." hoặc "Việc N đã xong."
+- **C.E5. Mô tả trống hoặc quá 200 ký tự**: báo "Mô tả việc đang trống." hoặc "Mô tả việc tối đa 200 ký tự."; không tạo.
+- **C.E6. `/task` không kèm mô tả**: hệ thống trả lời cách dùng lệnh.
+- **C.E7. Giao cho người không còn là thành viên**: báo "Người này không còn là thành viên của workspace."
+
+**Quy tắc:** BR-20, BR-35 – BR-39.
+
+**Biểu đồ hoạt động**
+
+![Biểu đồ hoạt động UC16 - Phần C: Bảng phân công](../uml/img/act-uc16c.svg)
+
+*Biểu đồ hoạt động UC16 - Phần C: Bảng phân công. Mã nguồn: [uc16c-task-board.puml](../uml/activity/uc16c-task-board.puml)*
+
+**Biểu đồ tuần tự**
+
+![Biểu đồ tuần tự UC16 - Phần C: Bảng phân công](../uml/img/seq-uc16c.svg)
+
+*Biểu đồ tuần tự UC16 - Phần C: Bảng phân công. Mã nguồn: [uc16c-task-board.puml](../uml/sequence/uc16c-task-board.puml)*
+
 **Biểu đồ trạng thái** (vòng đời của thực thể chính trong ca này)
 
 ![Biểu đồ trạng thái: Thành viên workspace (Member)](../uml/img/st-member.svg)
 
 *Biểu đồ trạng thái: Thành viên workspace (Member). Mã nguồn: [member.puml](../uml/state/member.puml)*
+
+![Biểu đồ trạng thái: Việc trên bảng phân công (Task)](../uml/img/st-task.svg)
+
+*Biểu đồ trạng thái: Việc trên bảng phân công (Task). Mã nguồn: [task.puml](../uml/state/task.puml)*
 
 ### 4.10. Kết nối
 
@@ -1435,7 +1546,7 @@ Mỗi yêu cầu kiểm được bằng ít nhất một ca kiểm thử. Mức:
 | Mã | Yêu cầu | Mức |
 | --- | --- | --- |
 | FR-01 | Mọi trang trừ trang đăng nhập đều yêu cầu đăng nhập; chưa đăng nhập thì chuyển về trang đăng nhập và quay lại đúng trang định mở sau khi đăng nhập | M |
-| FR-02 | Chỉ có hai cách đăng ký/đăng nhập: Google và GitHub, qua trang chọn tài khoản của nhà cung cấp | M |
+| FR-02 | Có ba cách đăng ký/đăng nhập: Google và GitHub qua trang chọn tài khoản của nhà cung cấp, và mã một lần gửi qua email (FR-111 – FR-115) | M |
 | FR-03 | Lần đầu đăng ký, hệ thống tạo tài khoản và workspace riêng rồi đưa người dùng tới màn nhập key kèm lời chào | M |
 | FR-04 | Danh tính đã đăng ký thì đăng nhập luôn và tới Trang chủ; không bao giờ tạo tài khoản trùng | M |
 | FR-05 | Người dùng đăng xuất được từ menu tài khoản hoặc khung người dùng | M |
@@ -1443,6 +1554,11 @@ Mỗi yêu cầu kiểm được bằng ít nhất một ca kiểm thử. Mức:
 | FR-07 | Trang chủ chỉ gồm thanh workspace, hình minh họa, câu chào, menu tài khoản và vài nút đi vào chức năng chính; logo ở mọi trang dẫn về Trang chủ | M |
 | FR-08 | Thanh bên hiện dấu báo tin chưa đọc, dấu báo được nhắc tên, và số yêu cầu đang chờ (với workspace mình làm chủ); tên kênh có chấm tin chưa đọc | M |
 | FR-09 | Dấu báo tự cập nhật không cần tải lại và tự mất khi đã đọc hoặc đã xử lý | M |
+| FR-111 | Trang đăng nhập có ô email nhận mã một lần khi máy chủ đã cấu hình gửi thư; chưa cấu hình thì ẩn ô này | M |
+| FR-112 | Mã gồm 6 chữ số, dùng một lần, hết hạn sau 10 phút; gửi mã mới làm mã cũ hết hiệu lực; mã lưu ở dạng băm | M |
+| FR-113 | Email đã có tài khoản thì đăng nhập; email mới thì hỏi tên hiển thị (tối đa 40 ký tự) rồi tạo tài khoản và workspace riêng | M |
+| FR-114 | Gửi mã cách nhau ít nhất 60 giây và tối đa 5 mã mỗi giờ cho một email; sai 5 lần thì mã hết hiệu lực; mã sai và mã hết hạn báo cùng một câu; câu trả lời khi gửi mã không lộ email đã có tài khoản hay chưa | M |
+| FR-115 | Trên màn giả lập nhà cung cấp (khi chưa cấu hình OAuth), tạo tài khoản mới bắt buộc xác thực email bằng mã: Google dùng chính email đăng nhập, GitHub nhập thêm email nhận mã | M |
 
 ### 5.2. Workspace riêng (UC03–UC05)
 
@@ -1453,6 +1569,7 @@ Mỗi yêu cầu kiểm được bằng ít nhất một ca kiểm thử. Mức:
 | FR-12 | Key sai, hết tiền, hoặc không kết nối được thì báo bằng câu tiếng Việt dễ hiểu và không lưu key | M |
 | FR-13 | Màn nhập key ghi rõ gói thuê bao không phải API key | M |
 | FR-14 | Sau khi lưu chỉ hiện 4 ký tự cuối của key; đổi mô hình, đổi key (ẩn sau nút "Đổi key") và xóa key (có xác nhận) ở cùng màn hình | M |
+| FR-116 | Ô địa chỉ API kiểu OpenAI gợi ý OpenAI, Google Gemini, OpenRouter, DeepSeek, Groq; danh sách mô hình chỉ giữ mô hình chat được | M |
 | FR-15 | Danh sách hội thoại mới nhất ở trên; tạo, mở hội thoại; tên tự lấy từ câu hỏi đầu | M |
 | FR-16 | Mỗi lời gọi gửi kèm các lượt trước đó; hội thoại quá dài thì chỉ gửi các lượt gần nhất | M |
 | FR-17 | Câu hỏi lưu trước khi agent trả lời; câu trả lời hiện dần và có định dạng Markdown | M |
@@ -1575,6 +1692,16 @@ Mỗi yêu cầu kiểm được bằng ít nhất một ca kiểm thử. Mức:
 | FR-104 | Chủ đổi mã tham gia; mã cũ hết hiệu lực ngay | M |
 | FR-105 | Chủ tạo kênh mới với tên hợp lệ, không trùng | M |
 | FR-106 | Chủ đổi tên và chế độ hiển thị của workspace | M |
+| FR-117 | Mỗi workspace chung có một bảng phân công (trang "Bảng phân công"); mỗi việc có số riêng ghi "việc N", mô tả tối đa 200 ký tự, người phụ trách hoặc "chưa có người phụ trách", trạng thái Đang làm hoặc Xong | M |
+| FR-118 | Việc xếp thành cây tối đa 3 cấp; việc con nằm trong khung việc cha; việc cha hiện số việc con đã xong trên tổng số; mở và thu gọn được | M |
+| FR-119 | Thành viên tạo việc đứng tên mình (cấp cao nhất hoặc việc con) và nhận việc chưa có người phụ trách, chưa xong; không giao việc cho người khác | M |
+| FR-120 | Chủ giao việc cho bất kỳ thành viên nào, kể cả chính mình, hoặc để trống; sửa mô tả, giao lại và xóa việc; xóa một việc xóa luôn các việc con, có hộp xác nhận | M |
+| FR-121 | Người phụ trách đánh dấu xong hoặc mở lại việc của mình; chủ đổi trạng thái việc của người khác khi bảng chưa khóa | M |
+| FR-122 | `/task <mô tả>` tạo việc cấp cao nhất đứng tên người gõ; chủ thêm `@tên` để giao; mỗi việc mới có tin hệ thống ghi việc gì, thuộc việc nào, ai phụ trách, ai giao | M |
+| FR-123 | Chủ khóa và mở khóa bảng; khi khóa, không ai thêm, sửa, xóa, giao lại hay nhận việc, kể cả bằng `/task`; người phụ trách vẫn đánh dấu xong được; mỗi lần khóa hoặc mở có tin hệ thống ở kênh "chung" | M |
+| FR-124 | Thành viên rời hoặc bị xóa thì các việc chưa xong của họ thành chưa có người phụ trách, kể cả khi bảng đang khóa; kênh "chung" có tin liệt kê các việc đó | M |
+| FR-125 | Ngữ cảnh agent của mọi thành viên gồm các việc chưa xong, mỗi việc kèm người phụ trách và việc cha nếu có; việc đã xong không gửi | M |
+| FR-126 | Khung "Agent đang đọc" hiện mục Bảng phân công đúng như phần agent nhận | M |
 | FR-107 | Mất kết nối thì hiện dải báo và khóa nút gửi | M |
 | FR-108 | Chữ đang soạn được giữ trên trình duyệt qua mất mạng và tải lại trang | M |
 | FR-109 | Tự kết nối lại khi có mạng; kênh hiện bù tin đã lỡ | M |
@@ -1586,7 +1713,7 @@ Mỗi yêu cầu kiểm được bằng ít nhất một ca kiểm thử. Mức:
 
 | Mã | Quy tắc |
 | --- | --- |
-| BR-01 | Tài khoản chỉ tạo bằng Google hoặc GitHub; mỗi tài khoản Google/GitHub ứng với đúng một tài khoản SpecGate |
+| BR-01 | Tài khoản chỉ tạo bằng Google, GitHub hoặc email đã xác thực bằng mã; mỗi danh tính (một tài khoản Google, một tài khoản GitHub, một địa chỉ email) ứng với đúng một tài khoản SpecGate, ba loại danh tính không tự gộp với nhau |
 | BR-02 | Không có chế độ khách; không có đường dẫn cho người chưa là thành viên vào thẳng workspace chung |
 | BR-03 | Trang chủ giữ gọn; thông báo nằm ở thanh bên, không nằm ở Trang chủ |
 | BR-04 | Mỗi người một key và một agent; agent ở workspace riêng và agent mang tên người đó trong kênh là một |
@@ -1619,6 +1746,12 @@ Mỗi yêu cầu kiểm được bằng ít nhất một ca kiểm thử. Mức:
 | BR-31 | Đoạn lấy từ bản tóm tắt có người nói "Bản tóm tắt (kênh) do ‹agent› viết (chưa lọc)"; đoạn từ lượt gốc đính kèm giữ người nói của lượt đó |
 | BR-32 | Vai và tên trong workspace tối đa 40 ký tự, mỗi người chỉ sửa của mình; màu ảnh đại diện không trùng trong workspace |
 | BR-33 | Bản tóm tắt hội thoại đính kèm tối đa 4 lượt gốc |
+| BR-34 | Mã đăng nhập gửi qua email gồm 6 chữ số, dùng một lần, hết hạn sau 10 phút, lưu ở dạng băm; mã mới làm mã cũ hết hiệu lực; gửi cách nhau ít nhất 60 giây, tối đa 5 mã mỗi giờ cho một email; sai 5 lần thì mã hết hiệu lực |
+| BR-35 | Bảng phân công do con người viết và giao; agent không tự tạo, tự nhận hay tự đổi trạng thái việc; `/task` trong lời agent không chạy; số việc tách khỏi số ý và luôn ghi "việc N" |
+| BR-36 | Chủ giao việc cho bất kỳ thành viên nào, kể cả chính mình, và sửa, giao lại, xóa mọi việc; thành viên chỉ tự nhận việc cho mình; chỉ người phụ trách (hoặc chủ khi bảng chưa khóa) đổi trạng thái việc |
+| BR-37 | Cây việc tối đa 3 cấp; xóa một việc xóa luôn mọi việc con; mô tả việc tối đa 200 ký tự |
+| BR-38 | Khóa bảng chặn thêm, sửa, xóa, giao lại và nhận việc; không chặn người phụ trách đánh dấu xong, và không chặn việc gỡ người đã rời khỏi các việc chưa xong |
+| BR-39 | Agent chỉ nhận các việc chưa xong, kèm người phụ trách và việc cha |
 
 Chi tiết loại, nguồn và truy vết của từng quy tắc: [business-rules.md](business-rules.md).
 
@@ -1630,7 +1763,7 @@ Chi tiết loại, nguồn và truy vết của từng quy tắc: [business-rule
 | --- | --- | --- |
 | NFR-01 | Bảo mật | API key mã hóa khi lưu, chỉ ghi không đọc lại; không xuất hiện trong log, phản hồi API hay tab Network của trình duyệt |
 | NFR-02 | Bảo mật | Mọi lời gọi mô hình đi qua máy chủ SpecGate |
-| NFR-03 | Bảo mật | Đăng nhập dùng OAuth của Google/GitHub với tham số `state` chống giả mạo; phiên lưu trong cookie httpOnly |
+| NFR-03 | Bảo mật | Đăng nhập dùng OAuth của Google/GitHub với tham số `state` chống giả mạo, hoặc mã email lưu dạng băm HMAC, có giới hạn gửi và giới hạn số lần nhập sai; phiên lưu trong cookie httpOnly; thư chứa mã không bao giờ ghi vào log |
 | NFR-04 | Phân quyền | Mỗi thao tác kiểm quyền ở máy chủ (thành viên, chủ workspace, chủ hội thoại, chủ highlight), không dựa vào việc ẩn nút |
 | NFR-05 | Riêng tư | Hội thoại, highlight riêng, highlight cho agent chỉ chủ của chúng đọc được, kể cả qua API |
 | NFR-06 | Hiệu năng | Tin mới tới các thành viên khác trong dưới 2 giây |
@@ -1658,7 +1791,8 @@ Chi tiết loại, nguồn và truy vết của từng quy tắc: [business-rule
 - Agent của riêng workspace chung, agent trọng tài tự động, agent tự trả lời khi được nhắc tên, agent gọi agent.
 - Nhiều key hoặc nhiều agent cho một người.
 - Chế độ dùng khi mất mạng.
-- Mật khẩu riêng, đăng nhập bằng email.
+- Mật khẩu riêng.
+- Hạn chót, mức ưu tiên cho việc trên bảng phân công.
 
 ### 8.2. Làm sau
 
@@ -1678,10 +1812,12 @@ Tài liệu ghi phương án đang áp dụng trong ngoặc; nhóm xác nhận h
 3. **Ai được chốt và loại ý** (mọi thành viên, ghi tên và lý do, BR-21). Phương án khác: chỉ chủ, cho trách nhiệm rõ ràng như việc chuyển sang Đang bàn.
 4. **Khi rời, bị xóa khỏi workspace, hoặc workspace bị xóa**: phần tên đã chốt (BR-25). Hội thoại có ngữ cảnh nhóm vẫn còn nhưng không nhận ngữ cảnh (FR-37); highlight cho agent của người đó trong workspace không còn được dùng. Chưa có chức năng xóa workspace.
 5. **Bản tóm tắt hội thoại làm trong đợt này hay để sau** (làm bản tối thiểu, FR-50 – FR-53 mức T).
-6. **Các giới hạn số lượng** ở mục 2.6 (200, 30, 10, 50, 5, 4).
+6. **Các giới hạn số lượng** ở mục 2.6 (200, 30, 10, 50, 5, 4; mã email: 10 phút, 5 lần sai, 60 giây, 5 mã mỗi giờ).
 7. **Danh sách màu highlight riêng** (năm màu: vàng, xanh lá, xanh dương, hồng, tím).
 8. **Hội thoại mới tự chọn sẵn ngữ cảnh nhóm** (không, người dùng tự chọn).
 9. **Tin gốc bị sửa hoặc bị xóa thì highlight xử lý thế nào** (để sau, vì chưa có chức năng sửa và xóa tin).
+10. **Giữ cả vai trong nhóm và bảng phân công hay gộp làm một** (giữ cả hai: vai là việc lâu dài người đó tự ghi, việc trên bảng phân công là việc cụ thể trong một giai đoạn).
+11. **Giới hạn số việc chưa xong trên bảng phân công** (chưa giới hạn; chỉ giới hạn 3 cấp và 200 ký tự mỗi việc).
 
 ---
 
@@ -1689,9 +1825,9 @@ Tài liệu ghi phương án đang áp dụng trong ngoặc; nhóm xác nhận h
 
 | Ca sử dụng | Yêu cầu chức năng | Quy tắc |
 | --- | --- | --- |
-| UC01 | FR-01 – FR-06 | BR-01, BR-02 |
+| UC01 | FR-01 – FR-06, FR-111 – FR-115 | BR-01, BR-02, BR-26, BR-34 |
 | UC02 | FR-07 – FR-09 | BR-03 |
-| UC03 | FR-10 – FR-14 | BR-04, BR-05 |
+| UC03 | FR-10 – FR-14, FR-116 | BR-04, BR-05 |
 | UC04 | FR-15 – FR-23 | BR-06, BR-07, BR-09, BR-13 |
 | UC05 | FR-24 – FR-30 | BR-08, BR-09, BR-12 |
 | UC06 | FR-31 – FR-41 | BR-06, BR-10, BR-11, BR-14 |
@@ -1704,12 +1840,26 @@ Tài liệu ghi phương án đang áp dụng trong ngoặc; nhóm xác nhận h
 | UC13 | FR-77 – FR-84 | BR-11, BR-12, BR-22 |
 | UC14 | FR-85 – FR-92 | BR-20, BR-21, BR-23 |
 | UC15 | FR-93 – FR-97 | BR-14, BR-24 |
-| UC16 | FR-98 – FR-106 | BR-17, BR-18, BR-25 |
+| UC16 | FR-98 – FR-106, FR-117 – FR-126 | BR-17, BR-18, BR-25, BR-32, BR-35 – BR-39 |
 | UC17 | FR-107 – FR-110 | |
 
 ---
 
-## 11. Thay đổi so với bản 0.2
+## 11. Thay đổi so với các bản trước
+
+### 11.1. Bản 0.4 so với bản 0.3
+
+Bản 0.4 cập nhật theo website đang chạy (nhánh `dev`, 21/11/2026). Mã mới được thêm vào cuối dãy (FR-111 trở đi, BR-34 trở đi) để không đổi mã cũ.
+
+| Chủ đề | Bản 0.3 | Bản 0.4 |
+| --- | --- | --- |
+| Đăng nhập | Chỉ Google, GitHub | Thêm đăng nhập và đăng ký bằng mã một lần gửi qua email (UC01 phần C, FR-111 – FR-114, BR-34) |
+| Tạo tài khoản trên màn giả lập | Nhập tên và tạo ngay | Bắt buộc xác thực email bằng mã (UC01 A.A4, FR-115) |
+| API key | Kiểu OpenAI: OpenAI, DeepSeek, OpenRouter, Groq, Ollama | Thêm Google Gemini; ô địa chỉ có gợi ý; danh sách mô hình bỏ mô hình không chat được (FR-116) |
+| Bảng phân công | Không đặc tả | Thêm UC16 phần C: cây việc 3 cấp, nhận việc, giao việc, `/task`, khóa bảng, gỡ người rời, agent đọc việc chưa xong (FR-117 – FR-126, BR-35 – BR-39) |
+| Điểm còn mở | 9 điểm | Thêm điểm 10, 11 về bảng phân công |
+
+### 11.2. Bản 0.3 so với bản 0.2
 
 Bản 0.3 viết lại theo `flow.md` đã chốt. Khi bản 0.2 khác flow, tài liệu theo flow.
 
@@ -1739,11 +1889,12 @@ Mã nguồn PlantUML nằm trong thư mục [`uml/`](../uml/README.md), ảnh SV
 
 | Loại | Tên biểu đồ | Mã nguồn | Ảnh |
 | --- | --- | --- | --- |
-| Ca sử dụng | Sơ đồ ca sử dụng tổng quát (SRS 0.3) | [00-overview.puml](../uml/use-case/00-overview.puml) | [SVG](../uml/img/uc-00-overview.svg) |
+| Ca sử dụng | Sơ đồ ca sử dụng tổng quát (SRS 0.4) | [00-overview.puml](../uml/use-case/00-overview.puml) | [SVG](../uml/img/uc-00-overview.svg) |
 | Ca sử dụng | Ca sử dụng chi tiết: workspace riêng và đường riêng sang chung | [01-private-workspace.puml](../uml/use-case/01-private-workspace.puml) | [SVG](../uml/img/uc-01-private-workspace.svg) |
 | Ca sử dụng | Ca sử dụng chi tiết: workspace chung, kênh và bảng | [02-shared-workspace.puml](../uml/use-case/02-shared-workspace.puml) | [SVG](../uml/img/uc-02-shared-workspace.svg) |
 | Hoạt động | Biểu đồ hoạt động UC01 - Phần A: Đăng ký hoặc đăng nhập | [uc01a-sign-in.puml](../uml/activity/uc01a-sign-in.puml) | [SVG](../uml/img/act-uc01a.svg) |
 | Hoạt động | Biểu đồ hoạt động UC01 - Phần B: Đăng xuất | [uc01b-sign-out.puml](../uml/activity/uc01b-sign-out.puml) | [SVG](../uml/img/act-uc01b.svg) |
+| Hoạt động | Biểu đồ hoạt động UC01 - Phần C: Đăng nhập bằng mã gửi qua email | [uc01c-email-sign-in.puml](../uml/activity/uc01c-email-sign-in.puml) | [SVG](../uml/img/act-uc01c.svg) |
 | Hoạt động | Biểu đồ hoạt động UC02: Dùng Trang chủ và dấu báo ở thanh bên | [uc02-home-badges.puml](../uml/activity/uc02-home-badges.puml) | [SVG](../uml/img/act-uc02.svg) |
 | Hoạt động | Biểu đồ hoạt động UC03: Thiết lập API key và chọn mô hình | [uc03-api-key.puml](../uml/activity/uc03-api-key.puml) | [SVG](../uml/img/act-uc03.svg) |
 | Hoạt động | Biểu đồ hoạt động UC04 - Phần A: Chat với agent riêng | [uc04a-chat.puml](../uml/activity/uc04a-chat.puml) | [SVG](../uml/img/act-uc04a.svg) |
@@ -1769,9 +1920,11 @@ Mã nguồn PlantUML nằm trong thư mục [`uml/`](../uml/README.md), ảnh SV
 | Hoạt động | Biểu đồ hoạt động UC15 - Phần B: Dựng và tải bản tổng hợp (/brief) | [uc15b-brief.puml](../uml/activity/uc15b-brief.puml) | [SVG](../uml/img/act-uc15b.svg) |
 | Hoạt động | Biểu đồ hoạt động UC16 - Phần A: Quản lý tên, vai và tư cách thành viên | [uc16a-members.puml](../uml/activity/uc16a-members.puml) | [SVG](../uml/img/act-uc16a.svg) |
 | Hoạt động | Biểu đồ hoạt động UC16 - Phần B: Cấu hình workspace chung | [uc16b-settings.puml](../uml/activity/uc16b-settings.puml) | [SVG](../uml/img/act-uc16b.svg) |
+| Hoạt động | Biểu đồ hoạt động UC16 - Phần C: Bảng phân công | [uc16c-task-board.puml](../uml/activity/uc16c-task-board.puml) | [SVG](../uml/img/act-uc16c.svg) |
 | Hoạt động | Biểu đồ hoạt động UC17: Tiếp tục làm việc khi mạng chập chờn | [uc17-connection.puml](../uml/activity/uc17-connection.puml) | [SVG](../uml/img/act-uc17.svg) |
 | Tuần tự | Biểu đồ tuần tự UC01 - Phần A: Đăng ký hoặc đăng nhập | [uc01a-sign-in.puml](../uml/sequence/uc01a-sign-in.puml) | [SVG](../uml/img/seq-uc01a.svg) |
 | Tuần tự | Biểu đồ tuần tự UC01 - Phần B: Đăng xuất | [uc01b-sign-out.puml](../uml/sequence/uc01b-sign-out.puml) | [SVG](../uml/img/seq-uc01b.svg) |
+| Tuần tự | Biểu đồ tuần tự UC01 - Phần C: Đăng nhập bằng mã gửi qua email | [uc01c-email-sign-in.puml](../uml/sequence/uc01c-email-sign-in.puml) | [SVG](../uml/img/seq-uc01c.svg) |
 | Tuần tự | Biểu đồ tuần tự UC02: Dùng Trang chủ và dấu báo ở thanh bên | [uc02-home.puml](../uml/sequence/uc02-home.puml) | [SVG](../uml/img/seq-uc02.svg) |
 | Tuần tự | Biểu đồ tuần tự UC03: Thiết lập API key và chọn mô hình | [uc03-api-key.puml](../uml/sequence/uc03-api-key.puml) | [SVG](../uml/img/seq-uc03.svg) |
 | Tuần tự | Biểu đồ tuần tự UC04 - Phần A: Chat với agent riêng | [uc04a-chat.puml](../uml/sequence/uc04a-chat.puml) | [SVG](../uml/img/seq-uc04a.svg) |
@@ -1797,15 +1950,18 @@ Mã nguồn PlantUML nằm trong thư mục [`uml/`](../uml/README.md), ảnh SV
 | Tuần tự | Biểu đồ tuần tự UC15 - Phần B: Dựng và tải bản tổng hợp (/brief) | [uc15b-brief.puml](../uml/sequence/uc15b-brief.puml) | [SVG](../uml/img/seq-uc15b.svg) |
 | Tuần tự | Biểu đồ tuần tự UC16 - Phần A: Quản lý tên, vai và tư cách thành viên | [uc16a-members.puml](../uml/sequence/uc16a-members.puml) | [SVG](../uml/img/seq-uc16a.svg) |
 | Tuần tự | Biểu đồ tuần tự UC16 - Phần B: Cấu hình workspace chung | [uc16b-settings.puml](../uml/sequence/uc16b-settings.puml) | [SVG](../uml/img/seq-uc16b.svg) |
+| Tuần tự | Biểu đồ tuần tự UC16 - Phần C: Bảng phân công | [uc16c-task-board.puml](../uml/sequence/uc16c-task-board.puml) | [SVG](../uml/img/seq-uc16c.svg) |
 | Tuần tự | Biểu đồ tuần tự UC17: Tiếp tục làm việc khi mạng chập chờn | [uc17-connection.puml](../uml/sequence/uc17-connection.puml) | [SVG](../uml/img/seq-uc17.svg) |
 | Trạng thái | Biểu đồ trạng thái: Highlight cho agent (Highlight) | [agent-highlight.puml](../uml/state/agent-highlight.puml) | [SVG](../uml/img/st-agent-highlight.svg) |
 | Trạng thái | Biểu đồ trạng thái: Câu trả lời của agent (Turn) | [answer-turn.puml](../uml/state/answer-turn.puml) | [SVG](../uml/img/st-answer-turn.svg) |
 | Trạng thái | Biểu đồ trạng thái: Ý trên bảng ý tưởng (BoardItem) | [board-item.puml](../uml/state/board-item.puml) | [SVG](../uml/img/st-board-item.svg) |
 | Trạng thái | Biểu đồ trạng thái: Kết nối của trình duyệt | [connection.puml](../uml/state/connection.puml) | [SVG](../uml/img/st-connection.svg) |
+| Trạng thái | Biểu đồ trạng thái: Mã đăng nhập gửi qua email (EmailCode) | [email-code.puml](../uml/state/email-code.puml) | [SVG](../uml/img/st-email-code.svg) |
 | Trạng thái | Biểu đồ trạng thái: Yêu cầu tham gia (JoinRequest) | [join-request.puml](../uml/state/join-request.puml) | [SVG](../uml/img/st-join-request.svg) |
 | Trạng thái | Biểu đồ trạng thái: Thành viên workspace (Member) | [member.puml](../uml/state/member.puml) | [SVG](../uml/img/st-member.svg) |
 | Trạng thái | Biểu đồ trạng thái: Highlight riêng (PrivateHighlight) | [private-highlight.puml](../uml/state/private-highlight.puml) | [SVG](../uml/img/st-private-highlight.svg) |
 | Trạng thái | Biểu đồ trạng thái: Agent riêng theo API key (ProviderKey) | [provider-key.puml](../uml/state/provider-key.puml) | [SVG](../uml/img/st-provider-key.svg) |
+| Trạng thái | Biểu đồ trạng thái: Việc trên bảng phân công (Task) | [task.puml](../uml/state/task.puml) | [SVG](../uml/img/st-task.svg) |
 | Lớp | SpecGate: kiến trúc thành phần (web_ui → backend → CSDL) | [architecture.puml](../uml/class/architecture.puml) | [SVG](../uml/img/cls-architecture.svg) |
 | Lớp | SpecGate: sơ đồ lớp miền dữ liệu (bảng ws_* trong backend) | [domain.puml](../uml/class/domain.puml) | [SVG](../uml/img/cls-domain.svg) |
 | RBAC | Bảng RBAC SpecGate (✔ được, ✘ không, ◐ có điều kiện) | [rbac.puml](../uml/rbac/rbac.puml) | [SVG](../uml/img/rbac.svg) |

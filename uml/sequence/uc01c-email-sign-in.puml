@@ -1,0 +1,55 @@
+' Sequence diagram of UC01 part C: requesting and checking an emailed one-time sign-in code.
+@startuml seq-uc01c
+!include ../_style.iuml
+title Biểu đồ tuần tự UC01 - Phần C: Đăng nhập bằng mã gửi qua email
+autonumber
+
+actor "Khách" as A
+boundary "Trang đăng nhập" as UI
+control "AuthController" as C
+participant "Máy chủ gửi thư" as SMTP
+entity "EmailCode" as EC
+entity "OAuthAccount" as OA
+entity "User" as U
+entity "Workspace" as W
+
+A -> UI : nhập email, "Gửi mã đăng nhập"
+UI -> C : POST /auth/email-codes {email}
+alt C.E1 - email sai dạng
+  C --> UI : 400 INVALID_EMAIL
+else C.E2 - gửi quá dày
+  C -> EC : đếm mã gần đây
+  C --> UI : 429 EMAIL_CODE_TOO_SOON / EMAIL_CODE_LIMIT
+else
+  C -> EC : hủy mã cũ, tạo mã mới (băm, 10 phút)
+  C -> SMTP : gửi thư chứa mã
+  alt C.E4 - không gửi được
+    C --> UI : 502 EMAIL_SEND_FAILED
+  else
+    C --> UI : 201 {expiresInSeconds, resendAfterSeconds}
+    UI --> A : bước nhập mã
+    A -> UI : nhập mã, "Xác nhận và đăng nhập"
+    UI -> C : POST /auth/email-sessions {email, code, displayName?}
+    C -> EC : kiểm mã
+    alt C.E3 - sai hoặc hết hạn
+      C -> EC : tăng số lần sai
+      C --> UI : 400 EMAIL_CODE_INVALID
+    else mã đúng
+      C -> OA : tìm(email, địa chỉ)
+      alt C.A1 - chưa có tài khoản, chưa có tên
+        C --> UI : 409 NAME_REQUIRED (mã giữ nguyên)
+        A -> UI : nhập tên hiển thị
+        UI -> C : POST /auth/email-sessions {email, code, displayName}
+        C -> EC : đánh dấu đã dùng
+        C -> U : tạo(tên hiển thị)
+        C -> OA : tạo(email, địa chỉ, user)
+        C -> W : tạo workspace riêng
+        C --> UI : 201, cookie phiên, mở màn nhập API key
+      else đã có tài khoản
+        C -> EC : đánh dấu đã dùng
+        C --> UI : 201, cookie phiên 30 ngày,\nmở Trang chủ hoặc trang định mở
+      end
+    end
+  end
+end
+@enduml

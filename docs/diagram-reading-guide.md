@@ -26,7 +26,7 @@ Tài liệu giải thích cách đọc các biểu đồ trong [SRS](SRS.md) và
 
 | Ký hiệu | Hình dạng | Nghĩa |
 | --- | --- | --- |
-| Làn | cột có tên ở đầu | Ai thực hiện các hộp trong cột: tác nhân (Khách, Người dùng, Thành viên, Chủ workspace), Hệ thống (SpecGate), hoặc hệ thống ngoài (Google/GitHub, Nhà cung cấp AI) |
+| Làn | cột có tên ở đầu | Ai thực hiện các hộp trong cột: tác nhân (Khách, Người dùng, Thành viên, Chủ workspace), Hệ thống (SpecGate), hoặc hệ thống ngoài (Google/GitHub, Máy chủ gửi thư, Nhà cung cấp AI) |
 | Điểm bắt đầu | chấm tròn đen | Nơi luồng bắt đầu |
 | Điểm kết thúc | chấm đen có vòng ngoài | Luồng dừng: xong việc, hoặc dừng vì ngoại lệ |
 | Hoạt động | hộp bo góc | Một bước, mở đầu bằng mã luồng |
@@ -58,7 +58,7 @@ Tài liệu giải thích cách đọc các biểu đồ trong [SRS](SRS.md) và
 | Hình tròn có vạch đứng bên trái | Boundary (giao diện) | Một màn hình hoặc hộp thoại của `web_ui`: "Màn hình chat", "Trang Bảng ý tưởng"… |
 | Hình tròn có mũi tên vòng | Control (điều khiển) | Bộ điều khiển hoặc dịch vụ của backend: `ConversationController`, `BoardService`, `ContextBuilder`, `LlmGateway`, `Broker` (phát tin thời gian thực)… |
 | Hình tròn có gạch dưới | Entity (thực thể) | Một bảng dữ liệu: `User`, `Message`, `BoardItem`… (xem `cls-domain`) |
-| Hộp chữ nhật | Hệ thống ngoài | Google/GitHub, Nhà cung cấp AI |
+| Hộp chữ nhật | Hệ thống ngoài | Google/GitHub, Máy chủ gửi thư, Nhà cung cấp AI |
 
 | Ký hiệu trong thân | Nghĩa |
 | --- | --- |
@@ -87,7 +87,7 @@ Tài liệu giải thích cách đọc các biểu đồ trong [SRS](SRS.md) và
 | Mũi tên có nhãn `sự kiện [điều kiện] / hành động` | Chuyển trạng thái: khi **sự kiện** xảy ra và **điều kiện** đúng thì chuyển, đồng thời thực hiện **hành động**; phần nào không có thì bỏ |
 | Mũi tên quay về chính hộp | Sự kiện xảy ra mà trạng thái không đổi |
 
-Biểu đồ trạng thái đặt ở cuối ca có thực thể đó: `st-provider-key` (UC03), `st-answer-turn` (UC04), `st-private-highlight` (UC05), `st-join-request` (UC11), `st-agent-highlight` (UC13), `st-board-item` (UC14), `st-member` (UC16), `st-connection` (UC17).
+Biểu đồ trạng thái đặt ở cuối ca có thực thể đó: `st-email-code` (UC01), `st-provider-key` (UC03), `st-answer-turn` (UC04), `st-private-highlight` (UC05), `st-join-request` (UC11), `st-agent-highlight` (UC13), `st-board-item` (UC14), `st-member`, `st-task` (UC16), `st-connection` (UC17).
 
 Ví dụ, trong `st-board-item`, mũi tên `"Đưa vào bàn" [người bấm là chủ]` đọc là: khi có người bấm "Đưa vào bàn", và người đó là chủ, thì ý chuyển từ Đề xuất sang Đang bàn. Không có mũi tên nào đi ra từ Đã chốt hay Đã loại ngoài mũi tên kết thúc: đó chính là BR-23 "không quay ngược".
 

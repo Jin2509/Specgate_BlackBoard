@@ -31,6 +31,8 @@ rectangle "Kênh" {
 rectangle "Thành viên và cài đặt" {
   usecase "UC16-A Tên, vai,\nrời nhóm, xóa thành viên" as UC16A
   usecase "UC16-B Đề bài, mã tham gia,\ntạo kênh" as UC16B
+  usecase "UC16-C Bảng phân công\n(thêm, nhận, xong, /task)" as UC16C
+  usecase "UC16-C Giao việc, sửa, xóa,\nkhóa bảng phân công" as UC16CO
 }
 
 User --> UC09
@@ -46,6 +48,9 @@ Owner --> UC15A
 Owner --> UC15B
 Member --> UC16A
 Owner --> UC16B
+Member --> UC16C
+Owner --> UC16CO
+UC16C .> UC12 : <<extend>>\n/task
 
 UC10A ..> UC11 : chờ chủ duyệt
 UC10B ..> UC11 : chờ chủ duyệt
