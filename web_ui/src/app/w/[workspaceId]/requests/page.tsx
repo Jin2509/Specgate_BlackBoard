@@ -9,7 +9,6 @@ import { PageBody } from "@/components/PageBody";
 import { PageHeader } from "@/components/PageHeader";
 import { PageLayout } from "@/components/PageLayout";
 import { Panel } from "@/components/Panel";
-import { requireSession } from "@/features/auth/server";
 import { PendingRequestCard, ProcessedRequestsTable } from "@/features/requests";
 import { listJoinRequests } from "@/features/requests/server";
 import { ContentSkeleton, isOwner } from "@/features/workspace";
@@ -31,7 +30,6 @@ export default function RequestsPage(props: PageProps<"/w/[workspaceId]/requests
 
 async function RequestsPageContent({ params }: PageProps<"/w/[workspaceId]/requests">) {
   const workspace = await requireSharedWorkspace(params);
-  await requireSession();
   if (!isOwner(workspace)) redirect(toSharedHomePath(workspace.id));
   const { pending, history } = await listJoinRequests(workspace.id);
 

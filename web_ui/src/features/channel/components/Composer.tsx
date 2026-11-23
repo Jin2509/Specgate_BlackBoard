@@ -1,16 +1,18 @@
 "use client";
 // Composes a channel message with @ and / suggestions, attached private highlights and a draft kept across reloads.
 import { AtSign, Highlighter, LoaderCircle, SendHorizontal, SquareSlash, X } from "lucide-react";
-import { useActionState, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useActionState, useEffect, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 
 import { useDraft } from "@/hooks/use-draft";
 import { useOnline } from "@/hooks/use-online";
 import { useQueryParam } from "@/hooks/use-query-param";
 import { format, t } from "@/lib/i18n";
+import { showErrorToast } from "@/stores/toast-store";
 import type { PrivateHighlight } from "@/types/conversation";
 import type { Profile } from "@/types/profile";
 import { cn } from "@/utils/cn";
 
+import { ChannelDocumentButton } from "./ChannelDocumentButton";
 import { HighlightPicker } from "./HighlightPicker";
 import { SuggestionMenu } from "./SuggestionMenu";
 import { createMessage, type MessageFormState } from "../api/channel-actions";
@@ -21,6 +23,8 @@ import {
   toTrailingTrigger,
   type Suggestion,
 } from "../utils/suggestions";
+
+const ALREADY_SENT_CODE = "ALREADY_SENT";
 
 /** Index of /decide in the demo menu, so the prototype screenshot shows a highlighted command. */
 const DEMO_ACTIVE_COMMAND_INDEX = 3;
@@ -60,6 +64,9 @@ export function Composer({
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
   const [state, formAction, isPending] = useActionState<MessageFormState, FormData>(createMessage, {});
+  useEffect(() => {
+    if (state.error && state.code !== ALREADY_SENT_CODE) showErrorToast(state.error);
+  }, [state]);
   const value = text ?? (draft || demoText || "");
   const trigger = toTrailingTrigger(value);
 
@@ -193,6 +200,7 @@ export function Composer({
             aria-label={t.channel.messageLabel}
             autoComplete="off"
           />
+          <ChannelDocumentButton workspaceId={workspaceId} channelId={channelId} />
           <ComposerButton label={t.channel.insertHighlight} onClick={() => setIsPickerOpen((isOpen) => !isOpen)}>
             <Highlighter className="size-5" />
           </ComposerButton>
@@ -212,7 +220,7 @@ export function Composer({
           </ComposerButton>
         </div>
       </div>
-      {state.code === "ALREADY_SENT" && quoteIds.length ? (
+      {state.code === ALREADY_SENT_CODE && quoteIds.length ? (
         <p role="alert" className="mt-1 flex flex-wrap items-center gap-2 px-1 text-[12.5px] text-proposed">
           {state.error}
           <button
@@ -225,9 +233,7 @@ export function Composer({
           </button>
         </p>
       ) : (
-        <p className="mt-1 px-1 text-[11.5px] text-subtle" role={state.error ? "alert" : undefined}>
-          {!isOnline ? t.channel.offline : (state.error ?? t.channel.composerHint)}
-        </p>
+        <p className="mt-1 px-1 text-[11.5px] text-subtle">{!isOnline ? t.channel.offline : t.channel.composerHint}</p>
       )}
     </form>
   );

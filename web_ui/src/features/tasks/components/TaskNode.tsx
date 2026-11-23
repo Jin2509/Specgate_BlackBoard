@@ -7,6 +7,7 @@ import { ActorAvatar } from "@/components/ActorAvatar";
 import { Button } from "@/components/ui/Button";
 import { Checkbox } from "@/components/ui/Checkbox";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/DropdownMenu";
+import { Select, type SelectOption } from "@/components/ui/Select";
 import { format, t } from "@/lib/i18n";
 import type { Task } from "@/types/task";
 import { cn } from "@/utils/cn";
@@ -16,6 +17,8 @@ import type { TaskTreeNode } from "../utils/task-tree";
 /** Each action is present only when the viewer may take it on this task. */
 export interface TaskNodeActions {
   onClaim?: () => void;
+  /** Owner only: give the task to this member, or to nobody (empty id). */
+  onAssign?: (assigneeId: string) => void;
   onToggleStatus?: () => void;
   onAddChild?: () => void;
   onEdit?: () => void;
@@ -25,6 +28,7 @@ export interface TaskNodeActions {
 export interface TaskTreeControls {
   toActions: (node: TaskTreeNode) => TaskNodeActions;
   isPending: boolean;
+  assigneeOptions: SelectOption[];
   isCollapsed: (taskNumber: number) => boolean;
   onToggleCollapsed: (taskNumber: number) => void;
   /** The composer shown under a task while someone adds a subtask to it. */
@@ -90,7 +94,13 @@ export function TaskNode({ node, controls }: { node: TaskTreeNode; controls: Tas
           {totalCount > 0 ? <TaskProgress doneCount={doneCount} totalCount={totalCount} /> : null}
         </div>
         <div className="flex shrink-0 items-center gap-1">
-          <TaskHolder task={task} onClaim={actions.onClaim} isPending={controls.isPending} />
+          <TaskHolder
+            task={task}
+            onClaim={actions.onClaim}
+            onAssign={actions.onAssign}
+            assigneeOptions={controls.assigneeOptions}
+            isPending={controls.isPending}
+          />
           {actions.onAddChild ? (
             <Button
               size="icon-sm"
@@ -136,7 +146,32 @@ function TaskProgress({ doneCount, totalCount }: { doneCount: number; totalCount
   );
 }
 
-function TaskHolder({ task, onClaim, isPending }: { task: Task; onClaim?: () => void; isPending: boolean }) {
+function TaskHolder({
+  task,
+  onClaim,
+  onAssign,
+  assigneeOptions,
+  isPending,
+}: {
+  task: Task;
+  onClaim?: () => void;
+  onAssign?: (assigneeId: string) => void;
+  assigneeOptions: SelectOption[];
+  isPending: boolean;
+}) {
+  if (onAssign) {
+    return (
+      <Select
+        size="sm"
+        value={task.assignee?.id ?? ""}
+        onValueChange={onAssign}
+        options={assigneeOptions}
+        isDisabled={isPending}
+        aria-label={format(t.tasks.assignTask, { number: task.number })}
+        className="max-w-40 shrink-0"
+      />
+    );
+  }
   if (task.assignee) {
     const assigner = task.assignedBy && task.assignedBy !== task.assignee.displayName ? task.assignedBy : null;
     return (

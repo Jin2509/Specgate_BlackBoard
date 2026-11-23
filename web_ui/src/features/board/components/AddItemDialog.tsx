@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/Label";
 import { Textarea } from "@/components/ui/Textarea";
 import { t } from "@/lib/i18n";
+import { showErrorToast } from "@/stores/toast-store";
 import type { BoardItemKind } from "@/types/board";
 
 import { createBoardItem } from "../api/board-actions";
@@ -45,15 +46,13 @@ export function AddItemDialog({
 }) {
   const [kind, setKind] = useState<BoardItemKind>("idea");
   const [body, setBody] = useState("");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit() {
     startTransition(async () => {
       const outcome = await createBoardItem({ workspaceId, kind, body });
-      if (!outcome.ok) return setErrorMessage(outcome.error);
+      if (!outcome.ok) return showErrorToast(outcome.error);
       setBody("");
-      setErrorMessage(null);
       onAdd();
     });
   }
@@ -86,11 +85,6 @@ export function AddItemDialog({
             placeholder={t.board.contentPlaceholder}
           />
         </div>
-        {errorMessage ? (
-          <p role="alert" className="text-sm text-destructive">
-            {errorMessage}
-          </p>
-        ) : null}
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             {t.common.cancel}

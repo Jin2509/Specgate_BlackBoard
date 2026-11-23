@@ -4,6 +4,8 @@ import { NextResponse, type NextRequest } from "next/server";
 import {
   LAST_WORKSPACE_COOKIE,
   LAST_WORKSPACE_COOKIE_OPTIONS,
+  SESSION_CHECKED_COOKIE,
+  SESSION_CHECKED_COOKIE_OPTIONS,
   SESSION_COOKIE,
   SESSION_COOKIE_OPTIONS,
 } from "@/config/session-cookie";
@@ -16,9 +18,22 @@ function isLoginPath(pathname: string): boolean {
   return pathname === "/login" || pathname.startsWith("/login/");
 }
 
+async function reportLastWorkspace(request: NextRequest, response: NextResponse, token: string): Promise<NextResponse> {
+  const workspaceId = WORKSPACE_PATH.exec(request.nextUrl.pathname)?.[1];
+  if (workspaceId && request.cookies.get(LAST_WORKSPACE_COOKIE)?.value !== workspaceId) {
+    // The backend ignores the personal workspace and workspaces the user is not a member of.
+    await requestBackend("/me/last-workspace", { method: "PUT", body: { workspaceId }, token }).catch(() => undefined);
+    response.cookies.set(LAST_WORKSPACE_COOKIE, workspaceId, LAST_WORKSPACE_COOKIE_OPTIONS);
+  }
+  return response;
+}
+
 export async function proxy(request: NextRequest): Promise<NextResponse> {
   const { pathname, search } = request.nextUrl;
   const token = request.cookies.get(SESSION_COOKIE)?.value;
+  // Checked a few minutes ago: skip the backend round trip; the page's own calls still reject a dead session.
+  if (token && !isLoginPath(pathname) && request.cookies.has(SESSION_CHECKED_COOKIE))
+    return reportLastWorkspace(request, NextResponse.next(), token);
   let session: BackendSession | null;
   try {
     session = await getBackendSession(token);
@@ -28,7 +43,10 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   }
   const redirectTo = (path: string) => {
     const response = NextResponse.redirect(new URL(path, request.url));
-    if (token && !session) response.cookies.delete(SESSION_COOKIE);
+    if (token && !session) {
+      response.cookies.delete(SESSION_COOKIE);
+      response.cookies.delete(SESSION_CHECKED_COOKIE);
+    }
     return response;
   };
 
@@ -41,15 +59,10 @@ export async function proxy(request: NextRequest): Promise<NextResponse> {
   if (!session) return redirectTo(`/login?next=${encodeURIComponent(pathname + search)}`);
 
   const response = NextResponse.next();
-  // Every visit restarts the 30-day session.
+  // Every check restarts the 30-day session.
   if (session.token) response.cookies.set(SESSION_COOKIE, session.token, SESSION_COOKIE_OPTIONS);
-  const workspaceId = WORKSPACE_PATH.exec(pathname)?.[1];
-  if (workspaceId && request.cookies.get(LAST_WORKSPACE_COOKIE)?.value !== workspaceId) {
-    // The backend ignores the personal workspace and workspaces the user is not a member of.
-    await requestBackend("/me/last-workspace", { method: "PUT", body: { workspaceId }, token }).catch(() => undefined);
-    response.cookies.set(LAST_WORKSPACE_COOKIE, workspaceId, LAST_WORKSPACE_COOKIE_OPTIONS);
-  }
-  return response;
+  response.cookies.set(SESSION_CHECKED_COOKIE, "1", SESSION_CHECKED_COOKIE_OPTIONS);
+  return reportLastWorkspace(request, response, session.token ?? token ?? "");
 }
 
 export const config = {

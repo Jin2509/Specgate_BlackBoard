@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, useTransition } from "react";
 
 import { t } from "@/lib/i18n";
+import { showErrorToast } from "@/stores/toast-store";
 
 import { createDigestHighlight } from "../api/private-highlight-actions";
 
@@ -26,7 +27,8 @@ export function SaveDigestButton({ workspaceId, home }: { workspaceId: string; h
       onClick={() =>
         startTransition(async () => {
           const outcome = await createDigestHighlight(workspaceId);
-          setResultText(outcome.ok ? t.personal.savedToPrivate : outcome.error);
+          if (!outcome.ok) return showErrorToast(outcome.error);
+          setResultText(t.personal.savedToPrivate);
         })
       }
       className="mt-1.5 text-xs font-medium text-primary-strong hover:underline disabled:opacity-50"

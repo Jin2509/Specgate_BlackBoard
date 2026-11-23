@@ -34,15 +34,24 @@ export async function updateKey(_previous: KeyFormState, formData: FormData): Pr
   redirect(toPersonalHomePath(me.personalWorkspaceId));
 }
 
-export async function updateModel(formData: FormData): Promise<void> {
+export async function updateModel(model: string): Promise<KeyFormState> {
   await requireMe();
-  await callApi(KEY_PATH, { method: "PATCH", body: { model: String(formData.get("model") ?? "") } }).catch(() => undefined);
+  try {
+    await callApi(KEY_PATH, { method: "PATCH", body: { model } });
+  } catch (error) {
+    return { error: toErrorMessage(error, t.errors.modelUpdateFailed) };
+  }
   revalidatePath("/", "layout");
+  return {};
 }
 
-export async function deleteKey(): Promise<void> {
+export async function deleteKey(): Promise<KeyFormState> {
   const me = await requireMe();
-  await callApi(KEY_PATH, { method: "DELETE" });
+  try {
+    await callApi(KEY_PATH, { method: "DELETE" });
+  } catch (error) {
+    return { error: toErrorMessage(error, t.errors.keyDeleteFailed) };
+  }
   revalidatePath("/", "layout");
   redirect(`${toPersonalHomePath(me.personalWorkspaceId)}/key`);
 }

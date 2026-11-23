@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { t } from "@/lib/i18n";
+import { showErrorToast } from "@/stores/toast-store";
 
 import { updateNickname } from "../api/member-actions";
 
@@ -27,7 +28,6 @@ export function RenameDialog({
 }) {
   const router = useRouter();
   const [nickname, setNickname] = useState(currentName);
-  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   return (
@@ -39,7 +39,7 @@ export function RenameDialog({
             event.preventDefault();
             startTransition(async () => {
               const outcome = await updateNickname(workspaceId, nickname);
-              if (!outcome.ok) return setError(outcome.error);
+              if (!outcome.ok) return showErrorToast(outcome.error);
               onOpenChange(false);
               router.refresh();
             });
@@ -57,14 +57,8 @@ export function RenameDialog({
               value={nickname}
               maxLength={NICKNAME_MAX_LENGTH}
               onChange={(event) => setNickname(event.target.value)}
-              aria-invalid={error ? true : undefined}
               className="h-9"
             />
-            {error ? (
-              <p role="alert" className="text-sm text-destructive">
-                {error}
-              </p>
-            ) : null}
           </div>
           <DialogFooter>
             <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>

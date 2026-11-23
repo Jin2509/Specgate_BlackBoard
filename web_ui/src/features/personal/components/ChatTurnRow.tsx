@@ -3,6 +3,7 @@ import { RotateCcw } from "lucide-react";
 
 import { CopyButton } from "@/components/CopyButton";
 import { Markdown } from "@/components/Markdown";
+import { toErrorText } from "@/lib/api/error-text";
 import { t } from "@/lib/i18n";
 import type { Turn } from "@/types/conversation";
 import { cn } from "@/utils/cn";
@@ -47,7 +48,7 @@ export function ChatTurnRow({
             turn.error && "text-destructive",
           )}
         >
-          {isMine || turn.error ? turn.text : <Markdown text={turn.text} />}
+          {isMine ? turn.text : turn.error ? toErrorText(turn.error, turn.text, turn.text) : <Markdown text={turn.text} />}
           {isTyping ? <span className="stream-caret" aria-hidden /> : null}
         </div>
         {turn.stopped ? <p className="mt-1 text-xs text-subtle">{t.personal.stoppedNote}</p> : null}

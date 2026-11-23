@@ -7,7 +7,6 @@ import { Suspense } from "react";
 import { PageBody } from "@/components/PageBody";
 import { PageHeader } from "@/components/PageHeader";
 import { PageLayout } from "@/components/PageLayout";
-import { requireSession } from "@/features/auth/server";
 import { AgentHighlightNote, deleteHighlight, HighlightQuote } from "@/features/highlight";
 import { listHighlights } from "@/features/highlight/server";
 import { ContentSkeleton } from "@/features/workspace";
@@ -17,6 +16,7 @@ import { toContentWidthClassName } from "@/utils/content-width";
 import { toDayClock } from "@/utils/date-format";
 import { listSegmentNotices, toEllipsizedText, toSegmentsText } from "@/utils/excerpt";
 import { toSharedHomePath } from "@/utils/route-paths";
+import { startEarly } from "@/utils/start-early";
 
 export const metadata: Metadata = { title: t.personal.agentHighlights };
 
@@ -29,9 +29,9 @@ export default function AgentHighlightsPage(props: PageProps<"/w/[workspaceId]/c
 }
 
 async function AgentHighlightsContent({ params }: PageProps<"/w/[workspaceId]/chat/agent-highlights">) {
+  const pendingHighlights = startEarly(listHighlights());
   await requirePersonalWorkspace(params);
-  await requireSession();
-  const { groups, total, limit } = await listHighlights();
+  const { groups, total, limit } = await pendingHighlights;
 
   return (
     <PageLayout>

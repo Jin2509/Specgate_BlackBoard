@@ -2,9 +2,10 @@
 // Summarizes the user's old messages on click only, after saying how many messages, blocks and agent calls it takes.
 import { LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useTransition } from "react";
 
 import { format, t } from "@/lib/i18n";
+import { showErrorToast } from "@/stores/toast-store";
 import type { AgentContext } from "@/types/highlight";
 
 import { createOldMessagesDigest } from "../api/conversation-actions";
@@ -28,7 +29,6 @@ export function DigestButton({
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
   return (
     <div className="mt-1.5">
       <p className="text-xs text-subtle">
@@ -39,9 +39,8 @@ export function DigestButton({
         disabled={isPending}
         onClick={() =>
           startTransition(async () => {
-            setError(null);
             const outcome = await createOldMessagesDigest(conversationId);
-            if (!outcome.ok) return setError(outcome.error);
+            if (!outcome.ok) return showErrorToast(outcome.error);
             router.refresh();
           })
         }
@@ -49,11 +48,6 @@ export function DigestButton({
       >
         {isPending ? <LoaderCircle className="size-3.5 animate-spin" /> : null} {t.personal.summarizeOld}
       </button>
-      {error ? (
-        <p role="alert" className="mt-1 text-xs text-destructive">
-          {error}
-        </p>
-      ) : null}
     </div>
   );
 }

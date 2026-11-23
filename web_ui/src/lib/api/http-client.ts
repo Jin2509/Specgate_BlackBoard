@@ -3,10 +3,14 @@ import { appConfig } from "@/config/app-config";
 import { t } from "@/lib/i18n";
 
 import { toApiPath } from "./api-base-path";
+import { toErrorText } from "./error-text";
 
 const BACKEND_UNREACHABLE = "BACKEND_UNREACHABLE";
 const SERVICE_UNAVAILABLE_STATUS = 503;
 const NO_CONTENT_STATUS = 204;
+// The backend's schema validation reports field details in English; the UI shows one generic sentence instead.
+const SCHEMA_VALIDATION_CODE = "VALIDATION_ERROR";
+const INVALID_REQUEST_CODE = "INVALID_REQUEST";
 
 export class ApiError extends Error {
   constructor(
@@ -52,13 +56,15 @@ export async function request(resourcePath: string, init: CallInit = {}): Promis
 }
 
 interface ErrorBody {
-  error?: { code?: unknown; message?: unknown };
+  error?: { code?: unknown; message?: unknown; details?: unknown };
 }
 
 /** Read the backend error body `{ error: { code, message, details } }` into an ApiError. */
 export async function toApiError(response: Response): Promise<ApiError> {
   const body = (await response.json().catch(() => null)) as ErrorBody | null;
-  const code = typeof body?.error?.code === "string" ? body.error.code : `HTTP_${response.status}`;
+  const backendCode = typeof body?.error?.code === "string" ? body.error.code : `HTTP_${response.status}`;
+  const hasFieldDetails = Array.isArray(body?.error?.details) && body.error.details.length > 0;
+  const code = backendCode === SCHEMA_VALIDATION_CODE && hasFieldDetails ? INVALID_REQUEST_CODE : backendCode;
   const message = typeof body?.error?.message === "string" ? body.error.message : t.errors.backendFailed;
   return new ApiError(response.status, code, message);
 }
@@ -71,7 +77,7 @@ export async function callJson<T>(resourcePath: string, init: CallInit = {}): Pr
   return (await response.json()) as T;
 }
 
-/** Return the backend's own message for an ApiError, or the fallback for anything else. */
+/** Return the catalog sentence for the error's code, else the backend's own message, else the fallback. */
 export function toErrorMessage(error: unknown, fallback: string): string {
-  return isApiError(error) ? error.message : fallback;
+  return isApiError(error) ? toErrorText(error.code, error.message, fallback) : fallback;
 }

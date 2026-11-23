@@ -14,6 +14,7 @@ import { requirePersonalWorkspace } from "@/features/workspace/server";
 import { format, t } from "@/lib/i18n";
 import { toContentWidthClassName } from "@/utils/content-width";
 import { toDateClock } from "@/utils/date-format";
+import { startEarly } from "@/utils/start-early";
 
 export const metadata: Metadata = { title: t.workspace.keyAndModel };
 
@@ -28,11 +29,10 @@ export default function KeyPage(props: PageProps<"/w/[workspaceId]/chat/key">) {
 }
 
 async function KeyPageContent({ params, searchParams }: PageProps<"/w/[workspaceId]/chat/key">) {
-  await requirePersonalWorkspace(params);
-  const { welcome } = await searchParams;
+  const pendingSettings = startEarly(getKeySettings());
+  const [, me, { welcome }] = await Promise.all([requirePersonalWorkspace(params), requireMe(), searchParams]);
   const welcomeProvider = typeof welcome === "string" ? WELCOME_PROVIDERS[welcome] : undefined;
-  const me = await requireMe();
-  const { key, note } = await getKeySettings();
+  const { key, note } = await pendingSettings;
 
   return (
     <PageLayout>

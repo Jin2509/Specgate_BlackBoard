@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 
 import { Select } from "@/components/ui/Select";
 import { t } from "@/lib/i18n";
+import { showErrorToast } from "@/stores/toast-store";
 
 import { updateModel } from "../api/key-actions";
 
@@ -15,10 +16,12 @@ export function ModelPicker({ models, value }: { models: string[]; value: string
 
   function handleChange(nextModel: string) {
     setModel(nextModel);
-    const formData = new FormData();
-    formData.set("model", nextModel);
     startTransition(async () => {
-      await updateModel(formData);
+      const outcome = await updateModel(nextModel);
+      if (outcome.error) {
+        setModel(value);
+        return showErrorToast(outcome.error);
+      }
       router.refresh();
     });
   }

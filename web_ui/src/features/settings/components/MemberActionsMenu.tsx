@@ -7,6 +7,7 @@ import { useState, useTransition } from "react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/DropdownMenu";
 import { format, t } from "@/lib/i18n";
+import { showErrorToast } from "@/stores/toast-store";
 
 import { RenameDialog } from "./RenameDialog";
 import { deleteMember, deleteMyMembership } from "../api/member-actions";
@@ -31,13 +32,12 @@ export function MemberActionsMenu({
   const router = useRouter();
   const [isRenameOpen, setIsRenameOpen] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function handleConfirm() {
     startTransition(async () => {
       const outcome = isSelf ? await deleteMyMembership(workspaceId) : await deleteMember(workspaceId, userId);
-      if (!outcome.ok) return setError(outcome.error);
+      if (!outcome.ok) return showErrorToast(outcome.error);
       setIsConfirmOpen(false);
       router.refresh();
     });
@@ -75,7 +75,6 @@ export function MemberActionsMenu({
         description={isSelf ? t.settings.leaveConfirm : format(t.settings.removeConfirm, { name: memberName })}
         confirmLabel={isSelf ? t.settings.leave : t.settings.removeMember}
         isPending={isPending}
-        error={error}
         onConfirm={handleConfirm}
       />
     </>

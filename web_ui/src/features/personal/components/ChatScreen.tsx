@@ -10,8 +10,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { useDraft } from "@/hooks/use-draft";
 import { useOnline } from "@/hooks/use-online";
 import { toApiPath } from "@/lib/api/api-base-path";
+import { toErrorText } from "@/lib/api/error-text";
 import { toApiError } from "@/lib/api/http-client";
 import { format, t } from "@/lib/i18n";
+import { showErrorToast, showSuccessToast } from "@/stores/toast-store";
 import type { ConversationDocument, Turn } from "@/types/conversation";
 import { cn } from "@/utils/cn";
 import { toContentWidthClassName } from "@/utils/content-width";
@@ -88,7 +90,6 @@ export function ChatScreen({
   const [isPending, setIsPending] = useState(false);
   const [askedText, setAskedText] = useState<string | null>(null);
   const [streamedText, setStreamedText] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
   const [question, setQuestion] = useDraft(`chat:${conversationId ?? "new"}`);
   const [tip, setTip] = useState<SelectionTip | null>(null);
   const [savedNotice, setSavedNotice] = useState<string | null>(null);
@@ -108,7 +109,7 @@ export function ChatScreen({
   const isBusy = isPending || isUploading || !isOnline;
 
   function fail(message: string, text?: string) {
-    setError(message);
+    showErrorToast(message);
     if (text) setQuestion(text);
     setAskedText(null);
     setIsPending(false);
@@ -144,7 +145,7 @@ export function ChatScreen({
           stopped: true,
         });
       }
-      if (!isAbortError(streamError)) setError(t.personal.streamInterrupted);
+      if (!isAbortError(streamError)) showErrorToast(t.personal.streamInterrupted);
     }
     abortRef.current = null;
     setStreamedText(null);
@@ -169,7 +170,7 @@ export function ChatScreen({
       const apiError = await toApiError(response);
       if (response.status === UNAUTHORIZED_STATUS) router.push("/login");
       else if (apiError.code === "NO_KEY") router.push(`${home}/key`);
-      else fail(apiError.message || t.personal.askFailed);
+      else fail(toErrorText(apiError.code, apiError.message, t.personal.askFailed));
       return null;
     } catch (requestError) {
       if (isAbortError(requestError)) setIsPending(false);
@@ -180,7 +181,6 @@ export function ChatScreen({
 
   async function ask(text: string) {
     setIsPending(true);
-    setError(null);
     setAskedText(text);
     setQuestion("");
     const targetId = await ensureConversation();
@@ -203,12 +203,12 @@ export function ChatScreen({
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
-    setError(null);
     setIsUploading(true);
     const targetId = await ensureConversation();
     const message = targetId ? await uploadDocument(targetId, file) : t.personal.conversationCreateFailed;
     setIsUploading(false);
-    if (message) return setError(message);
+    if (message) return showErrorToast(message);
+    showSuccessToast(format(t.documents.uploaded, { name: file.name }));
     if (!conversationId && targetId) return router.push(`${home}/${targetId}`);
     router.refresh();
   }
@@ -217,7 +217,6 @@ export function ChatScreen({
     if (!conversationId) return;
     setTurnToRegenerate(null);
     setIsPending(true);
-    setError(null);
     setHiddenTurnIds((hidden) => [...hidden, turn.id]);
     if (highlights === "delete") setLocalMarks([]);
     const response = await openAnswerStream(
@@ -351,7 +350,9 @@ export function ChatScreen({
           data-conversation-id={conversationId ?? ""}
           className="rounded-lg border border-border bg-composer focus-within:border-subtle"
         >
-          {conversationId ? <DocumentChips conversationId={conversationId} documents={documents} onError={setError} /> : null}
+          {conversationId ? (
+            <DocumentChips conversationId={conversationId} documents={documents} onError={showErrorToast} />
+          ) : null}
           <label htmlFor="ask" className="sr-only">
             {t.personal.questionLabel}
           </label>
@@ -410,11 +411,6 @@ export function ChatScreen({
             </button>
           </div>
         </form>
-        {error ? (
-          <p role="alert" className="mt-1.5 text-[13px] text-destructive">
-            {error}
-          </p>
-        ) : null}
       </div>
 
       <Dialog open={turnToRegenerate !== null} onOpenChange={(isOpen) => (isOpen ? null : setTurnToRegenerate(null))}>

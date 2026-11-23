@@ -1,10 +1,10 @@
-"""PDF and Word files attached to a private conversation: text extraction, limits, and what the agent reads."""
+"""PDF and Word files in a private conversation or a channel: text extraction, limits, and what the agent reads."""
 
 import io
 import zipfile
 
 from app.config import settings
-from test_ws import api, ask, login, shared, with_key  # noqa: F401
+from test_ws import add_member, api, ask, login, shared, with_key  # noqa: F401
 
 DOCX_CONTENT_TYPES = (
     '<?xml version="1.0" encoding="UTF-8"?>'
@@ -174,3 +174,69 @@ def test_should_place_documents_between_team_state_and_timeline(api):
     system = api.get(f"/api/v1/conversations/{conv['id']}/context", headers=h).json()["system"]
     assert system.index("## Đề bài") < system.index("attached") < system.index("## Dòng thời gian")
 
+
+
+def test_should_return_the_markdown_read_from_an_attached_file(api):
+    h, conv = new_conversation(api)
+    doc = upload(api, h, conv["id"], "plan.docx", make_docx("Muc tieu", "Khao sat sinh vien")).json()
+    r = api.get(f"/api/v1/conversations/{conv['id']}/documents/{doc['id']}", headers=h)
+    assert r.status_code == 200
+    assert r.json()["markdown"] == "# Muc tieu\n\nKhao sat sinh vien" and r.json()["fileName"] == "plan.docx"
+
+
+def test_should_hide_the_markdown_of_another_users_file(api):
+    h, conv = new_conversation(api)
+    doc = upload(api, h, conv["id"], "de-bai.pdf", make_pdf("Secret plan")).json()
+    other, _ = login(api, "long-tran", "Long")
+    assert api.get(f"/api/v1/conversations/{conv['id']}/documents/{doc['id']}", headers=other).status_code == 404
+
+
+def channel_upload(c, h, ws, name, content, ch="chung"):
+    return c.post(f"/api/v1/workspaces/{ws['id']}/channels/{ch}/documents", headers=h, files={"file": (name, content)})
+
+
+def test_should_post_the_text_of_a_channel_file_as_a_message(api):
+    lan, _ = login(api, "lan-pham", "Lan")
+    long, _ = login(api, "long-tran", "Long")
+    ws = shared(api, lan)
+    add_member(api, lan, ws, long)
+    r = channel_upload(api, long, ws, "de-bai.pdf", make_pdf("UIT student survey"))
+    assert r.status_code == 201, r.text
+    attachment = r.json()["messages"][0]["attachment"]
+    assert attachment["type"] == "document" and attachment["fileName"] == "de-bai.pdf"
+    assert attachment["markdown"] == "UIT student survey" and not attachment["truncated"]
+    seen = api.get(f"/api/v1/workspaces/{ws['id']}/channels/chung/messages", headers=lan).json()["messages"]
+    assert seen[-1]["attachment"]["markdown"] == "UIT student survey"
+
+
+def test_should_cut_a_long_channel_file_and_say_so(api, monkeypatch):
+    monkeypatch.setattr(settings, "document_chars_max", 5)
+    lan, _ = login(api, "lan-pham", "Lan")
+    ws = shared(api, lan)
+    attachment = channel_upload(api, lan, ws, "de-bai.pdf", make_pdf("UIT student survey")).json()["messages"][0][
+        "attachment"]
+    assert attachment["markdown"] == "UIT s" and attachment["truncated"] and attachment["charCount"] == 18
+
+
+def test_should_refuse_a_channel_file_from_a_non_member(api):
+    lan, _ = login(api, "lan-pham", "Lan")
+    stranger, _ = login(api, "trang@example.edu", "Trang", provider="google")
+    ws = shared(api, lan)
+    assert channel_upload(api, stranger, ws, "de-bai.pdf", make_pdf("x")).status_code == 403
+
+
+def test_should_refuse_an_unsupported_channel_file(api):
+    lan, _ = login(api, "lan-pham", "Lan")
+    ws = shared(api, lan)
+    r = channel_upload(api, lan, ws, "notes.txt", b"plain text")
+    assert r.status_code == 415 and r.json()["error"]["code"] == "DOCUMENT_TYPE_UNSUPPORTED"
+
+
+def test_should_give_the_uploaders_agent_only_a_marker_of_a_channel_file(api):
+    lan, _ = login(api, "lan-pham", "Lan")
+    with_key(api, lan)
+    ws = shared(api, lan)
+    channel_upload(api, lan, ws, "de-bai.pdf", make_pdf("UIT student survey"))
+    conv = api.post("/api/v1/conversations", headers=lan, json={"workspaceId": ws["id"]}).json()
+    system = api.get(f"/api/v1/conversations/{conv['id']}/context", headers=lan).json()["system"]
+    assert "[Đã gửi tệp de-bai.pdf (18 ký tự) vào kênh]" in system and "UIT student survey" not in system

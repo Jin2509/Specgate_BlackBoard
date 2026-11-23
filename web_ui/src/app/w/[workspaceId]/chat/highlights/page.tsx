@@ -14,6 +14,7 @@ import { getWorkspace, requirePersonalWorkspace } from "@/features/workspace/ser
 import { format, t } from "@/lib/i18n";
 import { toDayClock } from "@/utils/date-format";
 import { toPersonalHomePath } from "@/utils/route-paths";
+import { startEarly } from "@/utils/start-early";
 
 export const metadata: Metadata = { title: t.personal.privateHighlights };
 
@@ -26,12 +27,12 @@ export default function PrivateHighlightsPage(props: PageProps<"/w/[workspaceId]
 }
 
 async function PrivateHighlightsContent({ params, searchParams }: PageProps<"/w/[workspaceId]/chat/highlights">) {
-  const workspace = await requirePersonalWorkspace(params);
-  const me = await requireMe();
-  const query = await searchParams;
+  const pendingList = startEarly(listPrivateHighlights());
+  const pendingConversations = startEarly(listConversations());
+  const [workspace, me, query] = await Promise.all([requirePersonalWorkspace(params), requireMe(), searchParams]);
   const [list, conversations, sharedWorkspaces] = await Promise.all([
-    listPrivateHighlights(),
-    listConversations(),
+    pendingList,
+    pendingConversations,
     Promise.all(me.workspaces.map((shared) => getWorkspace(shared.id).catch(() => null))),
   ]);
   const targets: SendTarget[] = sharedWorkspaces.flatMap((shared) =>

@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { format, t } from "@/lib/i18n";
+import { showErrorToast } from "@/stores/toast-store";
 import { cn } from "@/utils/cn";
 
 import { createHighlightSend } from "../api/private-highlight-actions";
@@ -73,7 +74,6 @@ function SendForm({
     Object.fromEntries(items.map((item) => [item.id, item.text])),
   );
   const [ownWords, setOwnWords] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [duplicateNotice, setDuplicateNotice] = useState<string | null>(null);
   const [sentTo, setSentTo] = useState<{ workspaceId: string; channelName: string } | null>(null);
   const [isPending, startTransition] = useTransition();
@@ -96,7 +96,7 @@ function SendForm({
       });
       if (!outcome.ok) {
         if (outcome.code === "ALREADY_SENT") return setDuplicateNotice(outcome.error);
-        return setError(outcome.error);
+        return showErrorToast(outcome.error);
       }
       setSentTo({ workspaceId, channelName: channel?.name ?? channelId });
       onSent();
@@ -183,11 +183,6 @@ function SendForm({
         </p>
       ) : null}
       {duplicateNotice ? <p className="text-sm text-proposed">{duplicateNotice}</p> : null}
-      {error ? (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      ) : null}
       <DialogFooter>
         <Button variant="secondary" onClick={onClose}>
           {t.common.cancel}

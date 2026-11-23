@@ -4,6 +4,7 @@ import { Highlighter, LoaderCircle, StickyNote } from "lucide-react";
 import { useState } from "react";
 
 import { format, t } from "@/lib/i18n";
+import { showErrorToast } from "@/stores/toast-store";
 import type { HighlightColor } from "@/types/conversation";
 import { cn } from "@/utils/cn";
 import { HIGHLIGHT_COLORS } from "@/utils/highlight-colors";
@@ -30,7 +31,6 @@ export function ChatSelectionBar({
   const [color, setColor] = useState<HighlightColor>("yellow");
   const [isNoteOpen, setIsNoteOpen] = useState(false);
   const [note, setNote] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   return (
     <div
@@ -73,8 +73,9 @@ export function ChatSelectionBar({
           disabled={isSaving}
           onClick={async () => {
             setIsSaving(true);
-            setError(await onSave(color, note.trim() || undefined));
+            const failureMessage = await onSave(color, note.trim() || undefined);
             setIsSaving(false);
+            if (failureMessage) showErrorToast(failureMessage);
           }}
           className="ml-auto inline-flex h-7 items-center rounded-md bg-primary px-2.5 text-[13px] font-medium text-primary-foreground disabled:opacity-50"
         >
@@ -94,7 +95,6 @@ export function ChatSelectionBar({
           className="mt-2 h-8 w-full rounded-md border border-border bg-input px-2 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
       ) : null}
-      {error ? <p className="mt-1.5 text-xs text-destructive">{error}</p> : null}
     </div>
   );
 }

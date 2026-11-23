@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Suspense, type ReactNode } from "react";
 
+import { AccountSwitchGuard } from "@/components/AccountSwitchGuard";
 import { requireMe } from "@/features/auth/server";
 import { RobotIllustration } from "@/features/home";
 import { AccountMenu, ShellSkeleton, WorkspaceRail } from "@/features/workspace";
@@ -32,6 +33,7 @@ async function Home() {
 
   return (
     <>
+      <AccountSwitchGuard userId={me.user.id} />
       <WorkspaceRail workspaces={me.workspaces} pendingJoins={me.pendingJoins} activeId="" personalId={personalWorkspaceId} />
       <main className="flex min-w-0 flex-1 flex-col bg-canvas">
         <header className="flex h-14 shrink-0 items-center justify-end px-4 sm:px-6">

@@ -1,4 +1,4 @@
-"""Turns attached PDF and Word files into Markdown text kept with a conversation and sent to the agent."""
+"""Turns uploaded PDF and Word files into Markdown text, kept with a private conversation or posted to a channel."""
 
 import re
 from io import BytesIO
@@ -82,16 +82,31 @@ def context_rows(docs: list[m.ConversationDocument]) -> list[dict]:
              "truncated": len(d.markdown) < d.char_count} for d in docs]
 
 
-def create_document(s: Session, conversation: m.Conversation, file_name: str, content: bytes) -> m.ConversationDocument:
-    """Check the limits, read the file's text and keep it with the conversation (the file itself is dropped)."""
-    if len(list_documents(s, conversation.id)) >= settings.documents_per_conversation_max:
-        raise ApiError(409, f"Mỗi hội thoại đính kèm tối đa {settings.documents_per_conversation_max} file.",
-                       "DOCUMENT_LIMIT")
+def read_upload(file_name: str, content: bytes) -> tuple[str, str, str]:
+    """Check the size, clean the name and read the text: (file name, media type, Markdown). The file is dropped."""
+    if not content:
+        raise ApiError(400, "File đang trống.", "EMPTY")
     if len(content) > settings.document_size_max_bytes:
         size_mb = settings.document_size_max_bytes // BYTES_PER_MEGABYTE
         raise ApiError(413, f"File lớn hơn {size_mb} MB.", "DOCUMENT_TOO_LARGE")
     name = PurePath(file_name.replace("\\", "/")).name.strip()[:FILE_NAME_MAX_LENGTH]
     media_type, text = to_markdown(name, content)
+    return name, media_type, text
+
+
+def document_attachment(file_name: str, media_type: str, size_bytes: int, text: str) -> dict:
+    """A channel message attachment carrying the file's text, cut at DOCUMENT_CHARS_MAX characters."""
+    kept = text[:settings.document_chars_max]
+    return {"type": "document", "fileName": file_name, "mediaType": media_type, "sizeBytes": size_bytes,
+            "charCount": len(text), "markdown": kept, "truncated": len(kept) < len(text)}
+
+
+def create_document(s: Session, conversation: m.Conversation, file_name: str, content: bytes) -> m.ConversationDocument:
+    """Check the limits, read the file's text and keep it with the conversation (the file itself is dropped)."""
+    if len(list_documents(s, conversation.id)) >= settings.documents_per_conversation_max:
+        raise ApiError(409, f"Mỗi hội thoại đính kèm tối đa {settings.documents_per_conversation_max} file.",
+                       "DOCUMENT_LIMIT")
+    name, media_type, text = read_upload(file_name, content)
     doc = m.ConversationDocument(conversation_id=conversation.id, owner_id=conversation.owner_id, file_name=name,
                                  media_type=media_type, size_bytes=len(content),
                                  markdown=text[:settings.document_chars_max], char_count=len(text))

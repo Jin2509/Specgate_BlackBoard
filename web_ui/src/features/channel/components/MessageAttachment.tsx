@@ -1,10 +1,12 @@
-// Renders what follows a message: board receipt, command list, brief link or channel summary tag.
+// Renders what follows a message: board receipt, command list, brief link, channel summary tag or posted file.
 import { FileText, ListCollapse, Pin } from "lucide-react";
 import Link from "next/link";
 
 import { format, t } from "@/lib/i18n";
 import type { Attachment } from "@/types/message";
 import { IDEA_STATUS_META } from "@/utils/status-meta";
+
+import { DocumentAttachmentCard } from "./DocumentAttachmentCard";
 
 export function MessageAttachment({ attachment, workspaceId }: { attachment: Attachment; workspaceId: string }) {
   switch (attachment.type) {
@@ -40,6 +42,16 @@ export function MessageAttachment({ attachment, workspaceId }: { attachment: Att
         >
           <FileText className="size-3.5" /> {t.channel.openBrief}
         </Link>
+      );
+    case "document":
+      return (
+        <DocumentAttachmentCard
+          fileName={attachment.fileName}
+          sizeBytes={attachment.sizeBytes}
+          charCount={attachment.charCount}
+          markdown={attachment.markdown}
+          isTruncated={attachment.truncated}
+        />
       );
     case "summary":
       return (

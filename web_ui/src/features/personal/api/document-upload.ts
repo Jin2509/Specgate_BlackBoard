@@ -1,5 +1,6 @@
 // Uploads a PDF or Word file to a conversation from the browser, so large files skip the server action body limit.
 import { toApiPath } from "@/lib/api/api-base-path";
+import { toErrorText } from "@/lib/api/error-text";
 import { toApiError } from "@/lib/api/http-client";
 import { t } from "@/lib/i18n";
 
@@ -14,7 +15,8 @@ export async function uploadDocument(conversationId: string, file: File): Promis
       body,
     });
     if (response.ok) return null;
-    return (await toApiError(response)).message || t.personal.documentUploadFailed;
+    const apiError = await toApiError(response);
+    return toErrorText(apiError.code, apiError.message, t.personal.documentUploadFailed);
   } catch {
     return t.errors.backendUnreachable;
   }

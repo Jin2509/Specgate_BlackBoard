@@ -10,14 +10,17 @@ import { PageHeader } from "@/components/PageHeader";
 import { PageLayout } from "@/components/PageLayout";
 import { Button } from "@/components/ui/Button";
 import { format, t } from "@/lib/i18n";
+import { showErrorToast } from "@/stores/toast-store";
 import type { Task, TaskBoard } from "@/types/task";
 import type { TeamMember } from "@/types/workspace";
 import { toContentWidthClassName } from "@/utils/content-width";
 
+import { TaskAssignHint } from "./TaskAssignHint";
 import { TaskComposer } from "./TaskComposer";
 import { TaskFormDialog } from "./TaskFormDialog";
 import { TaskNode, type TaskNodeActions, type TaskTreeControls } from "./TaskNode";
-import { claimTask, deleteTask, updateTaskLock, updateTaskStatus, type TaskOutcome } from "../api/task-actions";
+import { claimTask, deleteTask, updateTask, updateTaskLock, updateTaskStatus, type TaskOutcome } from "../api/task-actions";
+import { toAssigneeOptions } from "../utils/assignee-options";
 import { TASK_MAX_DEPTH, toTaskTree, type TaskTreeNode } from "../utils/task-tree";
 
 export function TaskBoardView({
@@ -26,19 +29,20 @@ export function TaskBoardView({
   members,
   viewerId,
   isOwner,
+  joinCode,
 }: {
   workspaceId: string;
   board: TaskBoard;
   members: TeamMember[];
   viewerId: string;
   isOwner: boolean;
+  joinCode: string | null;
 }) {
   const router = useRouter();
   const [addingUnder, setAddingUnder] = useState<number | null>(null);
   const [collapsedNumbers, setCollapsedNumbers] = useState<ReadonlySet<number>>(new Set());
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [deletingTask, setDeletingTask] = useState<Task | null>(null);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const tree = toTaskTree(board.tasks);
   const canChangeBoard = !board.locked;
@@ -49,8 +53,7 @@ export function TaskBoardView({
   function runUpdate(update: () => Promise<TaskOutcome>, onSuccess?: () => void) {
     startTransition(async () => {
       const outcome = await update();
-      if (!outcome.ok) return setErrorMessage(outcome.error);
-      setErrorMessage(null);
+      if (!outcome.ok) return showErrorToast(outcome.error);
       onSuccess?.();
       router.refresh();
     });
@@ -65,6 +68,10 @@ export function TaskBoardView({
         canChangeBoard && !task.assignee && task.status === "doing"
           ? () => runUpdate(() => claimTask(workspaceId, task.number))
           : undefined,
+      onAssign:
+        canManage && task.status !== "done"
+          ? (assigneeId) => runUpdate(() => updateTask({ workspaceId, number: task.number, body: task.body, assigneeId }))
+          : undefined,
       onToggleStatus:
         isMine || canManage ? () => runUpdate(() => updateTaskStatus(workspaceId, task.number, nextStatus)) : undefined,
       onAddChild: canAddChild ? () => setAddingUnder(task.number) : undefined,
@@ -76,6 +83,7 @@ export function TaskBoardView({
   const controls: TaskTreeControls = {
     toActions,
     isPending,
+    assigneeOptions: toAssigneeOptions(members, viewerId),
     isCollapsed: (taskNumber) => collapsedNumbers.has(taskNumber),
     onToggleCollapsed: (taskNumber) =>
       setCollapsedNumbers((current) => {
@@ -119,17 +127,20 @@ export function TaskBoardView({
 
       <PageBody>
         <div className={toContentWidthClassName("wide")}>
+          {board.locked ? null : (
+            <TaskAssignHint
+              isOwner={isOwner}
+              memberCount={members.length}
+              joinCode={joinCode}
+              requestsHref={`/w/${workspaceId}/requests`}
+            />
+          )}
           {board.locked ? (
             <p
               role="status"
               className="mb-4 flex items-start gap-2 rounded-lg bg-proposed-soft px-3.5 py-2.5 text-sm text-foreground"
             >
               <Lock className="mt-0.5 size-4 shrink-0 text-proposed" /> {t.tasks.lockedNotice}
-            </p>
-          ) : null}
-          {errorMessage ? (
-            <p role="alert" className="mb-4 rounded-lg bg-rejected-soft px-3.5 py-2.5 text-sm text-foreground">
-              {errorMessage}
             </p>
           ) : null}
           {tree.length === 0 && board.locked ? <p className="text-sm text-subtle">{t.tasks.empty}</p> : null}

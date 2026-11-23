@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/Input";
 import { updateNickname } from "@/features/settings";
 import { format, t } from "@/lib/i18n";
+import { showErrorToast } from "@/stores/toast-store";
 
 const NICKNAME_MAX_LENGTH = 40;
 
@@ -23,13 +24,12 @@ export function NicknamePrompt({
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(true);
   const [nickname, setNickname] = useState(currentName);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function handleSave() {
     startTransition(async () => {
       const outcome = await updateNickname(workspaceId, nickname);
-      if (!outcome.ok) return setErrorMessage(outcome.error);
+      if (!outcome.ok) return showErrorToast(outcome.error);
       setIsOpen(false);
       router.refresh();
     });
@@ -48,11 +48,6 @@ export function NicknamePrompt({
           maxLength={NICKNAME_MAX_LENGTH}
           onChange={(event) => setNickname(event.target.value)}
         />
-        {errorMessage ? (
-          <p role="alert" className="text-sm text-destructive">
-            {errorMessage}
-          </p>
-        ) : null}
         <DialogFooter>
           <Button variant="secondary" onClick={() => setIsOpen(false)}>
             {t.workspace.later}

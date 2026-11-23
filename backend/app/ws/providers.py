@@ -29,7 +29,38 @@ FAKE_CHARS_PER_TOKEN = 4
 GEMINI_MODEL_PREFIX = "models/"
 # Listed by /models but unable to answer a chat turn; offering them only leads to provider errors.
 NON_CHAT_MODEL = re.compile(
-    r"embedding|tts|image|audio|live|transcribe|whisper|dall-e|moderation|aqa|lyria|imagen|veo|robotics", re.IGNORECASE)
+    r"embedding|tts|image|audio|live|transcribe|whisper|dall-e|moderation|aqa|lyria|imagen|veo|robotics"
+    r"|antigravity|deep-research|computer-use|customtools|nano-banana|genie|decision|guard", re.IGNORECASE)
+# Default model when the user picked none: the first family with a match wins, then its highest version.
+# Alphabetical order is no default: for Gemini it picks agent-only models that reject a system prompt.
+DEFAULT_MODEL_FAMILIES = (
+    re.compile(r"^gemini-(\d+(?:\.\d+)?)-flash$"),
+    re.compile(r"^claude-sonnet-(\d{1,2}(?:-\d{1,2})?)(?:-\d{8})?$"),
+    re.compile(r"^gpt-(\d+(?:\.\d+)?)$"),
+    re.compile(r"^deepseek-chat()$"),
+    re.compile(r"^(?:openai/)?gpt-oss-(\d+)b(?::free)?$"),
+    re.compile(r"^(?:meta-llama/)?llama-(\d+(?:\.\d+)?)-70b(?:-versatile|-instruct)?(?::free)?$"),
+    re.compile(r"^qwen/qwen(\d+(?:\.\d+)?)-\d+b(?::free)?$"),
+)
+# Default candidates probed with a one-token request when a key is saved, all at once.
+PROBE_CANDIDATES_MAX = 3
+PROBE_TIMEOUT_S = 8.0
+GEMINI_OPENAI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai"
+# Providers recognised from the key alone, so the user need not type an address. Order matters: longer prefixes first.
+BASE_URL_BY_KEY_PATTERN = (
+    (re.compile(r"^sk-or-"), "https://openrouter.ai/api/v1"),
+    (re.compile(r"^(AIza|AQ\.)"), GEMINI_OPENAI_BASE_URL),
+    (re.compile(r"^gsk_"), "https://api.groq.com/openai/v1"),
+    (re.compile(r"^xai-"), "https://api.x.ai/v1"),
+    (re.compile(r"^sk-[0-9a-f]{32}$"), "https://api.deepseek.com/v1"),
+)
+ANTHROPIC_KEY_PREFIX = "sk-ant-"
+# Gemini answers 400 when a listed model cannot take this request (no system prompt, retired for new users).
+UNSUPPORTED_MODEL_400 = re.compile(r"not enabled for models/|not supported for|no longer available", re.IGNORECASE)
+# Gemini answers a bad key with 400 INVALID_ARGUMENT instead of 401/403.
+REJECTED_KEY_400 = re.compile(r"(api|auth)[ _]key", re.IGNORECASE)
+# Google's native endpoints (base URL without /openai) reject a Bearer API key as a missing OAuth token.
+OAUTH_ONLY_ENDPOINT = "expected oauth 2 access token"
 
 
 class ProviderError(Exception):
@@ -46,7 +77,8 @@ MESSAGES = {
     "network": "Không kết nối được nhà cung cấp. Kiểm tra địa chỉ API và mạng.",
     "timeout": "Nhà cung cấp không trả lời kịp. Thử lại sau.",
     "model": "Key này không dùng được mô hình đã chọn.",
-    "context": "Hội thoại hoặc file đính kèm quá dài với mô hình này. Bỏ bớt file hoặc tạo hội thoại mới.",
+    "context": "Câu hỏi hoặc file đính kèm quá dài với mô hình này. Bỏ bớt file, rút gọn câu hỏi hoặc chọn mô hình "
+               "có ngữ cảnh lớn hơn.",
     "bad-url": "Địa chỉ API không hợp lệ. Dùng dạng https://…/v1.",
     "provider": "Nhà cung cấp đang lỗi. Thử lại sau.",
 }
@@ -78,11 +110,22 @@ CACHE_MARK = {"type": "ephemeral"}
 CACHE_MARKS_MAX = 4
 
 
-def normalize_base_url(provider: str, base_url: str | None) -> str | None:
-    """Anthropic: None (fixed endpoint). OpenAI-style: validated http(s) URL, default OpenAI."""
+def infer_provider(provider: str, api_key: str) -> str:
+    """An Anthropic key sent as OpenAI-style can only mean Anthropic."""
+    return "anthropic" if api_key.strip().startswith(ANTHROPIC_KEY_PREFIX) else provider
+
+
+def detect_base_url(api_key: str) -> str | None:
+    """Return the OpenAI-style address a key's prefix belongs to, or None when the prefix is not distinctive."""
+    key = api_key.strip()
+    return next((url for pattern, url in BASE_URL_BY_KEY_PATTERN if pattern.search(key)), None)
+
+
+def normalize_base_url(provider: str, base_url: str | None, api_key: str = "") -> str | None:
+    """Anthropic: None (fixed endpoint). OpenAI-style: validated http(s) URL, else the key's provider, else OpenAI."""
     if provider == "anthropic":
         return None
-    url = (base_url or "").strip().rstrip("/") or settings.openai_base_url
+    url = (base_url or "").strip().rstrip("/") or detect_base_url(api_key) or settings.openai_base_url
     parsed = urlparse(url)
     if parsed.scheme not in ("http", "https") or not parsed.hostname:
         raise fail("bad-url")
@@ -106,13 +149,20 @@ def _is_private(host: str) -> bool:
 
 def _status_error(status: int, body: str = "") -> ProviderError:
     low = body.lower()
+    if status == 401 and OAUTH_ONLY_ENDPOINT in low:
+        return fail("bad-url")
+    if status == 400 and REJECTED_KEY_400.search(body):
+        return fail("invalid-key")
+    if status == 400 and UNSUPPORTED_MODEL_400.search(body):
+        return fail("model")
     if status in (401, 403):
         return fail("invalid-key")
     if status in (402, 429) or "credit balance" in low or "insufficient_quota" in low:
         return fail("quota")
     if status == 404:
         return fail("model")
-    if status in (400, 413) and ("context" in low or "too long" in low or "maximum" in low and "token" in low):
+    if status in (400, 413) and ("context" in low or "too long" in low or "reduce the length" in low
+                                 or "maximum" in low and "token" in low):
         return fail("context")
     return fail("provider")
 
@@ -156,6 +206,56 @@ async def list_models(t: Target) -> list[str]:
     if not chat_ids:
         raise fail("model")
     return sorted(set(chat_ids))
+
+
+def _to_version(text: str) -> tuple[int, ...]:
+    return tuple(int(part) for part in re.split(r"[.-]", text) if part)
+
+
+def rank_default_models(models: list[str]) -> list[str]:
+    """Order models as default candidates: known families first, newest version first, then the rest as listed."""
+    ranked: list[str] = []
+    for family in DEFAULT_MODEL_FAMILIES:
+        matches = [(family.match(model), model) for model in models]
+        versions = sorted(((_to_version(match.group(1)), model) for match, model in matches if match), reverse=True)
+        ranked += [model for _, model in versions if model not in ranked]
+    return ranked + [model for model in models if model not in ranked]
+
+
+def pick_default_model(models: list[str]) -> str:
+    """Pick a mainstream chat model from the provider's list; the first one when no known family is listed."""
+    return rank_default_models(models)[0]
+
+
+async def _answers(t: Target, model: str) -> bool:
+    """Send a one-token request; True when the provider answers it."""
+    question = [{"role": "user", "content": "hi"}]
+    try:
+        async with httpx.AsyncClient(timeout=PROBE_TIMEOUT_S) as client:
+            if t.provider == "anthropic":
+                r = await client.post(
+                    f"{settings.anthropic_base_url.rstrip('/')}/v1/messages",
+                    headers={"x-api-key": t.api_key, "anthropic-version": "2023-06-01"},
+                    json={"model": model, "max_tokens": 1, "messages": question},
+                )
+            else:
+                r = await client.post(f"{t.base_url}/chat/completions", headers={"Authorization": f"Bearer {t.api_key}"},
+                                      json={"model": model, "max_tokens": 1, "messages": question})
+    except httpx.HTTPError:
+        return False
+    return r.status_code < 400
+
+
+async def pick_working_model(t: Target, models: list[str]) -> str:
+    """Probe the top default candidates at once; the best-ranked one that answers wins, else the best-ranked one.
+
+    A listed model may still be retired for new users or overloaded (Gemini then hangs instead of failing)."""
+    ranked = rank_default_models(models)
+    if settings.llm_fake:
+        return ranked[0]
+    candidates = ranked[:PROBE_CANDIDATES_MAX]
+    answers = await asyncio.gather(*(_answers(t, model) for model in candidates))
+    return next((model for model, answered in zip(candidates, answers) if answered), ranked[0])
 
 
 # ---------- chat ----------
@@ -270,6 +370,42 @@ async def stream_chat(t: Target, model: str, system: str | list[str], messages: 
         raise fail("network") from None
 
 
+def to_shorter_histories(messages: list[dict]) -> list[list[dict]]:
+    """Ever shorter versions of a conversation for a full context window: halve the earlier turns until only the
+    question is left. Each version starts with a user turn, as every provider requires."""
+    if not messages:
+        return []
+    *earlier, question = messages
+    versions: list[list[dict]] = []
+    keep = len(earlier)
+    while keep > 0:
+        keep //= 2
+        kept = earlier[len(earlier) - keep:] if keep else []
+        while kept and kept[0]["role"] != "user":
+            kept = kept[1:]
+        version = [*kept, question]
+        if not versions or version != versions[-1]:
+            versions.append(version)
+    return versions
+
+
+async def stream_chat_fitting(t: Target, model: str, system: str | list[str], messages: list[dict], *,
+                              usage: Usage | None = None) -> AsyncIterator[str]:
+    """Like stream_chat, but when the model's context window is full the oldest turns are dropped and the call is
+    retried, as chat apps do. The question is always sent; a retry happens only before any text arrived."""
+    attempts = [messages, *to_shorter_histories(messages)]
+    for index, attempt in enumerate(attempts):
+        has_started = False
+        try:
+            async for delta in stream_chat(t, model, system, attempt, usage=usage):
+                has_started = True
+                yield delta
+            return
+        except ProviderError as e:
+            if e.code != "context" or has_started or index == len(attempts) - 1:
+                raise
+
+
 def read_usage(provider: str, event: dict, usage: Usage) -> None:
     """Copy the token counts out of a stream event, if it carries any."""
     if provider == "anthropic":
@@ -308,4 +444,4 @@ def _delta(provider: str, event: dict) -> str:
 
 async def complete(t: Target, model: str, system: str | list[str], messages: list[dict], *,
                    usage: Usage | None = None) -> str:
-    return "".join([chunk async for chunk in stream_chat(t, model, system, messages, usage=usage)]).strip()
+    return "".join([chunk async for chunk in stream_chat_fitting(t, model, system, messages, usage=usage)]).strip()

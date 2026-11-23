@@ -5,13 +5,13 @@ import { useState, useTransition } from "react";
 
 import { updateTeamRole } from "@/features/settings";
 import { t } from "@/lib/i18n";
+import { showErrorToast } from "@/stores/toast-store";
 
 const TEAM_ROLE_MAX_LENGTH = 40;
 
 export function TeamRoleForm({ workspaceId, teamRole }: { workspaceId: string; teamRole: string | null }) {
   const router = useRouter();
   const [value, setValue] = useState(teamRole ?? "");
-  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   return (
     <form
@@ -20,8 +20,8 @@ export function TeamRoleForm({ workspaceId, teamRole }: { workspaceId: string; t
         event.preventDefault();
         startTransition(async () => {
           const outcome = await updateTeamRole(workspaceId, value);
-          setError(outcome.ok ? null : outcome.error);
-          if (outcome.ok) router.refresh();
+          if (!outcome.ok) return showErrorToast(outcome.error);
+          router.refresh();
         });
       }}
     >
@@ -43,11 +43,6 @@ export function TeamRoleForm({ workspaceId, teamRole }: { workspaceId: string; t
       >
         {t.common.save}
       </button>
-      {error ? (
-        <p role="alert" className="w-full text-xs text-destructive">
-          {error}
-        </p>
-      ) : null}
     </form>
   );
 }

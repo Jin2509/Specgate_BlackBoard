@@ -2,12 +2,12 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
-import { requireSession } from "@/features/auth/server";
 import { ExploreView } from "@/features/join";
 import { listExploreWorkspaces } from "@/features/join/server";
 import { ContentSkeleton } from "@/features/workspace";
 import { requireWorkspace } from "@/features/workspace/server";
 import { t } from "@/lib/i18n";
+import { startEarly } from "@/utils/start-early";
 
 export const metadata: Metadata = { title: t.join.explorePageTitle };
 
@@ -20,11 +20,11 @@ export default function ExplorePage(props: PageProps<"/w/[workspaceId]/explore">
 }
 
 async function ExplorePageContent({ params, searchParams }: PageProps<"/w/[workspaceId]/explore">) {
-  await requireWorkspace(params);
-  await requireSession();
   const { ws: selectedWorkspaceId } = await searchParams;
-  const { workspaces, selected } = await listExploreWorkspaces(
-    typeof selectedWorkspaceId === "string" ? selectedWorkspaceId : undefined,
+  const pendingExplore = startEarly(
+    listExploreWorkspaces(typeof selectedWorkspaceId === "string" ? selectedWorkspaceId : undefined),
   );
+  await requireWorkspace(params);
+  const { workspaces, selected } = await pendingExplore;
   return <ExploreView workspaces={workspaces} preselected={selected} />;
 }

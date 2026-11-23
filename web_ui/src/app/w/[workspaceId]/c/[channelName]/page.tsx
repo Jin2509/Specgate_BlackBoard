@@ -14,6 +14,7 @@ import { ContentSkeleton, isOwner } from "@/features/workspace";
 import { requireSharedWorkspace } from "@/features/workspace/server";
 import { isApiError } from "@/lib/api/http-client";
 import { format, t } from "@/lib/i18n";
+import { startEarly } from "@/utils/start-early";
 
 const NOT_FOUND_STATUS = 404;
 /** Fallback refresh in case the event stream cannot be opened. */
@@ -30,17 +31,19 @@ export default function ChannelPage(props: PageProps<"/w/[workspaceId]/c/[channe
 }
 
 async function ChannelPageContent({ params }: PageProps<"/w/[workspaceId]/c/[channelName]">) {
-  const workspace = await requireSharedWorkspace(params);
-  const { channelName } = await params;
-  const me = await requireMe();
+  const { workspaceId, channelName } = await params;
+  const pendingMessages = startEarly(listMessages(workspaceId, channelName));
+  const pendingBoard = startEarly(getBoard(workspaceId));
+  const pendingPrivateHighlights = startEarly(listPrivateHighlights());
+  const [workspace, me] = await Promise.all([requireSharedWorkspace(params), requireMe()]);
   let page;
   try {
-    page = await listMessages(workspace.id, channelName);
+    page = await pendingMessages;
   } catch (error) {
     if (isApiError(error, NOT_FOUND_STATUS)) notFound();
     throw error;
   }
-  const [board, privateHighlights] = await Promise.all([getBoard(workspace.id), listPrivateHighlights()]);
+  const [board, privateHighlights] = await Promise.all([pendingBoard, pendingPrivateHighlights]);
   const channel = page.channel;
   const people = workspace.members.map((member) => member.user);
   const agentCount = workspace.members.filter((member) => member.agent).length;

@@ -6,6 +6,7 @@ import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
 import { format, t } from "@/lib/i18n";
+import { showErrorToast } from "@/stores/toast-store";
 import type { Turn } from "@/types/conversation";
 
 import { listTurns } from "../api/conversation-actions";
@@ -26,7 +27,7 @@ export function AttachTurnsDialog({
   const router = useRouter();
   const [turns, setTurns] = useState<Turn[] | null>(null);
   const [chosenIds, setChosenIds] = useState<string[]>(item.attachedTurns.map((turn) => turn.id));
-  const [error, setError] = useState<string | null>(null);
+  const [hasLoadFailed, setHasLoadFailed] = useState(false);
   const [isPending, startTransition] = useTransition();
 
   useEffect(() => {
@@ -34,7 +35,10 @@ export function AttachTurnsDialog({
     void listTurns(conversationId).then((outcome) => {
       if (!isCurrent) return;
       if (outcome.ok) setTurns(outcome.value);
-      else setError(outcome.error);
+      else {
+        setHasLoadFailed(true);
+        showErrorToast(outcome.error);
+      }
     });
     return () => {
       isCurrent = false;
@@ -44,7 +48,7 @@ export function AttachTurnsDialog({
   function handleSave() {
     startTransition(async () => {
       const outcome = await updatePrivateHighlight(item.id, { attachedTurnIds: chosenIds });
-      if (!outcome.ok) return setError(outcome.error);
+      if (!outcome.ok) return showErrorToast(outcome.error);
       onClose();
       router.refresh();
     });
@@ -82,9 +86,8 @@ export function AttachTurnsDialog({
               </li>
             );
           })}
-          {turns === null && !error ? <li className="text-sm text-subtle">{t.common.loading}</li> : null}
+          {turns === null && !hasLoadFailed ? <li className="text-sm text-subtle">{t.common.loading}</li> : null}
         </ul>
-        {error ? <p className="text-sm text-destructive">{error}</p> : null}
         <DialogFooter>
           <Button variant="secondary" onClick={onClose}>
             {t.common.cancel}

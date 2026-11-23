@@ -1,86 +1,57 @@
 "use client";
-// Enters the personal agent's API key: pick a provider, type the key, and let the backend check and store it.
+// Enters the personal agent's API key; the provider and address are recognised from the key, with a custom address as fallback.
 import { Eye, EyeOff, LoaderCircle } from "lucide-react";
 import { useActionState, useState } from "react";
 
-import { SegmentedControl } from "@/components/SegmentedControl";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { useActionErrorToast } from "@/hooks/use-action-error-toast";
 import { format, t } from "@/lib/i18n";
-import type { ProviderKind } from "@/types/agent";
 
 import { updateKey, type KeyFormState } from "../api/key-actions";
-
-const PROVIDERS: ReadonlyArray<{ value: ProviderKind; label: string; hint: string }> = [
-  { value: "anthropic", label: "Anthropic", hint: t.personal.anthropicHint },
-  { value: "openai-compatible", label: t.personal.openAiLabel, hint: t.personal.openAiHint },
-];
-
-const BASE_URL_SUGGESTIONS: ReadonlyArray<{ url: string; label: string }> = [
-  { url: "https://api.openai.com/v1", label: "OpenAI" },
-  { url: "https://generativelanguage.googleapis.com/v1beta/openai", label: "Google Gemini" },
-  { url: "https://openrouter.ai/api/v1", label: "OpenRouter" },
-  { url: "https://api.deepseek.com/v1", label: "DeepSeek" },
-  { url: "https://api.groq.com/openai/v1", label: "Groq" },
-];
+import { BASE_URL_SUGGESTIONS, DEFAULT_BASE_URL, detectKeyProvider, type KeyProviderMatch } from "../utils/key-provider";
 
 function toSubmitLabel(isPending: boolean, hasKey: boolean): string {
   if (isPending) return t.personal.checkingKey;
   return hasKey ? t.personal.checkAndReplace : t.personal.checkAndSave;
 }
 
+function toKeyStatus(apiKey: string, detected: KeyProviderMatch | null, customBaseUrl: string): string {
+  if (!apiKey.trim()) return t.personal.keyLead;
+  if (customBaseUrl) return format(t.personal.keyCustomAddress, { url: customBaseUrl });
+  if (!detected) return t.personal.keyUnknown;
+  const recognised = format(t.personal.keyDetected, { provider: detected.name });
+  return detected.baseUrl ? `${recognised} ${format(t.personal.keyAddressAuto, { url: detected.baseUrl })}` : recognised;
+}
+
 export function KeyForm({
   hasKey,
-  defaultProvider,
   note,
 }: {
   hasKey: boolean;
-  defaultProvider: ProviderKind;
   /** Reminder about subscription plans, provided by the backend. */
   note: string;
 }) {
   const [state, formAction, isPending] = useActionState<KeyFormState, FormData>(updateKey, {});
-  const [provider, setProvider] = useState<ProviderKind>(defaultProvider);
+  useActionErrorToast(state);
+  // Controlled so both fields survive the form reset React does after a rejected key.
+  const [apiKey, setApiKey] = useState("");
+  const [customBaseUrl, setCustomBaseUrl] = useState("");
   const [isKeyShown, setIsKeyShown] = useState(false);
-  const providerHint = PROVIDERS.find((option) => option.value === provider)?.hint;
+  const [isCustomOpen, setIsCustomOpen] = useState(false);
+
+  const detected = detectKeyProvider(apiKey);
+  const trimmedCustomUrl = customBaseUrl.trim();
+  const provider = trimmedCustomUrl ? "openai-compatible" : (detected?.provider ?? "openai-compatible");
+  const baseUrl = provider === "anthropic" ? "" : trimmedCustomUrl || detected?.baseUrl || "";
+  const isUnknownKey = Boolean(apiKey.trim()) && !detected;
+  const isCustomShown = isCustomOpen || isUnknownKey || Boolean(trimmedCustomUrl);
 
   return (
     <form action={formAction} className="grid gap-4">
       <input type="hidden" name="provider" value={provider} />
-      <div className="grid gap-1.5">
-        <span className="text-[13px] font-semibold text-muted-foreground">{t.personal.provider}</span>
-        <SegmentedControl
-          aria-label={t.personal.provider}
-          value={provider}
-          onChange={setProvider}
-          className="inline-flex w-fit gap-0.5 p-0.5"
-          itemClassName="px-3 py-1.5 text-sm"
-          options={PROVIDERS.map((option) => ({ value: option.value, label: option.label }))}
-        />
-        <p className="text-xs leading-relaxed text-subtle">{providerHint}</p>
-      </div>
-
-      {provider === "openai-compatible" ? (
-        <div className="grid gap-1.5">
-          <Label htmlFor="base-url" className="text-[13px] font-semibold text-muted-foreground">
-            {t.personal.apiAddress}
-          </Label>
-          <Input
-            id="base-url"
-            name="baseUrl"
-            list="base-url-suggestions"
-            placeholder="https://api.openai.com/v1"
-            inputMode="url"
-            autoComplete="off"
-          />
-          <datalist id="base-url-suggestions">
-            {BASE_URL_SUGGESTIONS.map((suggestion) => (
-              <option key={suggestion.url} value={suggestion.url} label={suggestion.label} />
-            ))}
-          </datalist>
-        </div>
-      ) : null}
+      <input type="hidden" name="baseUrl" value={baseUrl} />
 
       <div className="grid gap-1.5">
         <Label htmlFor="api-key" className="text-[13px] font-semibold text-muted-foreground">
@@ -91,11 +62,13 @@ export function KeyForm({
             id="api-key"
             name="apiKey"
             type={isKeyShown ? "text" : "password"}
+            value={apiKey}
+            onChange={(event) => setApiKey(event.target.value)}
             autoComplete="off"
             spellCheck={false}
             required
             aria-invalid={state.error ? true : undefined}
-            aria-describedby={state.error ? "key-error" : "key-note"}
+            aria-describedby="key-status key-note"
             className="pr-10 font-mono"
           />
           <button
@@ -107,19 +80,53 @@ export function KeyForm({
             {isKeyShown ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
           </button>
         </div>
-        {state.error ? (
-          <p id="key-error" role="alert" className="text-[13px] text-destructive">
-            {state.error}
-          </p>
-        ) : (
-          <p id="key-note" className="text-xs leading-relaxed text-subtle">
-            {format(t.personal.keyEncrypted, { note })}
-          </p>
-        )}
+        <p id="key-status" aria-live="polite" className="text-xs leading-relaxed [overflow-wrap:anywhere] text-muted-foreground">
+          {toKeyStatus(apiKey, detected, trimmedCustomUrl)}
+        </p>
       </div>
 
+      {provider !== "anthropic" || trimmedCustomUrl ? (
+        <div className="grid gap-1.5">
+          {isUnknownKey ? null : (
+            <button
+              type="button"
+              onClick={() => setIsCustomOpen((isOpen) => !isOpen)}
+              aria-expanded={isCustomShown}
+              className="w-fit text-xs font-medium text-primary-strong hover:underline"
+            >
+              {isCustomShown ? t.personal.hideCustomAddress : t.personal.customAddress}
+            </button>
+          )}
+          {isCustomShown ? (
+            <>
+              <Label htmlFor="base-url" className="text-[13px] font-semibold text-muted-foreground">
+                {t.personal.apiAddress}
+              </Label>
+              <Input
+                id="base-url"
+                value={customBaseUrl}
+                onChange={(event) => setCustomBaseUrl(event.target.value)}
+                list="base-url-suggestions"
+                placeholder={format(t.personal.addressDefault, { url: detected?.baseUrl ?? DEFAULT_BASE_URL })}
+                inputMode="url"
+                autoComplete="off"
+              />
+              <datalist id="base-url-suggestions">
+                {BASE_URL_SUGGESTIONS.map((suggestion) => (
+                  <option key={suggestion.url} value={suggestion.url} label={suggestion.label} />
+                ))}
+              </datalist>
+            </>
+          ) : null}
+        </div>
+      ) : null}
+
+      <p id="key-note" className="text-xs leading-relaxed text-subtle">
+        {format(t.personal.keyEncrypted, { note })}
+      </p>
+
       <div>
-        <Button type="submit" disabled={isPending}>
+        <Button type="submit" disabled={isPending || !apiKey.trim()}>
           {isPending ? <LoaderCircle className="animate-spin" /> : null}
           {toSubmitLabel(isPending, hasKey)}
         </Button>

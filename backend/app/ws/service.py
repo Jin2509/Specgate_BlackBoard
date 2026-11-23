@@ -27,7 +27,7 @@ def base_name(s: Session, user_id: str, workspace_id: str | None = None) -> str:
         mem = member_row(s, workspace_id, user_id)
         if mem and mem.nickname:
             return mem.nickname
-    u = s.get(m.User, user_id)
+    u = user_by_id(s, user_id)
     return u.display_name if u else user_id
 
 
@@ -111,9 +111,38 @@ def board_author(s: Session, item: m.BoardItem) -> str:
     return name_of(s, item.created_by_id, item.workspace_id)
 
 
+def _request_memo(s: Session, name: str) -> dict:
+    """A memo that lives as long as the session, which is one request: building one response repeats the same lookups,
+    and every lookup is a round trip to the database."""
+    return s.info.setdefault(name, {})
+
+
 def member_row(s: Session, workspace_id: str, user_id: str) -> m.Member | None:
     """The membership row whether the person is still in the workspace or left it."""
-    return s.scalar(select(m.Member).where(m.Member.workspace_id == workspace_id, m.Member.user_id == user_id))
+    memo = _request_memo(s, "member_rows")
+    key = (workspace_id, user_id)
+    if key not in memo:
+        mem = s.scalar(select(m.Member).where(m.Member.workspace_id == workspace_id, m.Member.user_id == user_id))
+        if mem is None:
+            # Not kept: the person may join later in the same request.
+            return None
+        memo[key] = mem
+    return memo[key]
+
+
+def user_by_id(s: Session, user_id: str) -> m.User | None:
+    """The person, looked up once per request even when they no longer exist."""
+    memo = _request_memo(s, "users")
+    if user_id not in memo:
+        memo[user_id] = s.get(m.User, user_id)
+    return memo[user_id]
+
+
+def remember_members(s: Session, members: list[m.Member]) -> None:
+    """Let member_row answer from rows already loaded."""
+    memo = _request_memo(s, "member_rows")
+    for mem in members:
+        memo[(mem.workspace_id, mem.user_id)] = mem
 
 
 def membership_of(s: Session, workspace_id: str, user_id: str) -> m.Member | None:
@@ -156,9 +185,21 @@ def name_taken(s: Session, workspace_id: str, name: str, except_user: str | None
 
 def account_hint(s: Session, user_id: str) -> str | None:
     """Shown on hover over a name (flow §9): the GitHub login, or the Google or sign-in e-mail partly masked."""
-    acc = s.scalar(select(m.OAuthAccount).where(m.OAuthAccount.user_id == user_id).order_by(m.OAuthAccount.id))
-    if not acc:
-        return None
+    memo = _request_memo(s, "account_hints")
+    if user_id not in memo:
+        memo.update(_account_hints(s, [user_id]))
+    return memo.get(user_id)
+
+
+def _account_hints(s: Session, user_ids: list[str]) -> dict[str, str]:
+    """Hints of many people in one query: each person's first sign-in account."""
+    first: dict[str, m.OAuthAccount] = {}
+    for acc in s.scalars(select(m.OAuthAccount).where(m.OAuthAccount.user_id.in_(user_ids)).order_by(m.OAuthAccount.id)):
+        first.setdefault(acc.user_id, acc)
+    return {user_id: _to_account_hint(acc) for user_id, acc in first.items()}
+
+
+def _to_account_hint(acc: m.OAuthAccount) -> str:
     if acc.provider in ("google", "email") and "@" in acc.login:
         local, domain = acc.login.split("@", 1)
         source = "Google" if acc.provider == "google" else "Email"
@@ -181,8 +222,10 @@ def key_out(k: m.ProviderKey | None) -> dict | None:
             "models": list(k.models or []), "savedAt": iso(k.saved_at)}
 
 
-def agent_out(s: Session, user_id: str, workspace_id: str | None = None) -> dict | None:
-    k = s.get(m.ProviderKey, user_id)
+def agent_out(s: Session, user_id: str, workspace_id: str | None = None,
+              key: m.ProviderKey | None | bool = True) -> dict | None:
+    """`key`: the person's key when the caller already loaded it (None: they have none); True: look it up."""
+    k = s.get(m.ProviderKey, user_id) if key is True else key
     if not k:
         return None
     name = name_of(s, user_id, workspace_id)
@@ -191,7 +234,7 @@ def agent_out(s: Session, user_id: str, workspace_id: str | None = None) -> dict
 
 
 def member_user_out(s: Session, mem: m.Member) -> dict | None:
-    u = s.get(m.User, mem.user_id)
+    u = user_by_id(s, mem.user_id)
     if not u:
         return None
     name = (mem.nickname or u.display_name) + (LEFT_SUFFIX if mem.left_at else "")
@@ -204,13 +247,22 @@ def member_user_out(s: Session, mem: m.Member) -> dict | None:
 
 def team(s: Session, ws: m.Workspace) -> list[dict]:
     """FR-62 / FR-44: workspace name, colour, role, team role, personal agent or null = "chưa nhập key". Never a key."""
-    rows = s.scalars(active_members(s, ws.id).order_by(m.Member.joined_at, m.Member.id))
+    rows = list(s.scalars(active_members(s, ws.id).order_by(m.Member.joined_at, m.Member.id)))
+    user_ids = [mem.user_id for mem in rows]
+    if not user_ids:
+        return []
+    # Three queries for the whole team instead of three or four per person.
+    remember_members(s, rows)
+    _request_memo(s, "users").update({u.id: u for u in s.scalars(select(m.User).where(m.User.id.in_(user_ids)))})
+    keys = {k.user_id: k for k in s.scalars(select(m.ProviderKey).where(m.ProviderKey.user_id.in_(user_ids)))}
+    hints = _request_memo(s, "account_hints")
+    hints.update(_account_hints(s, [uid for uid in user_ids if uid not in hints]))
     out = []
     for mem in rows:
         u = member_user_out(s, mem)
         if u:
             out.append({"user": u, "role": mem.role, "teamRole": mem.team_role, "needsNickname": mem.needs_nickname,
-                        "agent": agent_out(s, mem.user_id, ws.id)})
+                        "agent": agent_out(s, mem.user_id, ws.id, key=keys.get(mem.user_id))})
     return out
 
 
@@ -250,7 +302,7 @@ def message_out(s: Session, msg: m.Message) -> dict:
         mem = member_row(s, msg.workspace_id, msg.sender_id)
         u = member_user_out(s, mem) if mem else None
         if not u:
-            usr = s.get(m.User, msg.sender_id)
+            usr = user_by_id(s, msg.sender_id)
             u = user_out(usr) if usr else {"id": msg.sender_id, "displayName": msg.sender_id, "initial": "?"}
         out["sender"] = u
     if msg.agent_model:

@@ -268,9 +268,10 @@ def test_uc03_provider_error_keeps_question(api):
     assert out["error"]["code"] == "quota" and "hạn mức" in out["turn"]["text"]
     turns = api.get(f"/api/v1/conversations/{conv['id']}", headers=h).json()["turns"]
     assert turns[0]["text"] == "Hỏi [fake-error]" and turns[1]["error"] == "quota"
-    # The error notice is not history; the unanswered question is merged into the next one.
-    nxt = ask(api, h, conv["id"], "Lại")
+    # Neither the error notice nor the unanswered question is history: the next question is asked on its own.
+    nxt = ask(api, h, conv["id"], "Kỹ thuật kiểm thử hộp đen là gì?")
     assert "error" not in nxt and "câu hỏi đầu tiên" in nxt["turn"]["text"]
+    assert "[fake-error]" not in nxt["turn"]["text"]
 
 
 def test_no_key_cannot_chat(api):

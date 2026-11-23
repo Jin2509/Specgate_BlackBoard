@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.db import SessionLocal
 from app.errors import ApiError
 from app.ws import models as m
+from app.ws import service as sv
 from app.ws.security import SESSION_COOKIE, read_session
 
 bearer = HTTPBearer(auto_error=False, description="Token từ /api/auth/dev-login hoặc cookie sg_session")
@@ -43,8 +44,8 @@ def forbidden(what: str) -> ApiError:
 
 def membership(s: Session, workspace_id: str, user_id: str) -> m.Member | None:
     """Current members only: a member who left keeps the row (their name stays reserved) but loses access."""
-    return s.scalar(select(m.Member).where(m.Member.workspace_id == workspace_id, m.Member.user_id == user_id,
-                                           m.Member.left_at.is_(None)))
+    mem = sv.member_row(s, workspace_id, user_id)
+    return mem if mem and not mem.left_at else None
 
 
 def shared_workspace(s: Session, workspace_id: str) -> m.Workspace:

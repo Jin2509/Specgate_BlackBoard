@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { useActionErrorToast } from "@/hooks/use-action-error-toast";
 import { t } from "@/lib/i18n";
 
 import { createChannel, type WorkspaceFormState } from "../api/workspace-actions";
@@ -23,6 +24,7 @@ export function CreateChannelDialog({
   onOpenChange: (isOpen: boolean) => void;
 }) {
   const [state, formAction, isPending] = useActionState<WorkspaceFormState, FormData>(createChannel, {});
+  useActionErrorToast(state);
 
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
@@ -47,11 +49,6 @@ export function CreateChannelDialog({
                 className="border-0 pl-0"
               />
             </div>
-            {state.error ? (
-              <p role="alert" className="text-[13px] text-destructive">
-                {state.error}
-              </p>
-            ) : null}
           </div>
           <DialogFooter>
             <Button type="button" variant="ghost" onClick={() => onOpenChange(false)}>

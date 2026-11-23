@@ -157,3 +157,46 @@ def test_agent_context_names_the_parent_of_a_subtask(team):
     conv = api.post("/api/v1/conversations", headers=lan, json={"workspaceId": ws["id"]}).json()
     body = api.get(f"/api/v1/conversations/{conv['id']}/context", headers=lan).json()
     assert "- việc 2 (thuộc việc 1): viết bộ chấm điểm (phụ trách: Lan)" in body["system"]
+
+
+def reassign(api, h, ws, number, assignee_id):
+    return api.patch(f"/api/v1/workspaces/{ws['id']}/tasks/{number}", headers=h,
+                     json={"assigneeId": assignee_id, "changeAssignee": True})
+
+
+def test_should_announce_when_the_owner_reassigns_a_task(team):
+    api, lan, long, ws = team
+    create(api, lan, ws, "dựng runner")
+    r = reassign(api, lan, ws, 1, user_id(api, long))
+    assert r.status_code == 200 and r.json()["assignee"]["displayName"] == "Long"
+    assert chung(api, long, ws)[-1]["text"] == "Lan đã giao việc 1 cho Long: dựng runner."
+
+
+def test_should_announce_when_the_owner_leaves_a_task_without_anyone(team):
+    api, lan, long, ws = team
+    create(api, lan, ws, "dựng runner", assigneeId=user_id(api, long))
+    reassign(api, lan, ws, 1, None)
+    assert chung(api, long, ws)[-1]["text"] == (
+        "Lan đã bỏ người phụ trách việc 1: dựng runner. Việc này chưa có người phụ trách.")
+
+
+def test_should_not_announce_an_edit_that_keeps_the_assignee(team):
+    api, lan, long, ws = team
+    create(api, lan, ws, "dựng runner")
+    before = len(chung(api, lan, ws))
+    api.patch(f"/api/v1/workspaces/{ws['id']}/tasks/1", headers=lan, json={"body": "dựng runner mới"})
+    assert len(chung(api, lan, ws)) == before
+
+
+def test_should_announce_when_a_member_claims_a_task(team):
+    api, lan, long, ws = team
+    create(api, lan, ws, "viết báo cáo", unassigned=True)
+    api.post(f"/api/v1/workspaces/{ws['id']}/tasks/1/claim", headers=long)
+    assert chung(api, lan, ws)[-1]["text"] == "Long đã nhận việc 1: viết báo cáo."
+
+
+def test_should_refuse_a_member_reassigning_a_task(team):
+    api, lan, long, ws = team
+    create(api, long, ws, "tìm paper")
+    r = reassign(api, long, ws, 1, user_id(api, lan))
+    assert r.status_code == 403 and r.json()["error"]["code"] == "FORBIDDEN"

@@ -1,6 +1,7 @@
-// Exposes the client-safe side of authentication: sign-in screens, the sign-out action and backend auth calls.
+// Exposes the client-safe side of authentication: sign-in screens, sign-out and backend auth calls.
 export { getBackendSession, getOAuthProviders, type BackendSession } from "./api/auth-client";
-export { signOut } from "./api/auth-actions";
+export { SignOutButton } from "./components/SignOutButton";
+export { useSignOut } from "./hooks/use-sign-out";
 export { AuthScreen } from "./components/AuthScreen";
 export { JoinGuide } from "./components/JoinGuide";
 export { LoginForm } from "./components/LoginForm";

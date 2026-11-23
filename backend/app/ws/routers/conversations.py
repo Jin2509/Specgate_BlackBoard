@@ -225,15 +225,22 @@ class Ask(BaseModel):
 
 def _history(turns: list[m.Turn]) -> list[dict]:
     """FR-16: every call carries the conversation, the newest CONVERSATION_HISTORY_TURNS_MAX turns of it (flow §4).
-    Error notices are skipped; same-role runs are merged (a failed answer leaves two user turns in a row, which
-    Anthropic rejects); the window never starts with an answer."""
-    turns = [t for t in turns if not t.error][-settings.conversation_history_turns_max:]
+    A question that got no answer (an error notice or nothing) is left out, so the model is not asked two things at
+    once; only the newest question is always kept, and "Tạo lại" retries a failed one. Same-role runs that remain
+    are merged (Anthropic rejects them) and the window never starts with an answer."""
+    answered: list[m.Turn] = []
+    for index, t in enumerate(turns):
+        if t.error:
+            continue
+        following = turns[index + 1] if index + 1 < len(turns) else None
+        is_unanswered = t.role == "user" and following is not None and (following.role == "user" or following.error)
+        if not is_unanswered:
+            answered.append(t)
+    turns = answered[-settings.conversation_history_turns_max:]
     while turns and turns[0].role != "user":
         turns = turns[1:]
     out: list[dict] = []
     for t in turns:
-        if t.error:
-            continue
         if out and out[-1]["role"] == t.role:
             out[-1]["content"] += "\n\n" + t.text
         else:
@@ -312,7 +319,7 @@ async def _answer(s: Session, conv: m.Conversation, user: m.User, user_turn: m.T
         chunks: list[str] = []
         finished = False
         try:
-            async for delta in pv.stream_chat(target, model, system, messages, usage=usage):
+            async for delta in pv.stream_chat_fitting(target, model, system, messages, usage=usage):
                 chunks.append(delta)
                 yield _sse("delta", {"text": delta})
             finished = True

@@ -2,7 +2,6 @@
 // Opens the signed-in person's account menu: who is signed in, personal settings and sign-out.
 import { ChevronDown, LogOut, Settings } from "lucide-react";
 import Link from "next/link";
-import { useTransition } from "react";
 
 import { ActorAvatar } from "@/components/ActorAvatar";
 import {
@@ -13,7 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/DropdownMenu";
-import { signOut } from "@/features/auth";
+import { useSignOut } from "@/features/auth";
 import { t } from "@/lib/i18n";
 import type { Profile } from "@/types/profile";
 
@@ -26,7 +25,7 @@ export function AccountMenu({
   settingsHref: string;
   settingsLabel: string;
 }) {
-  const [isSigningOut, startTransition] = useTransition();
+  const { isSigningOut, handleSignOut } = useSignOut();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
@@ -51,7 +50,7 @@ export function AccountMenu({
             <Settings /> {settingsLabel}
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem variant="destructive" disabled={isSigningOut} onSelect={() => startTransition(() => signOut())}>
+        <DropdownMenuItem variant="destructive" disabled={isSigningOut} onSelect={handleSignOut}>
           <LogOut /> {t.auth.signOut}
         </DropdownMenuItem>
       </DropdownMenuContent>

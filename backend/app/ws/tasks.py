@@ -139,6 +139,16 @@ def created_text(s: Session, ws: m.Workspace, task: m.Task) -> str:
     return f"{by} đã giao {name} cho {sv.name_of(s, task.assignee_id, ws.id)}: {task.body}."
 
 
+def assigned_text(s: Session, ws: m.Workspace, task: m.Task, actor: m.Member) -> str:
+    """The system message when a task changes hands, so the whole team sees who does what now (flow §13)."""
+    by = sv.name_of(s, actor.user_id, ws.id)
+    if task.assignee_id is None:
+        return f"{by} đã bỏ người phụ trách {label(task.number)}: {task.body}. Việc này chưa có người phụ trách."
+    if task.assignee_id == actor.user_id:
+        return f"{by} đã nhận {label(task.number)}: {task.body}."
+    return f"{by} đã giao {label(task.number)} cho {sv.name_of(s, task.assignee_id, ws.id)}: {task.body}."
+
+
 def update_task(s: Session, ws: m.Workspace, actor: m.Member, task: m.Task, *, body: str | None,
                 assignee_id: str | None, change_assignee: bool) -> m.Task:
     """The owner edits and reassigns any task."""

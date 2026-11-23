@@ -5,6 +5,7 @@ import { useActionState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
+import { useActionErrorToast } from "@/hooks/use-action-error-toast";
 import { t } from "@/lib/i18n";
 
 import { updateBrief, type BriefFormState } from "../api/member-actions";
@@ -13,6 +14,7 @@ const BRIEF_MAX_LENGTH = 4000;
 
 export function BriefEditor({ workspaceId, brief, canEdit }: { workspaceId: string; brief: string; canEdit: boolean }) {
   const [state, formAction, isPending] = useActionState<BriefFormState, FormData>(updateBrief, {});
+  useActionErrorToast(state);
 
   if (!canEdit) {
     return (
@@ -41,11 +43,7 @@ export function BriefEditor({ workspaceId, brief, canEdit }: { workspaceId: stri
         <Button type="submit" size="sm" disabled={isPending}>
           {isPending ? <LoaderCircle className="animate-spin" /> : null} {t.settings.saveBrief}
         </Button>
-        {state.error ? (
-          <span role="alert" className="text-xs text-destructive">
-            {state.error}
-          </span>
-        ) : state.savedAt ? (
+        {!state.error && state.savedAt ? (
           <span role="status" className="text-xs text-decided">
             {t.settings.saved}
           </span>

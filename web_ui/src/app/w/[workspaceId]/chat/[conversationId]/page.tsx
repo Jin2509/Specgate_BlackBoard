@@ -16,6 +16,7 @@ import { isApiError } from "@/lib/api/http-client";
 import { t } from "@/lib/i18n";
 import { toClock } from "@/utils/date-format";
 import { toPersonalHomePath } from "@/utils/route-paths";
+import { startEarly } from "@/utils/start-early";
 
 const NOT_FOUND_STATUS = 404;
 
@@ -30,20 +31,21 @@ export default function ConversationPage(props: PageProps<"/w/[workspaceId]/chat
 }
 
 async function ConversationPageContent({ params }: PageProps<"/w/[workspaceId]/chat/[conversationId]">) {
-  const workspace = await requirePersonalWorkspace(params);
   const { conversationId } = await params;
-  const me = await requireMe();
+  const pendingConversation = startEarly(getConversation(conversationId));
+  const pendingContext = startEarly(getAgentContext(conversationId));
+  const [workspace, me] = await Promise.all([requirePersonalWorkspace(params), requireMe()]);
   const home = toPersonalHomePath(workspace.id);
   if (!me.key) redirect(`${home}/key`);
   let conversation;
   try {
-    conversation = await getConversation(conversationId);
+    conversation = await pendingConversation;
   } catch (error) {
     if (isApiError(error, NOT_FOUND_STATUS)) notFound();
     throw error;
   }
   const options = me.workspaces.map((shared) => ({ id: shared.id, name: shared.name }));
-  const context = conversation.workspaceId ? (await getAgentContext(conversation.id)).context : null;
+  const context = conversation.workspaceId ? (await pendingContext).context : null;
   const linkName = conversation.workspace?.isMember ? conversation.workspace.name : undefined;
 
   return (

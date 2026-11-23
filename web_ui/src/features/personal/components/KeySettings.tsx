@@ -7,6 +7,7 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { SettingsSection } from "@/components/SettingsSection";
 import { Button } from "@/components/ui/Button";
 import { t } from "@/lib/i18n";
+import { showErrorToast } from "@/stores/toast-store";
 import type { ProviderKey, ProviderKind } from "@/types/agent";
 
 import { KeyForm } from "./KeyForm";
@@ -77,7 +78,7 @@ export function KeySettings({
       {isFormShown ? (
         <SettingsSection title={t.personal.keySection} description={t.personal.keySectionDescription}>
           <div className="rounded-lg border border-border bg-card p-4">
-            <KeyForm hasKey={Boolean(providerKey)} defaultProvider={providerKey?.provider ?? "anthropic"} note={note} />
+            <KeyForm hasKey={Boolean(providerKey)} note={note} />
           </div>
         </SettingsSection>
       ) : null}
@@ -89,7 +90,12 @@ export function KeySettings({
         description={t.personal.deleteKeyBody}
         confirmLabel={t.personal.deleteKey}
         isPending={isDeleting}
-        onConfirm={() => startTransition(() => deleteKey())}
+        onConfirm={() =>
+          startTransition(async () => {
+            const outcome = await deleteKey();
+            if (outcome.error) showErrorToast(outcome.error);
+          })
+        }
       />
     </>
   );

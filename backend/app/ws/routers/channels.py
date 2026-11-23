@@ -9,7 +9,7 @@ import json
 from collections.abc import AsyncIterator
 from typing import Literal
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, File, Query, Request, UploadFile
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 from sqlalchemy import select
@@ -20,6 +20,7 @@ from app.errors import ApiError
 from app.config import settings
 from app.ws import commands as cmd
 from app.ws import context as cx
+from app.ws import documents as dc
 from app.ws import models as m
 from app.ws import providers as pv
 from app.ws import service as sv
@@ -124,6 +125,23 @@ async def post_message(ws_id: str, channel_id: str, body: Post, user: m.User = D
     if outcome.summarize:
         posted.append(await _summarize(ws.id, ch.id, user))
     return {"messages": [sv.message_out(s, x) for x in posted]}
+
+
+@router.post("/documents", status_code=201)
+async def post_document(ws_id: str, channel_id: str, file: UploadFile = File(...), user: m.User = Depends(current_user),
+                        s: Session = Depends(db)) -> dict:
+    """Reads a PDF or Word file and posts its text to the channel as a message; the file itself is not kept."""
+    ws, _ = require_member(s, ws_id, user)
+    ch = channel_of(s, ws, channel_id)
+    # One byte over the limit is enough to refuse the file without reading all of it.
+    content = await file.read(settings.document_size_max_bytes + 1)
+    name, media_type, text = dc.read_upload(file.filename or "", content)
+    msg = sv.add_message(s, ws, ch, kind="human", sender_id=user.id, text="", body=[],
+                         attachment=dc.document_attachment(name, media_type, len(content), text))
+    sv.mark_read(s, user.id, ch, msg.seq)
+    s.commit()
+    sv.publish(s, [msg])
+    return {"messages": [sv.message_out(s, msg)]}
 
 
 async def _summarize(ws_id: str, ch_id: str, owner: m.User) -> m.Message:

@@ -14,7 +14,6 @@ export function ConfirmDialog({
   description,
   confirmLabel,
   isPending,
-  error,
   onConfirm,
 }: {
   isOpen: boolean;
@@ -23,7 +22,6 @@ export function ConfirmDialog({
   description: ReactNode;
   confirmLabel: string;
   isPending?: boolean;
-  error?: string | null;
   onConfirm: () => void;
 }) {
   return (
@@ -33,11 +31,6 @@ export function ConfirmDialog({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
-        {error ? (
-          <p role="alert" className="text-sm text-destructive">
-            {error}
-          </p>
-        ) : null}
         <DialogFooter>
           <Button variant="secondary" onClick={() => onOpenChange(false)}>
             {t.common.cancel}

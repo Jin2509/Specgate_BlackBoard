@@ -12,7 +12,17 @@ export type Attachment =
   | { type: "board-receipt"; itemId: string; number: number; kind: BoardItemKind; text: string; status: IdeaStatus | null }
   | { type: "help"; commands: Array<{ usage: string; description: string }> }
   | { type: "brief"; briefId: string }
-  | { type: "summary" };
+  | { type: "summary" }
+  | {
+      type: "document";
+      fileName: string;
+      mediaType: string;
+      sizeBytes: number;
+      charCount: number;
+      /** The text read from the file, cut at the server's limit when `truncated`. */
+      markdown: string;
+      truncated: boolean;
+    };
 
 export interface QuoteCardBase {
   highlightId: string;

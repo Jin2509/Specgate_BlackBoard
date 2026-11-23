@@ -6,15 +6,16 @@ import { useState, useTransition, type KeyboardEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
-import { Select, type SelectOption } from "@/components/ui/Select";
+import { Select } from "@/components/ui/Select";
 import { format, t } from "@/lib/i18n";
+import { showErrorToast } from "@/stores/toast-store";
 import type { TeamMember } from "@/types/workspace";
 import { cn } from "@/utils/cn";
 
 import { createTask } from "../api/task-actions";
+import { toAssigneeOptions } from "../utils/assignee-options";
 
 const BODY_MAX_LENGTH = 200;
-const NOBODY = "";
 
 export interface TaskComposerProps {
   workspaceId: string;
@@ -31,16 +32,8 @@ export function TaskComposer({ workspaceId, members, viewerId, isOwner, parentNu
   const router = useRouter();
   const [body, setBody] = useState("");
   const [assigneeId, setAssigneeId] = useState(viewerId);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
-  const assigneeOptions: Array<SelectOption> = [
-    ...members.map((member) => ({
-      value: member.user.id,
-      label:
-        member.user.id === viewerId ? format(t.tasks.assigneeMe, { name: member.user.displayName }) : member.user.displayName,
-    })),
-    { value: NOBODY, label: t.tasks.unassigned },
-  ];
+  const assigneeOptions = toAssigneeOptions(members, viewerId);
   const placeholder =
     parentNumber === null ? t.tasks.rootPlaceholder : format(t.tasks.childPlaceholder, { number: parentNumber });
 
@@ -53,8 +46,7 @@ export function TaskComposer({ workspaceId, members, viewerId, isOwner, parentNu
         assigneeId: isOwner ? assigneeId : viewerId,
         parentNumber,
       });
-      if (!outcome.ok) return setErrorMessage(outcome.error);
-      setErrorMessage(null);
+      if (!outcome.ok) return showErrorToast(outcome.error);
       setBody("");
       router.refresh();
     });
@@ -87,6 +79,7 @@ export function TaskComposer({ workspaceId, members, viewerId, isOwner, parentNu
           aria-label={placeholder}
           className="h-8 min-w-0 flex-1 border-0 bg-transparent px-1 shadow-none focus-visible:ring-0 dark:bg-transparent"
         />
+        {isOwner ? <span className="shrink-0 text-xs text-subtle max-sm:hidden">{t.tasks.assignTo}</span> : null}
         {isOwner ? (
           <Select
             size="sm"
@@ -101,11 +94,6 @@ export function TaskComposer({ workspaceId, members, viewerId, isOwner, parentNu
           {isPending ? <LoaderCircle className="animate-spin" /> : <CornerDownLeft />}
         </Button>
       </div>
-      {errorMessage ? (
-        <p role="alert" className="mt-1.5 text-xs text-destructive">
-          {errorMessage}
-        </p>
-      ) : null}
     </div>
   );
 }

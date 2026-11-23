@@ -7,6 +7,7 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { useActionErrorToast } from "@/hooks/use-action-error-toast";
 import { format, t } from "@/lib/i18n";
 import type { AuthProvider } from "@/types/profile";
 
@@ -16,10 +17,10 @@ import { PROVIDER_DETAILS } from "../utils/auth-providers";
 const DISPLAY_NAME_MAX_LENGTH = 40;
 const CODE_MAX_LENGTH = 6;
 const LABEL_CLASS = "text-[13px] font-semibold text-muted-foreground";
-const ERROR_ID = "signup-error";
 
 export function SignUpForm({ provider }: { provider: AuthProvider }) {
   const [state, formAction, isPending] = useActionState<SignUpState, FormData>(signUp, { step: "details" });
+  useActionErrorToast(state);
 
   return (
     <form action={formAction} className="mt-6 grid gap-4" noValidate>
@@ -33,16 +34,8 @@ export function SignUpForm({ provider }: { provider: AuthProvider }) {
   );
 }
 
-function ErrorText({ state }: { state: SignUpState }) {
-  return state.error ? (
-    <p id={ERROR_ID} role="alert" className="text-sm text-destructive">
-      {state.error}
-    </p>
-  ) : null;
-}
-
 function invalidProps(state: SignUpState, field: NonNullable<SignUpState["field"]>) {
-  return state.field === field ? { "aria-invalid": true, "aria-describedby": ERROR_ID } : {};
+  return state.field === field ? { "aria-invalid": true } : {};
 }
 
 function DetailsStep({ provider, state, isPending }: { provider: AuthProvider; state: SignUpState; isPending: boolean }) {
@@ -105,7 +98,6 @@ function DetailsStep({ provider, state, isPending }: { provider: AuthProvider; s
           className="h-10 bg-card"
         />
       </div>
-      <ErrorText state={state} />
       <div className="grid gap-2">
         <Button type="submit" name="intent" value="send" disabled={isPending} className="h-10">
           {isPending ? <LoaderCircle className="animate-spin" /> : <Mail />}
@@ -151,7 +143,6 @@ function CodeStep({ provider, state, isPending }: { provider: AuthProvider; stat
           className="h-10 bg-card tracking-[0.3em]"
         />
       </div>
-      <ErrorText state={state} />
       <Button type="submit" name="intent" value="create" disabled={isPending} className="h-10">
         {isPending ? <LoaderCircle className="animate-spin" /> : PROVIDER_DETAILS[provider].renderIcon("size-4")}
         {isPending ? t.auth.creating : t.auth.verifyAndCreate}

@@ -4,6 +4,7 @@ import { KeyRound, LoaderCircle } from "lucide-react";
 import { useActionState } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { useActionErrorToast } from "@/hooks/use-action-error-toast";
 import { t } from "@/lib/i18n";
 import { cn } from "@/utils/cn";
 
@@ -12,6 +13,7 @@ import { JOIN_CODE_INPUT_SLACK, JOIN_CODE_LENGTH } from "../utils/join-code";
 
 export function JoinCodeForm({ shouldAutoFocus = false, className }: { shouldAutoFocus?: boolean; className?: string }) {
   const [state, formAction, isPending] = useActionState<JoinCodeState, FormData>(createJoinRequestByCode, {});
+  useActionErrorToast(state);
 
   return (
     <form action={formAction} className={cn("grid gap-2", className)}>
@@ -44,12 +46,8 @@ export function JoinCodeForm({ shouldAutoFocus = false, className }: { shouldAut
           {isPending ? <LoaderCircle className="animate-spin" /> : null} {t.join.joinButton}
         </Button>
       </div>
-      <p
-        id="join-code-help"
-        role={state.error ? "alert" : undefined}
-        className={cn("text-xs", state.error ? "text-destructive" : "text-subtle")}
-      >
-        {state.error ?? t.join.codeHelp}
+      <p id="join-code-help" className="text-xs text-subtle">
+        {t.join.codeHelp}
       </p>
     </form>
   );

@@ -24,11 +24,27 @@
     "notFoundBody": "Trang này không tồn tại hoặc bạn không có quyền xem.",
     "backHome": "Về Trang chủ",
     "notFoundWorkspaceBody": "Workspace hoặc kênh có thể đã bị đổi tên, hoặc workspace chưa gắn mô-đun dữ kiện.",
-    "backToYourPage": "Về trang của bạn"
+    "backToYourPage": "Về trang của bạn",
+    "notifications": "Thông báo"
   },
   "errors": {
     "backendUnreachable": "Không kết nối được máy chủ SpecGate. Hãy thử lại sau ít phút.",
-    "backendFailed": "Máy chủ báo lỗi."
+    "backendFailed": "Máy chủ báo lỗi.",
+    "invalidKey": "Nhà cung cấp từ chối key này. Kiểm tra lại key rồi thử lại.",
+    "quota": "Key đã hết hạn mức hoặc đang bị giới hạn tốc độ. Thử lại sau hoặc dùng key khác.",
+    "providerNetwork": "Không kết nối được nhà cung cấp. Kiểm tra địa chỉ API và mạng.",
+    "providerTimeout": "Nhà cung cấp trả lời quá lâu. Thử lại sau.",
+    "model": "Key này không dùng được mô hình đã chọn. Chọn mô hình khác.",
+    "context": "Câu hỏi hoặc file đính kèm quá dài với mô hình này. Bỏ bớt file, rút gọn câu hỏi hoặc chọn mô hình có ngữ cảnh lớn hơn.",
+    "badUrl": "Địa chỉ API không đúng. Ví dụ: https://api.openai.com/v1, với Gemini dùng https://generativelanguage.googleapis.com/v1beta/openai.",
+    "provider": "Nhà cung cấp đang gặp sự cố. Thử lại sau.",
+    "sessionExpired": "Phiên đăng nhập đã hết. Đăng nhập lại để tiếp tục.",
+    "forbidden": "Bạn không có quyền làm việc này.",
+    "notFound": "Không tìm thấy nội dung này, có thể nó đã bị xóa.",
+    "tooManyRequests": "Bạn thao tác quá nhanh. Đợi một chút rồi thử lại.",
+    "invalidRequest": "Dữ liệu gửi lên chưa hợp lệ. Kiểm tra lại rồi thử lại.",
+    "modelUpdateFailed": "Không đổi được mô hình. Thử lại sau.",
+    "keyDeleteFailed": "Không xóa được key. Thử lại sau."
   },
   "auth": {
     "pageTitle": "Đăng nhập",
@@ -555,12 +571,10 @@
     "renameConversation": "Đổi tên hội thoại",
     "conversationName": "Tên hội thoại",
     "summarizeTitle": "Agent viết bản tóm tắt và lưu vào Highlight riêng để bạn xem trước khi gửi",
-    "summarySaved": "Đã lưu bản tóm tắt vào Highlight riêng.",
     "summarizeForTeam": "Tóm tắt cho nhóm",
     "deleteConversation": "Xóa hội thoại",
     "deleteConversationTitle": "Xóa hội thoại (tin đã gửi vào kênh vẫn còn)",
     "summaryReady": "Đã có bản tóm tắt",
-    "summaryNotReady": "Chưa tóm tắt được",
     "summaryReadyBody": "Bản tóm tắt chưa được gửi. Xem lại trong Highlight riêng rồi gửi.",
     "confirmDeleteTitle": "Xóa hội thoại này?",
     "confirmDeleteBody": "Hội thoại có {count} highlight riêng. Giữ lại hay xóa? Tin đã gửi vào kênh vẫn còn.",
@@ -573,10 +587,7 @@
     "savedToPrivate": "Đã lưu vào Highlight riêng.",
     "saveDigestToShare": "Lưu vào Highlight riêng để chia sẻ",
     "model": "Mô hình",
-    "anthropicHint": "Key bắt đầu bằng sk-ant-, tạo ở console.anthropic.com.",
     "openAiLabel": "Kiểu OpenAI",
-    "openAiHint": "Dùng cho OpenAI, Gemini, OpenRouter, DeepSeek, Groq, Ollama. Gemini: https://generativelanguage.googleapis.com/v1beta/openai, key lấy ở aistudio.google.com.",
-    "provider": "Nhà cung cấp",
     "apiAddress": "Địa chỉ API",
     "hideKey": "Ẩn key",
     "showKey": "Hiện key",
@@ -627,7 +638,15 @@
     "documentsLabel": "File đính kèm",
     "removeDocument": "Bỏ {name}",
     "documentTruncated": "gửi {sent}/{total} ký tự",
-    "usage": "{input} token vào, {cached} từ cache, {output} ra"
+    "usage": "{input} token vào, {cached} từ cache, {output} ra",
+    "keyLead": "Dán key từ OpenAI, Anthropic, Google AI Studio, OpenRouter, DeepSeek, Groq hoặc xAI. Hệ thống tự nhận ra nhà cung cấp.",
+    "keyDetected": "Nhận ra key {provider}.",
+    "keyAddressAuto": "Địa chỉ API tự điền: {url}",
+    "keyUnknown": "Không nhận ra loại key này. Nhập địa chỉ API của dịch vụ ở phần tùy chỉnh; bỏ trống sẽ dùng OpenAI.",
+    "keyCustomAddress": "Dùng địa chỉ bạn nhập: {url}",
+    "customAddress": "Tùy chỉnh địa chỉ API",
+    "hideCustomAddress": "Ẩn tùy chỉnh địa chỉ",
+    "addressDefault": "Bỏ trống để dùng {url}"
   },
   "privateHighlights": {
     "intro": "Đoạn bạn lưu từ hội thoại với agent. Chỉ bạn thấy, không gửi cho agent. Gửi vào kênh khi đã chắc.",
@@ -724,6 +743,25 @@
     "collapse": "Thu gọn việc {number}",
     "progress": "{done}/{total} việc con xong",
     "editDescription": "Sửa mô tả hoặc đổi người phụ trách, kể cả giao cho chính bạn.",
-    "partOf": "(thuộc việc {number})"
+    "partOf": "(thuộc việc {number})",
+    "assignTo": "Giao cho",
+    "assignTask": "Giao việc {number} cho",
+    "aloneHint": "Workspace mới có mình bạn, nên chưa giao việc cho ai được. Mời nhóm tham gia rồi duyệt yêu cầu, sau đó giao việc ngay tại đây.",
+    "aloneHintWithCode": "Workspace mới có mình bạn, nên chưa giao việc cho ai được. Gửi mã tham gia {code} cho nhóm, duyệt yêu cầu, rồi giao việc ngay tại đây.",
+    "openRequests": "Mở yêu cầu tham gia",
+    "ownerHint": "Chọn người ở ô \"Giao cho\" trên mỗi việc để giao hoặc đổi người phụ trách. Cả nhóm thấy thông báo trong #chung và agent của mọi người đều biết ai làm gì.",
+    "memberHint": "Chủ workspace giao việc cho từng người. Bạn tự thêm việc của mình, hoặc bấm \"Nhận\" ở việc chưa có người phụ trách."
+  },
+  "documents": {
+    "attach": "Đính kèm PDF hoặc Word",
+    "openText": "Xem nội dung đã đọc",
+    "viewerDescription": "Chữ đọc được từ file, dạng Markdown ({count} ký tự).",
+    "viewerTruncated": "File dài, chỉ giữ {kept} trên {total} ký tự đầu.",
+    "copyMarkdown": "Sao chép Markdown",
+    "downloadMarkdown": "Tải .md",
+    "charCount": "{count} ký tự",
+    "uploadFailed": "Không tải được file lên. Thử lại sau.",
+    "readFailed": "Không đọc được nội dung file. Thử lại sau.",
+    "uploaded": "Đã đọc xong {name}. Bấm tên file để xem nội dung."
   }
 }

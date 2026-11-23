@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { t } from "@/lib/i18n";
+import { showErrorToast, showSuccessToast } from "@/stores/toast-store";
 import type { Visibility } from "@/types/workspace";
 
 import { updateWorkspaceDetails } from "../api/member-actions";
@@ -46,15 +47,15 @@ export function WorkspaceDetailsForm({
   const router = useRouter();
   const [draftName, setDraftName] = useState(name);
   const [draftVisibility, setDraftVisibility] = useState(visibility);
-  const [message, setMessage] = useState<{ isError: boolean; text: string } | null>(null);
   const [isPending, startTransition] = useTransition();
   const hasChanges = draftName.trim() !== name || draftVisibility !== visibility;
 
   function handleSave() {
     startTransition(async () => {
       const outcome = await updateWorkspaceDetails(workspaceId, { name: draftName, visibility: draftVisibility });
-      setMessage(outcome.ok ? { isError: false, text: t.settings.saved } : { isError: true, text: outcome.error });
-      if (outcome.ok) router.refresh();
+      if (!outcome.ok) return showErrorToast(outcome.error);
+      showSuccessToast(t.settings.saved);
+      router.refresh();
     });
   }
 
@@ -85,14 +86,6 @@ export function WorkspaceDetailsForm({
         <Button size="sm" disabled={isPending || !hasChanges || !draftName.trim()} onClick={handleSave}>
           {isPending ? <LoaderCircle className="animate-spin" /> : null} {t.settings.saveWorkspace}
         </Button>
-        {message ? (
-          <span
-            role={message.isError ? "alert" : "status"}
-            className={message.isError ? "text-xs text-destructive" : "text-xs text-decided"}
-          >
-            {message.text}
-          </span>
-        ) : null}
       </div>
     </div>
   );

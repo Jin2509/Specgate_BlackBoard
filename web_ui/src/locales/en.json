@@ -24,11 +24,27 @@
     "notFoundBody": "This page does not exist or you are not allowed to see it.",
     "backHome": "Back to home",
     "notFoundWorkspaceBody": "The workspace or channel may have been renamed, or the workspace has no data module attached.",
-    "backToYourPage": "Back to your page"
+    "backToYourPage": "Back to your page",
+    "notifications": "Notifications"
   },
   "errors": {
     "backendUnreachable": "Cannot reach the SpecGate server. Please try again in a few minutes.",
-    "backendFailed": "The server reported an error."
+    "backendFailed": "The server reported an error.",
+    "invalidKey": "The provider rejected this key. Check the key and try again.",
+    "quota": "This key is out of quota or rate limited. Try again later or use another key.",
+    "providerNetwork": "Cannot reach the provider. Check the API address and your network.",
+    "providerTimeout": "The provider took too long to answer. Try again later.",
+    "model": "This key cannot use the selected model. Pick another model.",
+    "context": "The question or attached files are too long for this model. Remove some files, shorten the question or pick a model with a larger context.",
+    "badUrl": "The API address is wrong. Example: https://api.openai.com/v1; for Gemini use https://generativelanguage.googleapis.com/v1beta/openai.",
+    "provider": "The provider is having trouble. Try again later.",
+    "sessionExpired": "Your session has ended. Sign in again to continue.",
+    "forbidden": "You do not have permission to do this.",
+    "notFound": "This item was not found; it may have been deleted.",
+    "tooManyRequests": "You are going too fast. Wait a moment and try again.",
+    "invalidRequest": "Some of the submitted data is not valid. Check it and try again.",
+    "modelUpdateFailed": "Could not change the model. Try again later.",
+    "keyDeleteFailed": "Could not delete the key. Try again later."
   },
   "auth": {
     "pageTitle": "Sign in",
@@ -555,12 +571,10 @@
     "renameConversation": "Rename the conversation",
     "conversationName": "Conversation name",
     "summarizeTitle": "The agent writes a summary and saves it to Private highlights for you to review before sending",
-    "summarySaved": "Summary saved to Private highlights.",
     "summarizeForTeam": "Summarize for the team",
     "deleteConversation": "Delete the conversation",
     "deleteConversationTitle": "Delete the conversation (messages sent to channels remain)",
     "summaryReady": "The summary is ready",
-    "summaryNotReady": "Could not summarize",
     "summaryReadyBody": "The summary has not been sent. Review it in Private highlights, then send it.",
     "confirmDeleteTitle": "Delete this conversation?",
     "confirmDeleteBody": "This conversation has {count} private highlights. Keep or delete them? Messages sent to channels stay.",
@@ -573,10 +587,7 @@
     "savedToPrivate": "Saved to Private highlights.",
     "saveDigestToShare": "Save to Private highlights to share",
     "model": "Model",
-    "anthropicHint": "The key starts with sk-ant-, created at console.anthropic.com.",
     "openAiLabel": "OpenAI style",
-    "openAiHint": "For OpenAI, Gemini, OpenRouter, DeepSeek, Groq, Ollama. Gemini: https://generativelanguage.googleapis.com/v1beta/openai, key from aistudio.google.com.",
-    "provider": "Provider",
     "apiAddress": "API address",
     "hideKey": "Hide key",
     "showKey": "Show key",
@@ -627,7 +638,15 @@
     "documentsLabel": "Attached files",
     "removeDocument": "Remove {name}",
     "documentTruncated": "{sent}/{total} characters sent",
-    "usage": "{input} input tokens, {cached} cached, {output} output"
+    "usage": "{input} input tokens, {cached} cached, {output} output",
+    "keyLead": "Paste a key from OpenAI, Anthropic, Google AI Studio, OpenRouter, DeepSeek, Groq or xAI. The provider is recognised for you.",
+    "keyDetected": "Recognised a {provider} key.",
+    "keyAddressAuto": "API address filled in: {url}",
+    "keyUnknown": "This key type is not recognised. Enter the service API address under the custom address; leave it empty to use OpenAI.",
+    "keyCustomAddress": "Using the address you entered: {url}",
+    "customAddress": "Custom API address",
+    "hideCustomAddress": "Hide custom address",
+    "addressDefault": "Leave empty to use {url}"
   },
   "privateHighlights": {
     "intro": "Passages you saved from conversations with your agent. Only you see them and the agent does not read them. Send them to a channel when you are sure.",
@@ -724,6 +743,25 @@
     "collapse": "Collapse task {number}",
     "progress": "{done}/{total} subtasks done",
     "editDescription": "Edit the description or change who is in charge, yourself included.",
-    "partOf": "(part of task {number})"
+    "partOf": "(part of task {number})",
+    "assignTo": "Assign to",
+    "assignTask": "Assign task {number} to",
+    "aloneHint": "You are the only member, so there is nobody to assign tasks to yet. Invite your team and approve their requests, then assign tasks right here.",
+    "aloneHintWithCode": "You are the only member, so there is nobody to assign tasks to yet. Send the join code {code} to your team, approve their requests, then assign tasks right here.",
+    "openRequests": "Open join requests",
+    "ownerHint": "Pick a person in \"Assign to\" on any task to assign it or change who does it. The team sees a notice in #chung and every agent knows who does what.",
+    "memberHint": "The workspace owner assigns tasks. Add your own tasks, or press \"Claim\" on a task nobody holds."
+  },
+  "documents": {
+    "attach": "Attach a PDF or Word file",
+    "openText": "View the text read",
+    "viewerDescription": "Text read from the file, as Markdown ({count} characters).",
+    "viewerTruncated": "Long file: only the first {kept} of {total} characters are kept.",
+    "copyMarkdown": "Copy Markdown",
+    "downloadMarkdown": "Download .md",
+    "charCount": "{count} characters",
+    "uploadFailed": "Could not upload the file. Try again later.",
+    "readFailed": "Could not read the file text. Try again later.",
+    "uploaded": "Finished reading {name}. Click the file name to view its text."
   }
 }

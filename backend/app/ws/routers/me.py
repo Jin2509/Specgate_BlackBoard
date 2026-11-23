@@ -26,14 +26,15 @@ SUBSCRIPTION_NOTE = ("Gói thuê bao như ChatGPT Plus hay Claude Pro không ph�
 @router.get("")
 def me(user: m.User = Depends(current_user), s: Session = Depends(db)) -> dict:
     personal = personal_workspace(s, user.id)
+    key = s.get(m.ProviderKey, user.id)
     shared = _rail(s, user)
     pending = list(s.scalars(select(m.JoinRequest).where(m.JoinRequest.user_id == user.id,
                                                          m.JoinRequest.status == "pending")))
     return {
         "user": sv.user_out(user),
         "personalWorkspaceId": personal.id if personal else None,
-        "key": sv.key_out(s.get(m.ProviderKey, user.id)),
-        "agent": sv.agent_out(s, user.id),
+        "key": sv.key_out(key),
+        "agent": sv.agent_out(s, user.id, key=key),
         "workspaces": shared,
         "pendingJoins": [sv.join_request_out(s, r) for r in pending],
         "home": home_path(s, user),
@@ -104,8 +105,10 @@ def get_key(user: m.User = Depends(current_user), s: Session = Depends(db)) -> d
 async def verify_key(body: KeyIn, user: m.User = Depends(current_user)) -> dict:
     """FR-11: check the key with the provider and return its models. Nothing is stored."""
     try:
-        base = pv.normalize_base_url(body.provider, body.baseUrl)
-        models = await pv.list_models(pv.Target(body.provider, body.apiKey.get_secret_value(), base))
+        raw = body.apiKey.get_secret_value().strip()
+        provider = pv.infer_provider(body.provider, raw)
+        base = pv.normalize_base_url(provider, body.baseUrl, raw)
+        models = await pv.list_models(pv.Target(provider, raw, base))
     except pv.ProviderError as e:
         raise _verify_error(e) from None
     return {"ok": True, "models": models, "baseUrl": base}
@@ -116,8 +119,9 @@ async def save_key(body: KeyIn, user: m.User = Depends(current_user), s: Session
     """FR-11/12/14: verify, then store encrypted. A bad key is never stored; the response has only the last 4 chars."""
     raw = body.apiKey.get_secret_value().strip()
     try:
-        base = pv.normalize_base_url(body.provider, body.baseUrl)
-        models = await pv.list_models(pv.Target(body.provider, raw, base))
+        provider = pv.infer_provider(body.provider, raw)
+        base = pv.normalize_base_url(provider, body.baseUrl, raw)
+        models = await pv.list_models(pv.Target(provider, raw, base))
     except pv.ProviderError as e:
         raise _verify_error(e) from None
 
@@ -127,11 +131,12 @@ async def save_key(body: KeyIn, user: m.User = Depends(current_user), s: Session
             raise ApiError(400, "Mô hình này không có trong danh sách của key.", "MODEL_NOT_AVAILABLE")
         model = body.model
     else:
-        model = prev.model if prev and prev.model in models else models[0]
+        model = (prev.model if prev and prev.model in models
+                 else await pv.pick_working_model(pv.Target(provider, raw, base), models))
     if prev:
         s.delete(prev)
         s.flush()
-    k = m.ProviderKey(user_id=user.id, provider=body.provider, base_url=base, secret=encrypt_key(raw),
+    k = m.ProviderKey(user_id=user.id, provider=provider, base_url=base, secret=encrypt_key(raw),
                       key_last4=raw[-4:], model=model, models=models)
     s.add(k)
     s.commit()

@@ -6,6 +6,7 @@ import { useActionState } from "react";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
+import { useActionErrorToast } from "@/hooks/use-action-error-toast";
 import { format, t } from "@/lib/i18n";
 
 import { submitEmailSignIn, type EmailSignInState } from "../api/auth-actions";
@@ -17,7 +18,7 @@ const PRIMARY_CLASS = "h-11 w-full rounded-xl";
 
 export function EmailSignInForm({ next }: { next: string }) {
   const [state, formAction, isPending] = useActionState<EmailSignInState, FormData>(submitEmailSignIn, { step: "email" });
-  const describedBy = state.error ? "email-sign-in-error" : undefined;
+  useActionErrorToast(state);
 
   return (
     <form action={formAction} className="grid gap-3" noValidate>
@@ -39,7 +40,6 @@ export function EmailSignInForm({ next }: { next: string }) {
               spellCheck={false}
               required
               aria-invalid={state.field === "email" ? true : undefined}
-              aria-describedby={describedBy}
               className="h-10 bg-card"
             />
           </div>
@@ -49,26 +49,13 @@ export function EmailSignInForm({ next }: { next: string }) {
           </Button>
         </>
       ) : (
-        <CodeStep state={state} isPending={isPending} describedBy={describedBy} />
+        <CodeStep state={state} isPending={isPending} />
       )}
-      {state.error ? (
-        <p id="email-sign-in-error" role="alert" className="text-sm text-destructive">
-          {state.error}
-        </p>
-      ) : null}
     </form>
   );
 }
 
-function CodeStep({
-  state,
-  isPending,
-  describedBy,
-}: {
-  state: EmailSignInState;
-  isPending: boolean;
-  describedBy: string | undefined;
-}) {
+function CodeStep({ state, isPending }: { state: EmailSignInState; isPending: boolean }) {
   return (
     <>
       <input type="hidden" name="email" value={state.email ?? ""} />
@@ -92,7 +79,6 @@ function CodeStep({
           required
           autoFocus={!state.needsName}
           aria-invalid={state.field === "code" ? true : undefined}
-          aria-describedby={describedBy}
           className="h-10 bg-card tracking-[0.3em]"
         />
       </div>
@@ -110,7 +96,6 @@ function CodeStep({
             required
             autoFocus
             aria-invalid={state.field === "displayName" ? true : undefined}
-            aria-describedby={describedBy}
             className="h-10 bg-card"
           />
         </div>

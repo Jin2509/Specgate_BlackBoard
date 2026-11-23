@@ -8,6 +8,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
 import { format, t } from "@/lib/i18n";
+import { showErrorToast } from "@/stores/toast-store";
 import { cn } from "@/utils/cn";
 
 import { createConversationSummary, deleteConversation } from "../api/conversation-actions";
@@ -27,12 +28,13 @@ export function ConversationActions({
   const router = useRouter();
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [summaryOutcome, setSummaryOutcome] = useState<{ ok: boolean; text: string } | null>(null);
+  const [isSummaryReady, setIsSummaryReady] = useState(false);
 
   function handleSummarize() {
     startTransition(async () => {
       const outcome = await createConversationSummary(id);
-      setSummaryOutcome(outcome.ok ? { ok: true, text: t.personal.summarySaved } : { ok: false, text: outcome.error });
+      if (!outcome.ok) return showErrorToast(outcome.error);
+      setIsSummaryReady(true);
       router.refresh();
     });
   }
@@ -59,21 +61,19 @@ export function ConversationActions({
         <Trash2 className="size-4.5" />
       </button>
 
-      <Dialog open={summaryOutcome !== null} onOpenChange={(isOpen) => (isOpen ? null : setSummaryOutcome(null))}>
+      <Dialog open={isSummaryReady} onOpenChange={setIsSummaryReady}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>{summaryOutcome?.ok ? t.personal.summaryReady : t.personal.summaryNotReady}</DialogTitle>
-            <DialogDescription>{summaryOutcome?.ok ? t.personal.summaryReadyBody : summaryOutcome?.text}</DialogDescription>
+            <DialogTitle>{t.personal.summaryReady}</DialogTitle>
+            <DialogDescription>{t.personal.summaryReadyBody}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="secondary" onClick={() => setSummaryOutcome(null)}>
+            <Button variant="secondary" onClick={() => setIsSummaryReady(false)}>
               {t.common.close}
             </Button>
-            {summaryOutcome?.ok ? (
-              <Button asChild>
-                <Link href={`${home}/highlights?kind=summary`}>{t.personal.openList}</Link>
-              </Button>
-            ) : null}
+            <Button asChild>
+              <Link href={`${home}/highlights?kind=summary`}>{t.personal.openList}</Link>
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

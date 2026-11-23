@@ -3,7 +3,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { SESSION_COOKIE, LAST_WORKSPACE_COOKIE, SESSION_COOKIE_OPTIONS } from "@/config/session-cookie";
+import { LAST_WORKSPACE_COOKIE, SESSION_CHECKED_COOKIE, SESSION_COOKIE, SESSION_COOKIE_OPTIONS } from "@/config/session-cookie";
 import { isApiError, toErrorMessage } from "@/lib/api/http-client";
 import { t } from "@/lib/i18n";
 import type { AuthProvider } from "@/types/profile";
@@ -41,6 +41,7 @@ function toProvider(value: FormDataEntryValue | null): AuthProvider {
 async function finishSignIn(session: DevSession): Promise<never> {
   const jar = await cookies();
   jar.set(SESSION_COOKIE, session.token, SESSION_COOKIE_OPTIONS);
+  jar.delete(SESSION_CHECKED_COOKIE);
   jar.delete(LAST_WORKSPACE_COOKIE);
   redirect(toSafeNextPath(session.redirect) ?? "/");
 }
@@ -194,10 +195,11 @@ export async function submitEmailSignIn(previous: EmailSignInState, formData: Fo
   return finishSignIn(session);
 }
 
+/** End the session and drop its cookies; the caller reloads the page so no client state of the account survives. */
 export async function signOut(): Promise<void> {
   const jar = await cookies();
   await deleteBackendSession(jar.get(SESSION_COOKIE)?.value);
   jar.delete(SESSION_COOKIE);
+  jar.delete(SESSION_CHECKED_COOKIE);
   jar.delete(LAST_WORKSPACE_COOKIE);
-  redirect("/login");
 }

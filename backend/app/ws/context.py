@@ -50,6 +50,10 @@ def message_words(s: Session, msg: m.Message) -> str:
             parts.append(f"[Trích dẫn: {card.get('speakerLabel')} nói: \"{words}\"]")
         elif kind == "conversation-summary":
             parts.append(f"[{card.get('title')}, do {card.get('speakerLabel')} viết, chưa được lọc: {card.get('text')}]")
+    attachment = msg.attachment or {}
+    if attachment.get("type") == "document":
+        # Only a marker: the whole text in every call would cost far more than it helps; attach it to a chat to read it.
+        parts.append(f"[Đã gửi tệp {attachment.get('fileName')} ({attachment.get('charCount')} ký tự) vào kênh]")
     return "\n".join(parts)
 
 

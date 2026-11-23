@@ -7,6 +7,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { createBrief } from "@/features/board";
 import { t } from "@/lib/i18n";
+import { showErrorToast } from "@/stores/toast-store";
 
 export function BriefActions({
   workspaceId,
@@ -19,7 +20,6 @@ export function BriefActions({
 }) {
   const router = useRouter();
   const [isCopied, setIsCopied] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
   function handleDownload() {
@@ -42,17 +42,12 @@ export function BriefActions({
     startTransition(async () => {
       const outcome = await createBrief(workspaceId);
       if (outcome.ok) router.refresh();
-      else setError(outcome.error);
+      else showErrorToast(outcome.error);
     });
   }
 
   return (
     <>
-      {error ? (
-        <span role="alert" className="mr-2 text-xs text-destructive">
-          {error}
-        </span>
-      ) : null}
       {canRebuild ? (
         <Button variant="secondary" size="sm" onClick={handleRebuild} disabled={isPending}>
           {isPending ? <LoaderCircle className="animate-spin" /> : <RefreshCw />}{" "}

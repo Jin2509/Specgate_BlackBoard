@@ -1,7 +1,9 @@
 // Lays out a workspace: checks membership, then renders the workspace rail, the channel column and the content area.
 import { Suspense, type ReactNode } from "react";
 
+import { AccountSwitchGuard } from "@/components/AccountSwitchGuard";
 import { CollapsibleSidebar } from "@/components/CollapsibleSidebar";
+import { DraftOwnerProvider } from "@/components/DraftOwnerProvider";
 import { requireMe } from "@/features/auth/server";
 import { toIdeaCount } from "@/features/board";
 import { getBoard } from "@/features/board/server";
@@ -17,7 +19,7 @@ import { t } from "@/lib/i18n";
 import type { Me } from "@/types/account";
 import type { SharedWorkspace } from "@/types/workspace";
 import { toDayClock } from "@/utils/date-format";
-import { toPersonalHomePath, toWorkspaceHomePath } from "@/utils/route-paths";
+import { toPersonalHomePath } from "@/utils/route-paths";
 
 export default function WorkspaceLayout({ children, params }: LayoutProps<"/w/[workspaceId]">) {
   return (
@@ -30,12 +32,13 @@ export default function WorkspaceLayout({ children, params }: LayoutProps<"/w/[w
 }
 
 async function WorkspaceShell({ params, children }: { params: Promise<{ workspaceId: string }>; children: ReactNode }) {
-  const workspace = await requireWorkspace(params);
-  const me = await requireMe(toWorkspaceHomePath(workspace));
+  const { workspaceId } = await params;
+  const [workspace, me] = await Promise.all([requireWorkspace(params), requireMe(`/w/${workspaceId}`)]);
   const personalWorkspaceId = me.personalWorkspaceId ?? workspace.id;
 
   return (
-    <>
+    <DraftOwnerProvider ownerId={me.user.id}>
+      <AccountSwitchGuard userId={me.user.id} />
       <CollapsibleSidebar id="workspace-nav" side="left" breakpoint="md" label={t.workspace.sidebarLabel} widthClassName="w-80">
         <WorkspaceRail
           workspaces={me.workspaces}
@@ -54,7 +57,7 @@ async function WorkspaceShell({ params, children }: { params: Promise<{ workspac
         )}
       </CollapsibleSidebar>
       <div className="flex min-w-0 flex-1">{children}</div>
-    </>
+    </DraftOwnerProvider>
   );
 }
 

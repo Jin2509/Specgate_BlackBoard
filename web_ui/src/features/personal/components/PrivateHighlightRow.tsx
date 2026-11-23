@@ -8,6 +8,7 @@ import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/Button";
 import { Textarea } from "@/components/ui/Textarea";
 import { format, t } from "@/lib/i18n";
+import { showErrorToast } from "@/stores/toast-store";
 import type { HighlightColor } from "@/types/conversation";
 import { cn } from "@/utils/cn";
 import { HIGHLIGHT_COLORS, toHighlightColorLabel } from "@/utils/highlight-colors";
@@ -42,13 +43,12 @@ export function PrivateHighlightRow({
   const [color, setColor] = useState<HighlightColor>(item.color);
   const [isAttaching, setIsAttaching] = useState(false);
   const [isPending, startTransition] = useTransition();
-  const [error, setError] = useState<string | null>(null);
   const isSummary = item.kind !== "passage";
 
   function handleSave() {
     startTransition(async () => {
       const outcome = await updatePrivateHighlight(item.id, { text, color, note: note || null });
-      if (!outcome.ok) return setError(outcome.error);
+      if (!outcome.ok) return showErrorToast(outcome.error);
       setIsEditing(false);
       router.refresh();
     });
@@ -166,7 +166,6 @@ export function PrivateHighlightRow({
               ))}
             </ul>
           ) : null}
-          {error ? <p className="mt-1 text-xs text-destructive">{error}</p> : null}
         </div>
         <div className="flex shrink-0 flex-col items-end gap-1">
           <Button size="sm" variant="outline" onClick={onSend}>

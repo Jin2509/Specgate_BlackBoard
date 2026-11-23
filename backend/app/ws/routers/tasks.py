@@ -51,9 +51,12 @@ class TaskChange(BaseModel):
 def update_task(ws_id: str, number: int, body: TaskChange, user: m.User = Depends(current_user),
                 s: Session = Depends(db)) -> dict:
     ws, mem = require_member(s, ws_id, user)
-    task = tk.update_task(s, ws, mem, tk.get_task(s, ws, number), body=body.body, assignee_id=body.assigneeId,
+    task = tk.get_task(s, ws, number)
+    previous_assignee = task.assignee_id
+    task = tk.update_task(s, ws, mem, task, body=body.body, assignee_id=body.assigneeId,
                           change_assignee=body.changeAssignee)
-    s.commit()
+    notices = [tk.post_notice(s, ws, tk.assigned_text(s, ws, task, mem))] if task.assignee_id != previous_assignee else []
+    _commit_with_notices(s, notices)
     return tk.task_out(s, task)
 
 
@@ -61,7 +64,7 @@ def update_task(ws_id: str, number: int, body: TaskChange, user: m.User = Depend
 def claim_task(ws_id: str, number: int, user: m.User = Depends(current_user), s: Session = Depends(db)) -> dict:
     ws, mem = require_member(s, ws_id, user)
     task = tk.claim_task(ws, mem, tk.get_task(s, ws, number))
-    s.commit()
+    _commit_with_notices(s, [tk.post_notice(s, ws, tk.assigned_text(s, ws, task, mem))])
     return tk.task_out(s, task)
 
 

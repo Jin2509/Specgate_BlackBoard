@@ -11,6 +11,7 @@ import { PageLayout } from "@/components/PageLayout";
 import { Button } from "@/components/ui/Button";
 import { useQueryParam } from "@/hooks/use-query-param";
 import { format, t } from "@/lib/i18n";
+import { showErrorToast } from "@/stores/toast-store";
 import type { BoardCard, Decision } from "@/types/board";
 import { IDEA_COLUMNS } from "@/utils/status-meta";
 
@@ -27,7 +28,6 @@ export function BoardView({ workspaceId, cards, isOwner }: { workspaceId: string
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [isFlagDismissed, setIsFlagDismissed] = useState(false);
   const [isAdding, setIsAdding] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const openId = selectedId ?? (isFlagDismissed ? null : decideFlag);
   const openCard = cards.find((card) => card.id === openId);
@@ -38,7 +38,7 @@ export function BoardView({ workspaceId, cards, isOwner }: { workspaceId: string
     startTransition(async () => {
       const outcome = await update();
       if (outcome.ok) router.refresh();
-      else setErrorMessage(outcome.error ?? null);
+      else showErrorToast(outcome.error ?? "");
     });
   }
 
@@ -63,11 +63,6 @@ export function BoardView({ workspaceId, cards, isOwner }: { workspaceId: string
       />
 
       <PageBody className="flex flex-col gap-6">
-        {errorMessage ? (
-          <p role="alert" className="rounded-lg bg-rejected-soft px-4 py-2.5 text-sm text-foreground">
-            {errorMessage}
-          </p>
-        ) : null}
         <div className="grid content-start gap-4 @2xl:grid-cols-2 @5xl:grid-cols-4">
           {IDEA_COLUMNS.map((status) => (
             <BoardColumn

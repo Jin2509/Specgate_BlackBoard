@@ -26,8 +26,7 @@ export default function SettingsPage(props: PageProps<"/w/[workspaceId]/settings
 }
 
 async function SettingsPageContent({ params }: PageProps<"/w/[workspaceId]/settings">) {
-  const workspace = await requireSharedWorkspace(params);
-  const me = await requireMe();
+  const [workspace, me] = await Promise.all([requireSharedWorkspace(params), requireMe()]);
   const isViewerOwner = isOwner(workspace);
   const team = workspace.members;
 

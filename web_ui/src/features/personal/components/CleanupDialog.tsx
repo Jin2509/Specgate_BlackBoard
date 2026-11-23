@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
 import { Select } from "@/components/ui/Select";
 import { format, t } from "@/lib/i18n";
+import { showErrorToast } from "@/stores/toast-store";
 import type { HighlightColor } from "@/types/conversation";
 import { HIGHLIGHT_COLORS } from "@/utils/highlight-colors";
 
@@ -36,11 +37,8 @@ export function CleanupDialog({
         conversationId: conversationId || undefined,
         sentOnly: isSentOnly,
       });
-      setResultText(
-        outcome.ok
-          ? format(t.privateHighlights.cleanupDone, { deleted: outcome.value.deleted, total: outcome.value.total })
-          : outcome.error,
-      );
+      if (!outcome.ok) return showErrorToast(outcome.error);
+      setResultText(format(t.privateHighlights.cleanupDone, { deleted: outcome.value.deleted, total: outcome.value.total }));
       router.refresh();
     });
   }

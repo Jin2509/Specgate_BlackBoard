@@ -24,8 +24,7 @@ export default function NewChatPage(props: PageProps<"/w/[workspaceId]/chat">) {
 }
 
 async function NewChatPageContent({ params }: PageProps<"/w/[workspaceId]/chat">) {
-  const workspace = await requirePersonalWorkspace(params);
-  const me = await requireMe();
+  const [workspace, me] = await Promise.all([requirePersonalWorkspace(params), requireMe()]);
   const home = toPersonalHomePath(workspace.id);
   if (!me.key) redirect(`${home}/key`);
 

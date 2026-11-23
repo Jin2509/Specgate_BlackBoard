@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/Label";
 import { Textarea } from "@/components/ui/Textarea";
 import { format, t } from "@/lib/i18n";
+import { showErrorToast } from "@/stores/toast-store";
 import type { HighlightLabel } from "@/types/highlight";
 import { toEllipsizedText, toExcerpt } from "@/utils/excerpt";
 import { HIGHLIGHT_LABEL_META } from "@/utils/status-meta";
@@ -65,7 +66,6 @@ function DraftForm({
   const [removedIndexes, setRemovedIndexes] = useState<number[]>([]);
   const [label, setLabel] = useState<HighlightLabel>("important");
   const [note, setNote] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const keptSegments = otherSegments
     .map((segment, index) => ({ segment, index, text: texts[index] }))
@@ -87,7 +87,7 @@ function DraftForm({
         note: note.trim() || undefined,
       });
       if (outcome.ok) onSaved(ownSegments.length + outcome.skippedCount);
-      else setError(outcome.error);
+      else showErrorToast(outcome.error);
     });
   }
 
@@ -171,11 +171,6 @@ function DraftForm({
           options={LABELS.map((value) => ({ value, label: HIGHLIGHT_LABEL_META[value].label }))}
         />
       </div>
-      {error ? (
-        <p role="alert" className="text-sm text-destructive">
-          {error}
-        </p>
-      ) : null}
       <DialogFooter>
         <Button variant="secondary" onClick={onClose}>
           {t.common.cancel}

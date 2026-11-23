@@ -1,9 +1,9 @@
 // Renders the signed-in person at the bottom of a sidebar, with settings and sign-out buttons.
-import { LogOut, Settings } from "lucide-react";
+import { Settings } from "lucide-react";
 
 import { ActorAvatar } from "@/components/ActorAvatar";
 import { IconButton } from "@/components/IconButton";
-import { signOut } from "@/features/auth";
+import { SignOutButton } from "@/features/auth";
 import { t } from "@/lib/i18n";
 import type { Profile } from "@/types/profile";
 
@@ -18,16 +18,7 @@ export function UserPanel({ user, settingsHref, settingsLabel }: { user: Profile
       <IconButton label={settingsLabel} href={settingsHref}>
         <Settings />
       </IconButton>
-      <form action={signOut}>
-        <button
-          type="submit"
-          aria-label={t.auth.signOut}
-          title={t.auth.signOut}
-          className="inline-flex size-8 items-center justify-center rounded text-subtle transition-colors hover:bg-hover hover:text-destructive"
-        >
-          <LogOut className="size-5" />
-        </button>
-      </form>
+      <SignOutButton />
     </div>
   );
 }

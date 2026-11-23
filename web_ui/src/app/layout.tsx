@@ -1,8 +1,9 @@
-// Sets up the root document: fonts, global styles, metadata, the connection banner and the tooltip provider.
+// Sets up the root document: fonts, global styles, metadata, the connection banner, toasts and the tooltip provider.
 import type { Metadata } from "next";
 import { Be_Vietnam_Pro, JetBrains_Mono } from "next/font/google";
 
 import { ConnectionBanner } from "@/components/ConnectionBanner";
+import { Toaster } from "@/components/Toaster";
 import { TooltipProvider } from "@/components/ui/Tooltip";
 import { locale, t } from "@/lib/i18n";
 
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full">
         <ConnectionBanner />
         <TooltipProvider delayDuration={TOOLTIP_DELAY_MS}>{children}</TooltipProvider>
+        <Toaster />
       </body>
     </html>
   );

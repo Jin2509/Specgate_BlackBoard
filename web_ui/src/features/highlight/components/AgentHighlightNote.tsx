@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 
 import { Select } from "@/components/ui/Select";
 import { format, t } from "@/lib/i18n";
+import { showErrorToast } from "@/stores/toast-store";
 import type { HighlightLabel } from "@/types/highlight";
 import { HIGHLIGHT_LABEL_META } from "@/utils/status-meta";
 
@@ -18,7 +19,6 @@ export function AgentHighlightNote({ id, note, label }: { id: string; note: stri
   const [isOpen, setIsOpen] = useState(false);
   const [noteText, setNoteText] = useState(note ?? "");
   const [chosenLabel, setChosenLabel] = useState<HighlightLabel>(label);
-  const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   if (!isOpen)
     return (
@@ -33,7 +33,7 @@ export function AgentHighlightNote({ id, note, label }: { id: string; note: stri
         event.preventDefault();
         startTransition(async () => {
           const outcome = await updateHighlight(id, { note: noteText, label: chosenLabel });
-          if (!outcome.ok) return setError(outcome.error);
+          if (!outcome.ok) return showErrorToast(outcome.error);
           setIsOpen(false);
           router.refresh();
         });
@@ -64,11 +64,6 @@ export function AgentHighlightNote({ id, note, label }: { id: string; note: stri
       <button type="button" onClick={() => setIsOpen(false)} className="text-xs text-subtle">
         {t.common.cancel}
       </button>
-      {error ? (
-        <p role="alert" className="w-full text-xs text-destructive">
-          {error}
-        </p>
-      ) : null}
     </form>
   );
 }

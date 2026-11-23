@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { Select, type SelectOption } from "@/components/ui/Select";
 import { format, t } from "@/lib/i18n";
+import { showErrorToast } from "@/stores/toast-store";
 import type { Task } from "@/types/task";
 import type { TeamMember } from "@/types/workspace";
 
@@ -36,7 +37,6 @@ export function TaskFormDialog({
 }) {
   const [body, setBody] = useState(task.body);
   const [assigneeId, setAssigneeId] = useState(task.assignee?.id ?? NOBODY);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
   const assigneeOptions: Array<SelectOption> = [
     ...members.map((member) => ({
@@ -50,8 +50,7 @@ export function TaskFormDialog({
   function handleSubmit() {
     startTransition(async () => {
       const outcome = await updateTask({ workspaceId, number: task.number, body, assigneeId });
-      if (!outcome.ok) return setErrorMessage(outcome.error);
-      setErrorMessage(null);
+      if (!outcome.ok) return showErrorToast(outcome.error);
       onSave();
     });
   }
@@ -77,11 +76,6 @@ export function TaskFormDialog({
           <Label htmlFor="task-assignee">{t.tasks.assigneeLabel}</Label>
           <Select id="task-assignee" size="lg" value={assigneeId} onValueChange={setAssigneeId} options={assigneeOptions} />
         </div>
-        {errorMessage ? (
-          <p role="alert" className="text-sm text-destructive">
-            {errorMessage}
-          </p>
-        ) : null}
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             {t.common.cancel}
