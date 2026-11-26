@@ -17,6 +17,21 @@ Bảng đen chung cho người và LLM: một workspace để nhóm lên ý tư�
 docker compose up --build      # web http://localhost:3000, backend http://localhost:8000/docs
 ```
 
+### Lần đầu trên máy sạch
+
+`docker compose up --build` dựng xong là mở được `http://localhost:3000` → chuyển sang `/login`. Nhưng chưa đăng nhập được: image dựng từ repo không kèm `backend/.env` (file này bị gitignore) và không kèm dữ liệu mẫu. Làm thêm ba bước sau:
+
+```bash
+cp backend/.env.example backend/.env
+# trong backend/.env: LLM_FAKE=true (agent giả, không gọi mạng, không tốn tiền), AUTH_DEV_LOGIN=true
+docker compose up -d --build
+docker compose exec backend python -m app.ws.seed
+```
+
+- Không có `backend/.env` thì `SMTP_*` trống, nên đăng nhập bằng email tắt (`POST /api/auth/email-codes` trả 501) và không có tài khoản nào để chọn ở màn chọn tài khoản giả lập.
+- Trang chọn tài khoản đọc danh sách tài khoản ở mỗi lần tải, nên sau lệnh `seed` chỉ cần tải lại `/login/github` là thấy Lan và Long.
+- Xoá sạch dữ liệu: `docker compose down -v` rồi `up` và `seed` lại.
+
 Chạy riêng backend: xem `backend/README.md`. Triển khai lên server: xem `deploy/README.md`.
 
 ## Chạy frontend
