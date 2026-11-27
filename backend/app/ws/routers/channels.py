@@ -39,15 +39,17 @@ def list_messages(ws_id: str, channel_id: str, after: int | None = Query(None, d
     """FR-40: senderKind human | agent (agentModel + owner) | system. `ownMessageIds`: messages that are already
     in the user's agent context (FR-23); `myHighlights`: the user's own chalk marks in this channel (FR-24)."""
     ws, _ = require_member(s, ws_id, user)
-    ch = channel_of(s, ws, channel_id)
+    ch = channel_of(s, ws, channel_id, reader_id=user.id)
     q = select(m.Message).where(m.Message.channel_id == ch.id)
     if after is not None:
         q = q.where(m.Message.seq > after).order_by(m.Message.seq).limit(limit)
         rows = list(s.scalars(q))
     else:
         rows = list(reversed(list(s.scalars(q.order_by(m.Message.seq.desc()).limit(limit)))))
-    hls = s.scalars(select(m.Highlight).where(m.Highlight.owner_id == user.id, m.Highlight.channel_id == ch.id)
-                    .order_by(m.Highlight.at))
+    sv.preload_messages(s, ws.id, rows)
+    # Read in full now: the commit below hands the connection back, and an open cursor would outlive it.
+    hls = list(s.scalars(select(m.Highlight).where(m.Highlight.owner_id == user.id, m.Highlight.channel_id == ch.id)
+                         .order_by(m.Highlight.at)))
     if after is None and rows:
         # Opening the channel reads it (flow §2: the dot on the rail and on the channel name goes away).
         sv.mark_read(s, user.id, ch, rows[-1].seq)
@@ -201,6 +203,8 @@ async def stream(ws_id: str, channel_id: str, request: Request,
         backlog = [sv.message_out(s, x) for x in
                    s.scalars(select(m.Message).where(m.Message.channel_id == ch_id, m.Message.seq > after)
                              .order_by(m.Message.seq))]
+    # The stream may stay open for hours: hand the pooled connection back now, or each open tab holds one.
+    s.close()
 
     async def events() -> AsyncIterator[str]:
         q = broker.subscribe(channel_topic(ch_id))

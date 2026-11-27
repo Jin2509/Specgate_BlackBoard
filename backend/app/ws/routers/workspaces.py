@@ -17,7 +17,7 @@ from app.ws import board as bd
 from app.ws import models as m
 from app.ws import service as sv
 from app.ws import tasks as tk
-from app.ws.deps import current_user, db, require_member, require_owner
+from app.ws.deps import current_user, db, load_workspace_and_member, require_member, require_owner
 
 router = APIRouter(prefix="/workspaces", tags=["workspaces"])
 
@@ -60,12 +60,14 @@ def create_workspace(body: NewWorkspace, user: m.User = Depends(current_user), s
     s.add(m.Member(workspace_id=ws.id, user_id=user.id, role="owner", color=0))
     s.add(m.Channel(workspace_id=ws.id, name="chung"))
     s.commit()
+    sv.publish_membership(ws.id, user.id)
     return sv.workspace_out(s, ws, sv.membership_of(s, ws.id, user.id))
 
 
 @router.get("/{ws_id}")
 def get_workspace(ws_id: str, user: m.User = Depends(current_user), s: Session = Depends(db)) -> dict:
     """FR-39: a non-member gets 403 NOT_MEMBER and the UI opens Explore with this workspace selected."""
+    load_workspace_and_member(s, ws_id, user.id)
     ws = s.get(m.Workspace, ws_id)
     if ws and ws.kind == "personal":
         if ws.owner_id != user.id:
@@ -198,6 +200,7 @@ def leave_workspace(ws_id: str, user: m.User = Depends(current_user), s: Session
     notices = _leave(s, ws, mem, removed=False)
     s.commit()
     sv.publish(s, notices)
+    sv.publish_membership(ws.id, user.id)
 
 
 @router.delete("/{ws_id}/members/{user_id}", status_code=204)
@@ -211,6 +214,7 @@ def remove_member(ws_id: str, user_id: str, user: m.User = Depends(current_user)
     notices = _leave(s, ws, mem, removed=True)
     s.commit()
     sv.publish(s, notices)
+    sv.publish_membership(ws.id, user_id)
 
 
 # ---------- join code ----------

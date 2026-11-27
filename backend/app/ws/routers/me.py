@@ -4,7 +4,7 @@ from typing import Literal
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field, SecretStr
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.config import settings
@@ -13,7 +13,7 @@ from app.ws import models as m
 from app.ws import providers as pv
 from app.ws import service as sv
 from app.ws.deps import current_user, db
-from app.ws.routers.auth import home_path, last_shared_path, personal_workspace
+from app.ws.routers.auth import home_path
 from app.ws.security import encrypt_key
 
 router = APIRouter(prefix="/me", tags=["me"])
@@ -25,37 +25,49 @@ SUBSCRIPTION_NOTE = ("Gói thuê bao như ChatGPT Plus hay Claude Pro không ph�
 
 @router.get("")
 def me(user: m.User = Depends(current_user), s: Session = Depends(db)) -> dict:
-    personal = personal_workspace(s, user.id)
-    key = s.get(m.ProviderKey, user.id)
+    # Three small lookups in one round trip: the API key, the personal workspace and the private highlight count.
+    key, personal_id, private_total = s.execute(
+        select(m.ProviderKey,
+               select(m.Workspace.id).where(m.Workspace.kind == "personal", m.Workspace.owner_id == user.id)
+               .limit(1).scalar_subquery(),
+               select(func.count()).select_from(m.PrivateHighlight).where(m.PrivateHighlight.owner_id == user.id)
+               .scalar_subquery())
+        .select_from(m.User).outerjoin(m.ProviderKey, m.ProviderKey.user_id == m.User.id)
+        .where(m.User.id == user.id)).one()
     shared = _rail(s, user)
+    # "Vào làm việc với nhóm" opens the shared workspace used last, while still a member: the rail lists exactly those.
+    last_shared = user.last_workspace_id if any(w["id"] == user.last_workspace_id for w in shared) else None
     pending = list(s.scalars(select(m.JoinRequest).where(m.JoinRequest.user_id == user.id,
                                                          m.JoinRequest.status == "pending")))
     return {
         "user": sv.user_out(user),
-        "personalWorkspaceId": personal.id if personal else None,
+        "personalWorkspaceId": personal_id,
         "key": sv.key_out(key),
         "agent": sv.agent_out(s, user.id, key=key),
         "workspaces": shared,
         "pendingJoins": [sv.join_request_out(s, r) for r in pending],
         "home": home_path(s, user),
-        "lastSharedPath": last_shared_path(s, user),
-        "privateHighlights": {"total": len(list(s.scalars(select(m.PrivateHighlight.id).where(
-            m.PrivateHighlight.owner_id == user.id)))), "limit": settings.private_highlights_max},
+        "lastSharedPath": f"/w/{last_shared}/c/chung" if last_shared else None,
+        "privateHighlights": {"total": private_total, "limit": settings.private_highlights_max},
     }
 
 
 def _rail(s: Session, user: m.User) -> list[dict]:
     """Shared workspaces the user is in now, each with its dots (flow §2): unread, mentioned, and for the owner the
-    number of join requests waiting."""
+    number of join requests waiting. Three queries whatever the number of workspaces."""
+    waiting = (select(func.count()).select_from(m.JoinRequest)
+               .where(m.JoinRequest.workspace_id == m.Workspace.id, m.JoinRequest.status == "pending")
+               .correlate(m.Workspace).scalar_subquery())
+    rows = list(s.execute(select(m.Member, m.Workspace, waiting).join(m.Workspace, m.Workspace.id == m.Member.workspace_id)
+                          .where(m.Member.user_id == user.id, m.Member.left_at.is_(None), m.Workspace.kind == "shared")
+                          .order_by(m.Member.joined_at, m.Member.id)))
+    badges = sv.workspace_badges(s, [mem for mem, _, _ in rows], {ws.id: count for _, ws, count in rows})
     out = []
-    for mem in s.scalars(select(m.Member).where(m.Member.user_id == user.id, m.Member.left_at.is_(None))
-                         .order_by(m.Member.joined_at, m.Member.id)):
-        ws = s.get(m.Workspace, mem.workspace_id)
-        if ws and ws.kind == "shared":
-            b = sv.workspace_badges(s, ws, mem)
-            out.append({"id": ws.id, "name": ws.name, "short": sv.initial(ws.name), "role": mem.role,
-                        "unread": b["unread"], "mentioned": b["mentioned"], "pendingRequests": b["pendingRequests"],
-                        "channels": [{"id": cid, **v} for cid, v in b["channels"].items()]})
+    for mem, ws, _ in rows:
+        b = badges[ws.id]
+        out.append({"id": ws.id, "name": ws.name, "short": sv.initial(ws.name), "role": mem.role,
+                    "unread": b["unread"], "mentioned": b["mentioned"], "pendingRequests": b["pendingRequests"],
+                    "channels": [{"id": cid, **v} for cid, v in b["channels"].items()]})
     return out
 
 

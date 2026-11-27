@@ -14,7 +14,13 @@ IDLE_PING_AFTER_S = 60
 # Connections older than this are replaced, whatever their idle time.
 POOL_RECYCLE_S = 1800
 engine = create_engine(settings.database_url, connect_args=_connect_args,
-                       pool_recycle=-1 if _is_sqlite else POOL_RECYCLE_S)
+                       pool_recycle=-1 if _is_sqlite else POOL_RECYCLE_S, pool_size=settings.db_pool_size,
+                       max_overflow=settings.db_max_overflow, pool_timeout=settings.db_pool_timeout_s)
+
+
+def worker_thread_limit() -> int:
+    """Worker threads that never outnumber pooled connections, so no thread waits on a connection forever."""
+    return max(1, min(settings.worker_threads_max, settings.db_pool_size + settings.db_max_overflow))
 SessionLocal = sessionmaker(bind=engine, expire_on_commit=False)
 
 

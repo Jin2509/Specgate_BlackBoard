@@ -6,6 +6,17 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
     database_url: str = "sqlite:///./specgate.db"
+    # Sync endpoints run on worker threads and each holds a pooled connection until its response is sent. With fewer
+    # connections than threads, threads waiting for a connection starve the requests that hold one: keep
+    # db_pool_size + db_max_overflow >= worker_threads_max (enforced at startup).
+    db_pool_size: int = 20
+    db_max_overflow: int = 30
+    db_pool_timeout_s: float = 10.0
+    worker_threads_max: int = 40
+    # Requests waiting longer than this for a free slot get 503 SERVER_BUSY instead of hanging.
+    request_queue_timeout_s: float = 30.0
+    # How often overdue tasks are looked for; #chung hears of a passed deadline within this delay.
+    task_deadline_check_s: float = 60.0
     # Version prefix of every HTTP route; the Next.js app calls the same prefix.
     api_prefix: str = "/api/v1"
     cors_origins: list[str] = ["http://localhost:3000"]

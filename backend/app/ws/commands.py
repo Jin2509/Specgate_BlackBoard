@@ -162,14 +162,15 @@ def _split_assignee(s: Session, ws: m.Workspace, arg: str) -> tuple[str | None, 
 
 
 def _task(s: Session, ws: m.Workspace, user: m.User, arg: str, out: Outcome) -> Outcome:
-    """flow §13: a task in your own name; the owner adds @name to assign it. Never run from an agent's words."""
+    """flow §13: the owner adds a task waiting for a member to claim it, or @name to assign it. Never run from an
+    agent's words."""
     assignee_id, body = _split_assignee(s, ws, arg)
     if not body:
-        return out.say("Cách dùng: /task <mô tả>. Chủ workspace gõ /task @tên <mô tả> để giao việc.")
+        return out.say("Cách dùng: /task <mô tả>, hoặc /task @tên <mô tả> để giao việc.")
     actor = sv.membership_of(s, ws.id, user.id)
-    if assignee_id not in (None, user.id) and actor.role != "owner":
-        return out.say("Chỉ chủ workspace giao việc cho người khác. Gõ /task <mô tả> để tự nhận một việc.")
-    task = tk.create_task(s, ws, actor, body, assignee_id or user.id)
+    if actor.role != "owner":
+        return out.say("Chỉ chủ workspace thêm việc. Mở Bảng phân công để nhận một việc đang chờ người nhận.")
+    task = tk.create_task(s, ws, actor, body, assignee_id)
     return out.say(tk.created_text(s, ws, task))
 
 

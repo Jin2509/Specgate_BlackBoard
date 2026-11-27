@@ -55,3 +55,30 @@ def test_should_list_members_with_the_same_queries_for_two_or_six_members(api):
         member, _ = login(api, f"member-{index}", f"Member {index}")
         add_member(api, owner, ws, member)
     assert queries_for(api, owner, f"/api/v1/workspaces/{ws['id']}/members") == small_count
+
+
+def test_should_load_the_rail_with_the_same_queries_for_one_or_three_workspaces(api):
+    owner, first = team_of(api, 2)
+    one = queries_for(api, owner, "/api/v1/me/badges")
+    for index in range(2):
+        ws = shared(api, owner, name=f"Nhóm {index}")
+        api.post(f"/api/v1/workspaces/{ws['id']}/channels", headers=owner, json={"name": f"kenh-{index}"})
+    assert queries_for(api, owner, "/api/v1/me/badges") == one <= 3
+    assert queries_for(api, owner, "/api/v1/me") <= 5
+
+
+def test_should_load_a_workspace_in_at_most_four_queries(api):
+    owner, ws = team_of(api, 3)
+    assert queries_for(api, owner, f"/api/v1/workspaces/{ws['id']}") <= 4
+
+
+def test_should_list_messages_with_the_same_queries_for_one_or_four_senders(api):
+    owner, ws = team_of(api, 4)
+    path = f"/api/v1/workspaces/{ws['id']}/channels/chung/messages"
+    api.post(path, headers=owner, json={"text": "first"})
+    one_sender = queries_for(api, owner, path)
+    for index in range(1, 4):
+        member, _ = login(api, f"member-{index}", f"Member {index}")
+        api.post(path, headers=member, json={"text": f"from member {index}"})
+    api.get(path, headers=owner)
+    assert queries_for(api, owner, path) == one_sender <= 6

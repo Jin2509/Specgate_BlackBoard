@@ -304,6 +304,8 @@ async def _answer(s: Session, conv: m.Conversation, user: m.User, user_turn: m.T
     # flow §6: the answer remembers whose group context it was written with.
     usage = pv.Usage()
     save = {"version_group": version_group, "context_ws": ctx["workspace"]["id"] if ctx else None, "usage": usage}
+    # The model may take a minute: end the read so the pooled connection is free meanwhile. Saving uses its own session.
+    s.commit()
 
     if not stream:
         try:

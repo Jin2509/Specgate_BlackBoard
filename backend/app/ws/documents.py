@@ -24,6 +24,9 @@ BYTES_PER_MEGABYTE = 1024 * 1024
 EXTRA_BLANK_LINES = re.compile(r"\n{3,}")
 
 
+NUL = "\x00"
+
+
 def _unreadable() -> ApiError:
     return ApiError(422, "Không đọc được file này. File có thể bị hỏng.", "DOCUMENT_UNREADABLE")
 
@@ -58,7 +61,8 @@ def to_markdown(file_name: str, content: bytes) -> tuple[str, str]:
         media_type, text = DOCX_MEDIA_TYPE, _docx_text(content)
     else:
         raise ApiError(415, "Chỉ nhận file PDF hoặc Word (.docx).", "DOCUMENT_TYPE_UNSUPPORTED")
-    text = EXTRA_BLANK_LINES.sub("\n\n", text).strip()
+    # PDF fonts without a Unicode map often yield NUL characters; Postgres refuses them in text columns.
+    text = EXTRA_BLANK_LINES.sub("\n\n", text.replace(NUL, "")).strip()
     if not text:
         raise ApiError(422, "File không có chữ để đọc, có thể là ảnh scan.", "DOCUMENT_NO_TEXT")
     return media_type, text
@@ -89,7 +93,7 @@ def read_upload(file_name: str, content: bytes) -> tuple[str, str, str]:
     if len(content) > settings.document_size_max_bytes:
         size_mb = settings.document_size_max_bytes // BYTES_PER_MEGABYTE
         raise ApiError(413, f"File lớn hơn {size_mb} MB.", "DOCUMENT_TOO_LARGE")
-    name = PurePath(file_name.replace("\\", "/")).name.strip()[:FILE_NAME_MAX_LENGTH]
+    name = PurePath(file_name.replace(NUL, "").replace("\\", "/")).name.strip()[:FILE_NAME_MAX_LENGTH]
     media_type, text = to_markdown(name, content)
     return name, media_type, text
 

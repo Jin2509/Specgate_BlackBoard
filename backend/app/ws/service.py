@@ -1,13 +1,14 @@
 """Shared domain logic: labels, serialization (camelCase, like web_ui/src/lib/types.ts), posting messages."""
 
 import re
+from collections.abc import Iterable
 from datetime import datetime, timezone
 
-from sqlalchemy import func, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.orm import Session
 
 from app.ws import models as m
-from app.ws.realtime import broker, channel_topic
+from app.ws.realtime import broker, channel_topic, user_topic, workspace_topic
 
 
 def iso(dt: datetime | None) -> str | None:
@@ -121,6 +122,8 @@ def member_row(s: Session, workspace_id: str, user_id: str) -> m.Member | None:
     """The membership row whether the person is still in the workspace or left it."""
     memo = _request_memo(s, "member_rows")
     key = (workspace_id, user_id)
+    if key in _request_memo(s, "absent_member_rows"):
+        return None
     if key not in memo:
         mem = s.scalar(select(m.Member).where(m.Member.workspace_id == workspace_id, m.Member.user_id == user_id))
         if mem is None:
@@ -138,11 +141,55 @@ def user_by_id(s: Session, user_id: str) -> m.User | None:
     return memo[user_id]
 
 
+def keep_for_request(s: Session, row: object) -> None:
+    """Hold a loaded row until the request ends: the session's identity map keeps rows only weakly, so a row fetched
+    ahead would be dropped and fetched again by the next `s.get`."""
+    _request_memo(s, "held_rows")[id(row)] = row
+
+
+def is_member_row_loaded(s: Session, workspace_id: str, user_id: str) -> bool:
+    return (workspace_id, user_id) in _request_memo(s, "member_rows")
+
+
 def remember_members(s: Session, members: list[m.Member]) -> None:
     """Let member_row answer from rows already loaded."""
     memo = _request_memo(s, "member_rows")
     for mem in members:
         memo[(mem.workspace_id, mem.user_id)] = mem
+
+
+def preload_people(s: Session, workspace_id: str, user_ids: Iterable[str]) -> None:
+    """Load everyone a response names (account, membership row, sign-in hint) in one query instead of three per
+    person, so the name and avatar lookups that follow are answered from memory. Only for read-only responses: a
+    person marked as no member here stays so for the rest of the request."""
+    users = _request_memo(s, "users")
+    members = _request_memo(s, "member_rows")
+    absent = _request_memo(s, "absent_member_rows")
+    hints = _request_memo(s, "account_hints")
+    missing = [uid for uid in dict.fromkeys(user_ids)
+               if uid and (uid not in users or uid not in hints
+                           or ((workspace_id, uid) not in members and (workspace_id, uid) not in absent))]
+    if not missing:
+        return
+    first_accounts: dict[str, m.OAuthAccount] = {}
+    for user, mem, account in s.execute(
+            select(m.User, m.Member, m.OAuthAccount)
+            .outerjoin(m.Member, and_(m.Member.user_id == m.User.id, m.Member.workspace_id == workspace_id))
+            .outerjoin(m.OAuthAccount, m.OAuthAccount.user_id == m.User.id)
+            .where(m.User.id.in_(missing)).order_by(m.OAuthAccount.id)):
+        users[user.id] = user
+        if mem is None:
+            absent[(workspace_id, user.id)] = True
+        else:
+            members[(workspace_id, user.id)] = mem
+        if account is not None:
+            first_accounts.setdefault(user.id, account)
+    for uid in missing:
+        users.setdefault(uid, None)
+        if (workspace_id, uid) not in members:
+            absent[(workspace_id, uid)] = True
+        # People without a sign-in account have no hint; remembering that avoids asking again for each mention.
+        hints[uid] = _to_account_hint(first_accounts[uid]) if uid in first_accounts else None
 
 
 def membership_of(s: Session, workspace_id: str, user_id: str) -> m.Member | None:
@@ -187,6 +234,7 @@ def account_hint(s: Session, user_id: str) -> str | None:
     """Shown on hover over a name (flow §9): the GitHub login, or the Google or sign-in e-mail partly masked."""
     memo = _request_memo(s, "account_hints")
     if user_id not in memo:
+        memo[user_id] = None
         memo.update(_account_hints(s, [user_id]))
     return memo.get(user_id)
 
@@ -247,16 +295,25 @@ def member_user_out(s: Session, mem: m.Member) -> dict | None:
 
 def team(s: Session, ws: m.Workspace) -> list[dict]:
     """FR-62 / FR-44: workspace name, colour, role, team role, personal agent or null = "chưa nhập key". Never a key."""
-    rows = list(s.scalars(active_members(s, ws.id).order_by(m.Member.joined_at, m.Member.id)))
-    user_ids = [mem.user_id for mem in rows]
-    if not user_ids:
+    # One query for the whole team: members with their account, key and sign-in accounts (first one is the hint).
+    joined = list(s.execute(active_members(s, ws.id).add_columns(m.User, m.ProviderKey, m.OAuthAccount)
+                            .join(m.User, m.User.id == m.Member.user_id)
+                            .outerjoin(m.ProviderKey, m.ProviderKey.user_id == m.Member.user_id)
+                            .outerjoin(m.OAuthAccount, m.OAuthAccount.user_id == m.Member.user_id)
+                            .order_by(m.Member.joined_at, m.Member.id, m.OAuthAccount.id)))
+    if not joined:
         return []
-    # Three queries for the whole team instead of three or four per person.
+    rows = list({mem.id: mem for mem, _, _, _ in joined}.values())
     remember_members(s, rows)
-    _request_memo(s, "users").update({u.id: u for u in s.scalars(select(m.User).where(m.User.id.in_(user_ids)))})
-    keys = {k.user_id: k for k in s.scalars(select(m.ProviderKey).where(m.ProviderKey.user_id.in_(user_ids)))}
+    _request_memo(s, "users").update({user.id: user for _, user, _, _ in joined})
+    keys = {mem.user_id: key for mem, _, key, _ in joined if key is not None}
     hints = _request_memo(s, "account_hints")
-    hints.update(_account_hints(s, [uid for uid in user_ids if uid not in hints]))
+    first_accounts: dict[str, m.OAuthAccount] = {}
+    for mem, _, _, account in joined:
+        if account is not None:
+            first_accounts.setdefault(mem.user_id, account)
+    for mem in rows:
+        hints[mem.user_id] = _to_account_hint(first_accounts[mem.user_id]) if mem.user_id in first_accounts else None
     out = []
     for mem in rows:
         u = member_user_out(s, mem)
@@ -285,10 +342,25 @@ def workspace_out(s: Session, ws: m.Workspace, me: m.Member | None) -> dict:
             "joinCode": ws.join_code,
             "joinCodeAt": iso(ws.join_code_at),
             # flow §2: each channel name carries its own unread dot.
-            "channels": [{"id": c.id, "name": c.name, **channel_unread(s, c, me)} for c in channels(s, ws.id)],
+            "channels": [{"id": c.id, "name": c.name, **dot}
+                         for c, dot in channels_with_unread(s, [me]).get(ws.id, [])],
             "members": team(s, ws),
         }
     return out
+
+
+def preload_messages(s: Session, workspace_id: str, msgs: list[m.Message]) -> None:
+    """Before serializing many messages: load the messages they reply to and everyone they name, in at most three
+    queries, instead of a few per sender, card owner and reply."""
+    loaded = {x.id for x in msgs}
+    parent_ids = list({x.reply_to_id for x in msgs if x.reply_to_id and x.reply_to_id not in loaded})
+    parents = list(s.scalars(select(m.Message).where(m.Message.id.in_(parent_ids)))) if parent_ids else []
+    people: list[str] = []
+    for x in [*msgs, *parents]:
+        if x.sender_kind != "system":
+            people.append(x.sender_id)
+        people.extend(card["ownerId"] for card in x.cards or [] if card.get("ownerId"))
+    preload_people(s, workspace_id, people)
 
 
 def message_out(s: Session, msg: m.Message) -> dict:
@@ -507,39 +579,83 @@ def join_request_out(s: Session, r: m.JoinRequest) -> dict:
 # ---------- unread dots (flow §2) ----------
 
 
-def channel_unread(s: Session, ch: m.Channel, mem: m.Member) -> dict:
-    """{unread, mentioned} of one channel for one member: messages of other people (not the system) after what
-    they last read; before they ever opened the channel, after the moment they joined."""
-    read = s.scalar(select(m.ChannelRead).where(m.ChannelRead.user_id == mem.user_id, m.ChannelRead.channel_id == ch.id))
-    q = select(m.Message).where(m.Message.channel_id == ch.id, m.Message.sender_kind != "system",
-                                m.Message.sender_id != mem.user_id)
-    q = q.where(m.Message.seq > read.last_seq) if read else q.where(m.Message.at > mem.joined_at)
-    rows = list(s.scalars(q.order_by(m.Message.seq.desc()).limit(200)))
-    me = base_name(s, mem.user_id, ch.workspace_id).casefold()
-    mentioned = any(seg.get("t") == "mention" and str(seg.get("v", "")).casefold() == me
-                    for x in rows for seg in x.body or [])
-    return {"unread": bool(rows), "mentioned": mentioned}
+# Unread messages scanned per channel for a mention of the reader, newest first.
+UNREAD_SCAN_MAX = 200
+
+
+def channels_with_unread(s: Session, members: list[m.Member]) -> dict[str, list[tuple[m.Channel, dict]]]:
+    """Each workspace of one person's memberships, as its channels in order with {unread, mentioned}: messages of
+    other people (not the system) after what they last read; before they ever opened a channel, after the moment
+    they joined. One query whatever the number of workspaces and channels: every channel, joined to its newest
+    unread messages."""
+    if not members:
+        return {}
+    user_id = members[0].user_id
+    workspace_ids = [mem.workspace_id for mem in members]
+    remember_members(s, members)
+    newest_first = func.row_number().over(partition_by=m.Message.channel_id, order_by=m.Message.seq.desc())
+    unread = (select(m.Message.channel_id, m.Message.body, newest_first.label("rank"))
+              .join(m.Member, and_(m.Member.workspace_id == m.Message.workspace_id, m.Member.user_id == user_id))
+              .outerjoin(m.ChannelRead, and_(m.ChannelRead.channel_id == m.Message.channel_id,
+                                             m.ChannelRead.user_id == user_id))
+              .where(m.Message.workspace_id.in_(workspace_ids), m.Message.sender_kind != "system",
+                     m.Message.sender_id != user_id,
+                     or_(and_(m.ChannelRead.last_seq.is_not(None), m.Message.seq > m.ChannelRead.last_seq),
+                         and_(m.ChannelRead.last_seq.is_(None), m.Message.at > m.Member.joined_at)))
+              .subquery())
+    rows = s.execute(select(m.Channel, unread.c.rank, unread.c.body)
+                     .outerjoin(unread, and_(unread.c.channel_id == m.Channel.id, unread.c.rank <= UNREAD_SCAN_MAX))
+                     .where(m.Channel.workspace_id.in_(workspace_ids))
+                     .order_by(m.Channel.created_at, m.Channel.name, unread.c.rank))
+    out: dict[str, list[tuple[m.Channel, dict]]] = {wid: [] for wid in workspace_ids}
+    dots: dict[str, dict] = {}
+    for ch, rank, body in rows:
+        if ch.id not in dots:
+            dots[ch.id] = {"unread": False, "mentioned": False}
+            out[ch.workspace_id].append((ch, dots[ch.id]))
+        if rank is None:
+            continue
+        dot = dots[ch.id]
+        dot["unread"] = True
+        if not dot["mentioned"]:
+            me = base_name(s, user_id, ch.workspace_id).casefold()
+            dot["mentioned"] = any(seg.get("t") == "mention" and str(seg.get("v", "")).casefold() == me
+                                   for seg in body or [])
+    return out
+
+
+def remember_channel_read(s: Session, user_id: str, channel_id: str, read: m.ChannelRead | None) -> None:
+    """Keep a read position loaded with the channel (None: never opened) for mark_read."""
+    _request_memo(s, "channel_reads")[(user_id, channel_id)] = read
 
 
 def mark_read(s: Session, user_id: str, ch: m.Channel, seq: int | None = None) -> None:
     top = seq if seq is not None else (s.scalar(select(func.max(m.Message.seq)).where(m.Message.channel_id == ch.id)) or 0)
-    read = s.scalar(select(m.ChannelRead).where(m.ChannelRead.user_id == user_id, m.ChannelRead.channel_id == ch.id))
+    reads = _request_memo(s, "channel_reads")
+    key = (user_id, ch.id)
+    read = reads[key] if key in reads else s.scalar(
+        select(m.ChannelRead).where(m.ChannelRead.user_id == user_id, m.ChannelRead.channel_id == ch.id))
     if read is None:
-        s.add(m.ChannelRead(user_id=user_id, channel_id=ch.id, last_seq=top))
+        read = m.ChannelRead(user_id=user_id, channel_id=ch.id, last_seq=top)
+        s.add(read)
+        reads[key] = read
     elif top > read.last_seq:
         read.last_seq = top
 
 
-def workspace_badges(s: Session, ws: m.Workspace, mem: m.Member) -> dict:
-    """What the rail shows next to a shared workspace: a dot for unread, a stronger one for a mention, and for the
-    owner the number of join requests waiting."""
-    per = {c.id: channel_unread(s, c, mem) for c in channels(s, ws.id)}
-    pending = 0
-    if mem.role == "owner":
-        pending = len(list(s.scalars(select(m.JoinRequest.id).where(m.JoinRequest.workspace_id == ws.id,
-                                                                     m.JoinRequest.status == "pending"))))
-    return {"unread": any(v["unread"] for v in per.values()), "mentioned": any(v["mentioned"] for v in per.values()),
-            "pendingRequests": pending, "channels": per}
+def workspace_badges(s: Session, members: list[m.Member], pending_by_workspace_id: dict[str, int]) -> dict[str, dict]:
+    """What the rail shows next to each shared workspace of one person: a dot for unread, a stronger one for a
+    mention, and for an owner the number of join requests waiting (counted by the caller with the memberships)."""
+    per_workspace = channels_with_unread(s, members)
+    out = {}
+    for mem in members:
+        per = {ch.id: dot for ch, dot in per_workspace.get(mem.workspace_id, [])}
+        out[mem.workspace_id] = {"unread": any(v["unread"] for v in per.values()),
+                                 "mentioned": any(v["mentioned"] for v in per.values()),
+                                 "pendingRequests": pending_by_workspace_id.get(mem.workspace_id, 0)
+                                 if mem.role == "owner" else 0,
+                                 "channels": per}
+    return out
 
 
 # ---------- messages ----------
@@ -584,7 +700,29 @@ def add_message(s: Session, ws: m.Workspace, ch: m.Channel, *, kind: str, sender
     return msg
 
 
+# Realtime event names pushed to the browser (`<domain>.<entity>.<past-verb>`).
+EVENT_CHANNEL_ACTIVITY = "workspace.channel.updated"
+EVENT_JOIN_REQUEST = "join.request.changed"
+EVENT_MEMBERSHIP = "workspace.membership.changed"
+
+
 def publish(s: Session, msgs: list[m.Message]) -> None:
-    """Call after commit."""
+    """Call after commit. The channel gets the message; every member's rail learns that the channel moved."""
     for msg in msgs:
         broker.publish(channel_topic(msg.channel_id), {"type": "message", "message": message_out(s, msg)})
+        broker.publish(workspace_topic(msg.workspace_id), {"type": EVENT_CHANNEL_ACTIVITY, "workspaceId": msg.workspace_id,
+                                                           "channelId": msg.channel_id})
+
+
+def publish_join_request(s: Session, req: m.JoinRequest) -> None:
+    """Call after commit. Only the owners and the requester hear of a request, never the other members."""
+    event = {"type": EVENT_JOIN_REQUEST, "workspaceId": req.workspace_id, "requestId": req.id, "status": req.status}
+    owner_ids = s.scalars(select(m.Member.user_id).where(m.Member.workspace_id == req.workspace_id,
+                                                         m.Member.role == "owner", m.Member.left_at.is_(None)))
+    for user_id in {*owner_ids, req.user_id}:
+        broker.publish(user_topic(user_id), event)
+
+
+def publish_membership(workspace_id: str, user_id: str) -> None:
+    """Call after commit, when someone joins or leaves, so their open connection follows the change."""
+    broker.publish(user_topic(user_id), {"type": EVENT_MEMBERSHIP, "workspaceId": workspace_id})

@@ -323,8 +323,8 @@ class BoardItem(Base):
 
 
 class Task(Base):
-    """One node of the task tree (flow §13): a short description, who does it and "doing" or "done".
-    A task may sit under a parent task, at most three levels deep. No deadline or priority on purpose."""
+    """One node of the task tree (flow §13): a short description, who does it, "todo", "doing" or "done", an
+    optional deadline, and the owner's lock. A task may sit under a parent task, at most three levels deep."""
 
     __tablename__ = "ws_tasks"
     __table_args__ = (UniqueConstraint("workspace_id", "number"),)
@@ -337,7 +337,12 @@ class Task(Base):
     parent_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
     # None = "chưa có người phụ trách": anyone may claim it, the owner may assign it.
     assignee_id: Mapped[str | None] = mapped_column(String, nullable=True, index=True)
-    status: Mapped[str] = mapped_column(String, default="doing")   # doing | done
+    status: Mapped[str] = mapped_column(String, default="todo")   # todo | doing | done
+    # The owner's lock: nobody claims, hands back, reassigns, edits or deletes the task; progress still moves.
+    locked: Mapped[bool] = mapped_column(Boolean, default=False)
+    due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True, index=True)
+    # When #chung was told the deadline passed; cleared when the deadline changes, so a new one is announced too.
+    overdue_notified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     created_by: Mapped[str] = mapped_column(String)
     # Who put the current assignee on the task: the assignee themself (claimed) or the owner (assigned).
     assigned_by: Mapped[str | None] = mapped_column(String, nullable=True)

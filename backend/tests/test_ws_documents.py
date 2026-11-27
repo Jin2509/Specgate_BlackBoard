@@ -240,3 +240,15 @@ def test_should_give_the_uploaders_agent_only_a_marker_of_a_channel_file(api):
     conv = api.post("/api/v1/conversations", headers=lan, json={"workspaceId": ws["id"]}).json()
     system = api.get(f"/api/v1/conversations/{conv['id']}/context", headers=lan).json()["system"]
     assert "[Đã gửi tệp de-bai.pdf (18 ký tự) vào kênh]" in system and "UIT student survey" not in system
+
+
+def test_should_drop_nul_characters_that_postgres_refuses(api):
+    h, _ = login(api, "lan-pham", "Lan")
+    with_key(api, h)
+    conv = api.post("/api/v1/conversations", headers=h, json={}).json()
+    r = api.post(f"/api/v1/conversations/{conv['id']}/documents", headers=h,
+                 files={"file": ("de\x00bai.pdf", make_pdf("Muc tieu\x00 kiem chung"), "application/pdf")})
+    assert r.status_code == 201, r.text
+    doc = api.get(f"/api/v1/conversations/{conv['id']}/documents/{r.json()['id']}", headers=h).json()
+    assert "\x00" not in doc["markdown"] and "\x00" not in doc["fileName"]
+    assert doc["markdown"] == "Muc tieu kiem chung"

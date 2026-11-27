@@ -1,5 +1,6 @@
 """Task board routes of a shared workspace (flow §13). Rules live in app/ws/tasks.py; nothing here calls a model."""
 
+from datetime import datetime
 from typing import Literal
 
 from fastapi import APIRouter, Depends
@@ -27,16 +28,18 @@ def list_tasks(ws_id: str, user: m.User = Depends(current_user), s: Session = De
 
 class NewTask(BaseModel):
     body: str = Field(max_length=2000)
-    assigneeId: str | None = Field(None, description="Bỏ trống = việc đứng tên người tạo")
-    unassigned: bool = Field(False, description="Chỉ chủ: để việc chưa có người phụ trách")
+    assigneeId: str | None = Field(None, description="Bỏ trống = việc chờ thành viên nhận")
+    unassigned: bool = Field(False, description="Giữ cho tương thích: việc chờ thành viên nhận")
     parentNumber: int | None = Field(None, description="Số của việc lớn hơn mà việc này thuộc về; bỏ trống = việc cấp cao nhất")
+    dueAt: datetime | None = Field(None, description="Hạn chót, ISO 8601 có múi giờ; bỏ trống = không có hạn")
 
 
 @router.post("", status_code=201)
 def create_task(ws_id: str, body: NewTask, user: m.User = Depends(current_user), s: Session = Depends(db)) -> dict:
+    """Only the owner adds tasks; without an assignee the task waits in "Cần làm" for a member to claim it."""
     ws, mem = require_member(s, ws_id, user)
-    assignee = None if body.unassigned else (body.assigneeId or user.id)
-    task = tk.create_task(s, ws, mem, body.body, assignee, body.parentNumber)
+    assignee = None if body.unassigned else body.assigneeId
+    task = tk.create_task(s, ws, mem, body.body, assignee, body.parentNumber, body.dueAt)
     _commit_with_notices(s, [tk.post_notice(s, ws, tk.created_text(s, ws, task))])
     return tk.task_out(s, task)
 
@@ -45,6 +48,8 @@ class TaskChange(BaseModel):
     body: str | None = Field(None, max_length=2000)
     assigneeId: str | None = Field(None, description="Người phụ trách mới; null cùng changeAssignee = bỏ trống")
     changeAssignee: bool = False
+    dueAt: datetime | None = Field(None, description="Hạn chót mới; null cùng changeDueAt = bỏ hạn")
+    changeDueAt: bool = False
 
 
 @router.patch("/{number}")
@@ -54,8 +59,9 @@ def update_task(ws_id: str, number: int, body: TaskChange, user: m.User = Depend
     task = tk.get_task(s, ws, number)
     previous_assignee = task.assignee_id
     task = tk.update_task(s, ws, mem, task, body=body.body, assignee_id=body.assigneeId,
-                          change_assignee=body.changeAssignee)
-    notices = [tk.post_notice(s, ws, tk.assigned_text(s, ws, task, mem))] if task.assignee_id != previous_assignee else []
+                          change_assignee=body.changeAssignee, due_at=body.dueAt, change_due=body.changeDueAt)
+    notices = ([tk.post_notice(s, ws, tk.assigned_text(s, ws, task, mem, previous_assignee))]
+               if task.assignee_id != previous_assignee else [])
     _commit_with_notices(s, notices)
     return tk.task_out(s, task)
 
@@ -68,8 +74,32 @@ def claim_task(ws_id: str, number: int, user: m.User = Depends(current_user), s:
     return tk.task_out(s, task)
 
 
+@router.post("/{number}/release")
+def release_task(ws_id: str, number: int, user: m.User = Depends(current_user), s: Session = Depends(db)) -> dict:
+    """"Bỏ nhận": the assignee hands the task back to "Cần làm"; the team sees it in #chung."""
+    ws, mem = require_member(s, ws_id, user)
+    task = tk.release_task(ws, mem, tk.get_task(s, ws, number))
+    _commit_with_notices(s, [tk.post_notice(s, ws, tk.assigned_text(s, ws, task, mem, previous_assignee=user.id))])
+    return tk.task_out(s, task)
+
+
+class TaskLock(BaseModel):
+    locked: bool
+
+
+@router.put("/{number}/lock")
+def update_task_lock(ws_id: str, number: int, body: TaskLock, user: m.User = Depends(current_user),
+                     s: Session = Depends(db)) -> dict:
+    """The owner locks or unlocks one task; every change is announced in #chung."""
+    ws, mem = require_member(s, ws_id, user)
+    task = tk.get_task(s, ws, number)
+    notices = [tk.post_notice(s, ws, tk.task_lock_text(s, ws, mem, task))] if tk.update_task_lock(mem, task, body.locked) else []
+    _commit_with_notices(s, notices)
+    return tk.task_out(s, task)
+
+
 class StatusChange(BaseModel):
-    status: Literal["doing", "done"]
+    status: Literal["todo", "doing", "done"]
 
 
 @router.put("/{number}/status")

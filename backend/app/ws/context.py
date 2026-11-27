@@ -325,7 +325,10 @@ def render_system_blocks(user_name: str, agent_label: str, ctx: dict | None, *,
     def task_line(t: dict) -> str:
         parent = f" (thuộc {tk.label(t['parentNumber'])})" if t.get("parentNumber") else ""
         holder = t["assigneeName"] or "chưa có người phụ trách"
-        return f"- {tk.label(t['number'])}{parent}: {t['body']} (phụ trách: {holder})"
+        due = ""
+        if t.get("dueAt"):
+            due = f", hạn {t['dueAt'][:16].replace('T', ' ')} UTC" + (", đã quá hạn" if t.get("isOverdue") else "")
+        return f"- {tk.label(t['number'])}{parent}: {t['body']} (phụ trách: {holder}{due})"
 
     tasks = "\n".join(task_line(t) for t in ctx.get("tasks", [])) or "(chưa có việc nào)"
     parts.append("## Bảng phân công: việc đang làm và việc chưa có người phụ trách\n" + tasks)

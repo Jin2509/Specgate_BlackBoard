@@ -70,6 +70,7 @@ def _create_or_update(s: Session, ws: m.Workspace, user: m.User, via: str, code:
         req = m.JoinRequest(workspace_id=ws.id, user_id=user.id, via=via, code=code, message=message or "")
         s.add(req)
     s.commit()
+    sv.publish_join_request(s, req)
     return req
 
 
@@ -143,6 +144,7 @@ def _cancel(req_id: str, user: m.User, s: Session) -> dict:
         raise ApiError(409, "Yêu cầu này không còn chờ duyệt.", "NOT_PENDING")
     req.status, req.decided_at = "cancelled", m.now()
     s.commit()
+    sv.publish_join_request(s, req)
     return sv.join_request_out(s, req)
 
 
@@ -173,6 +175,9 @@ def _decide(req_id: str, approve: bool, user: m.User, s: Session) -> dict:
         s.add(m.Member(workspace_id=req.workspace_id, user_id=req.user_id, role="member", nickname=nickname,
                        needs_nickname=needs, color=sv.free_color(s, req.workspace_id)))
     s.commit()
+    sv.publish_join_request(s, req)
+    if approve:
+        sv.publish_membership(req.workspace_id, req.user_id)
     return sv.join_request_out(s, req)
 
 

@@ -14,7 +14,8 @@ def _default_sql(col) -> str:
     if isinstance(col.type, Boolean):
         # Existing rows take the column's own default (Turn.active must be true for turns written before versions).
         arg = getattr(col.default, "arg", None)
-        return " DEFAULT 1" if arg is True else " DEFAULT 0"
+        # TRUE/FALSE, not 1/0: Postgres refuses an integer default on a boolean column; SQLite accepts both.
+        return " DEFAULT TRUE" if arg is True else " DEFAULT FALSE"
     if isinstance(col.type, Integer) and not col.nullable:
         return " DEFAULT 0"
     return ""
@@ -60,3 +61,15 @@ def fix_member_colors(session) -> int:
             used.add(x.color)
     session.commit()
     return changed
+
+
+def start_unclaimed_tasks_as_todo(session) -> int:
+    """Tasks written before the "Cần làm" column were all "doing"; those nobody holds have not started."""
+    from sqlalchemy import update
+
+    from app.ws import models as m
+
+    result = session.execute(update(m.Task).where(m.Task.status == "doing", m.Task.assignee_id.is_(None))
+                             .values(status="todo"))
+    session.commit()
+    return result.rowcount or 0
