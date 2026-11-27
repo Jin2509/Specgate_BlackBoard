@@ -2,3 +2,6 @@
 node_modules
 pnpm-lock.yaml
 next-env.d.ts
+# Third-party agent skills installed by the skills CLI; not project code.
+.agents
+skills-lock.json
