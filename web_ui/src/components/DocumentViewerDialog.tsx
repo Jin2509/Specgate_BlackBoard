@@ -7,6 +7,7 @@ import { Markdown } from "@/components/Markdown";
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
 import { format, t } from "@/lib/i18n";
+import { downloadTextFile } from "@/utils/download-text-file";
 
 const MARKDOWN_MEDIA_TYPE = "text/markdown;charset=utf-8";
 const ORIGINAL_EXTENSION = /\.(pdf|docx)$/i;
@@ -16,12 +17,7 @@ function toMarkdownFileName(fileName: string): string {
 }
 
 function downloadMarkdown(fileName: string, markdown: string): void {
-  const url = URL.createObjectURL(new Blob([markdown], { type: MARKDOWN_MEDIA_TYPE }));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = toMarkdownFileName(fileName);
-  link.click();
-  URL.revokeObjectURL(url);
+  downloadTextFile(toMarkdownFileName(fileName), markdown, MARKDOWN_MEDIA_TYPE);
 }
 
 export function DocumentViewerDialog({

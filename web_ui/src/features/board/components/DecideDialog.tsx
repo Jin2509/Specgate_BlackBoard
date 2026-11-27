@@ -99,7 +99,7 @@ export function DecideDialog({
 
         <p className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <SquareTerminal className="size-3.5" /> {t.board.equivalentCommand}
-          <code className="truncate rounded bg-input px-1.5 py-0.5 font-mono text-[11.5px] text-muted-foreground">
+          <code className="truncate rounded bg-input px-1.5 py-0.5 font-mono text-[0.71875rem] text-muted-foreground">
             {toDecideCommand(card.number, decision, reason)}
           </code>
         </p>

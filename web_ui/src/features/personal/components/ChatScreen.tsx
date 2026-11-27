@@ -1,6 +1,6 @@
 "use client";
 // Chats privately with the user's agent: streamed Markdown answers with stop and regenerate, and selection to highlight.
-import { LoaderCircle, Paperclip, SendHorizontal, Square } from "lucide-react";
+import { FileText, LoaderCircle, SendHorizontal, Square } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
@@ -18,6 +18,7 @@ import type { ConversationDocument, Turn } from "@/types/conversation";
 import { cn } from "@/utils/cn";
 import { toContentWidthClassName } from "@/utils/content-width";
 import { toClock } from "@/utils/date-format";
+import { isImeComposing } from "@/utils/ime-composition";
 
 import { ChatEmptyState } from "./ChatEmptyState";
 import { ChatSelectionBar, type SelectionTip } from "./ChatSelectionBar";
@@ -38,6 +39,8 @@ const TIP_HALF_WIDTH_PX = 150;
 const TIP_MAX_RIGHT_PX = 320;
 const TIP_MIN_LEFT_PX = 8;
 const STOPPED_TURN_PREFIX = "stopped-";
+/** The newest turns fill the first screen and render at once; older answers wait until scrolled near. */
+const EAGER_TURN_COUNT = 6;
 const DOCUMENT_ACCEPT = ".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
 function isAbortError(error: unknown): boolean {
@@ -227,10 +230,11 @@ export function ChatScreen({
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
-    if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
-      event.preventDefault();
-      event.currentTarget.form?.requestSubmit();
-    }
+    if (event.key !== "Enter" || event.shiftKey) return;
+    event.preventDefault();
+    // The Enter that confirms a word in Telex or VNI must not send the question.
+    if (isImeComposing(event.nativeEvent)) return;
+    event.currentTarget.form?.requestSubmit();
   }
 
   /** A selection inside one saved turn (an answer or the user's own question) shows the highlight bar. */
@@ -292,12 +296,13 @@ export function ChatScreen({
         <div className={cn(toContentWidthClassName("reading"), "flex min-h-full flex-col px-4 pt-8 pb-6 sm:px-8")}>
           {turns.length === 0 && !askedText ? <ChatEmptyState model={model} /> : null}
           <ol className="space-y-7">
-            {turns.map((turn) => {
+            {turns.map((turn, index) => {
               const isStopped = turn.id.startsWith(STOPPED_TURN_PREFIX);
               return (
                 <ChatTurnRow
                   key={turn.id}
                   turn={turn}
+                  isDeferred={index < turns.length - EAGER_TURN_COUNT}
                   isLocal={isStopped}
                   canRegenerate={!isBusy && turn.id === lastAnswer?.id && !isStopped}
                   onRegenerate={() =>
@@ -313,7 +318,7 @@ export function ChatScreen({
               ) : (
                 <li className="grid grid-cols-[8.5rem_minmax(0,1fr)] gap-4 @max-xl:grid-cols-1 @max-xl:gap-1">
                   <span className="truncate pt-0.5 font-mono text-xs text-agent">{model}</span>
-                  <span className="text-[15px] text-subtle">
+                  <span className="text-[0.9375rem] text-subtle">
                     {t.personal.answering}
                     <span className="stream-caret" aria-hidden />
                   </span>
@@ -334,7 +339,7 @@ export function ChatScreen({
 
       <div className={cn(toContentWidthClassName("reading"), "px-4 pb-3 sm:px-8")}>
         {savedNotice ? (
-          <p role="status" className="mb-2 text-[13px] text-muted-foreground">
+          <p role="status" className="mb-2 text-[0.8125rem] text-muted-foreground">
             {savedNotice}{" "}
             <Link href={`${home}/highlights`} className="text-primary-strong underline-offset-2 hover:underline">
               {t.personal.openList}
@@ -364,7 +369,7 @@ export function ChatScreen({
             onChange={(event) => setQuestion(event.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={format(t.personal.askPlaceholder, { model })}
-            className="block max-h-48 min-h-14 w-full resize-none bg-transparent px-3 pt-3 text-[15px] leading-relaxed text-foreground outline-none placeholder:text-subtle"
+            className="block field-sizing-content max-h-48 min-h-14 w-full resize-none overflow-y-auto bg-transparent px-3 pt-3 text-[0.9375rem] leading-relaxed text-foreground outline-none placeholder:text-subtle"
           />
           <div className="flex items-center gap-2 px-2 pb-2">
             <input
@@ -382,9 +387,10 @@ export function ChatScreen({
               title={t.personal.attachDocument}
               disabled={isBusy}
               onClick={() => fileInputRef.current?.click()}
-              className="inline-flex size-8 shrink-0 items-center justify-center rounded-md text-subtle hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:opacity-35"
+              className="inline-flex h-8 shrink-0 items-center gap-1.5 rounded-md border border-border px-2 text-xs font-medium text-muted-foreground hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none disabled:opacity-35"
             >
-              {isUploading ? <LoaderCircle className="size-4 animate-spin" /> : <Paperclip className="size-4" />}
+              {isUploading ? <LoaderCircle className="size-4 animate-spin" /> : <FileText className="size-4" />}
+              <span className="max-sm:sr-only">{t.personal.attachDocumentShort}</span>
             </button>
             {!conversationId && linkOptions.length > 0 ? (
               <NewChatContextSelect value={newLinkId} onChange={setNewLinkId} options={linkOptions} />
@@ -396,7 +402,7 @@ export function ChatScreen({
                 aria-label={t.personal.stop}
                 title={t.personal.stopTitle}
                 onClick={() => abortRef.current?.abort()}
-                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border px-2.5 text-[13px] font-medium text-foreground hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border px-2.5 text-[0.8125rem] font-medium text-foreground hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
               >
                 <Square className="size-3.5 fill-current" /> {t.personal.stop}
               </button>

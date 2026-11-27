@@ -33,7 +33,7 @@ export function HighlightPicker({
   return (
     <div className="absolute bottom-full left-4 z-20 mb-1 w-[min(34rem,calc(100%-2rem))] rounded-lg bg-card p-2 shadow-float">
       <div className="flex items-center gap-1.5 px-1 pb-2">
-        <p className="text-[12.5px] font-semibold text-subtle">{t.channel.myHighlights}</p>
+        <p className="text-[0.78125rem] font-semibold text-subtle">{t.channel.myHighlights}</p>
         {HIGHLIGHT_COLORS.map((option) => (
           <button
             key={option.value}
@@ -55,7 +55,7 @@ export function HighlightPicker({
           onChange={(event) => setQuery(event.target.value)}
           onKeyDown={(event) => (event.key === "Escape" ? onClose() : null)}
           placeholder={t.channel.searchPlaceholder}
-          className="ml-1 h-7 min-w-0 flex-1 rounded-md border border-border bg-input px-2 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="ml-1 h-7 min-w-0 flex-1 rounded-md border border-border bg-input px-2 text-[0.8125rem] outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
         <button type="button" aria-label={t.common.close} onClick={onClose} className="rounded p-1 text-subtle hover:bg-hover">
           <X className="size-4" />
@@ -80,7 +80,7 @@ export function HighlightPicker({
                   className="mt-1.5 size-2.5 shrink-0 rounded-full"
                   style={{ backgroundColor: `var(--hl-${highlight.color}-solid)` }}
                 />
-                <span className="min-w-0 flex-1 text-[13px]">
+                <span className="min-w-0 flex-1 text-[0.8125rem]">
                   <span className="flex items-center gap-1.5 text-xs text-subtle">
                     {highlight.kind !== "passage" ? <ListCollapse className="size-3" /> : null}
                     {highlight.kind === "summary" ? t.channel.summaryKind : highlight.speaker} · {highlight.conversationTitle}
@@ -93,7 +93,7 @@ export function HighlightPicker({
           );
         })}
         {visibleHighlights.length === 0 ? (
-          <li className="px-2 py-3 text-center text-[13px] text-subtle">
+          <li className="px-2 py-3 text-center text-[0.8125rem] text-subtle">
             {highlights.length === 0 ? t.channel.noPrivateHighlights : t.channel.noMatch}
           </li>
         ) : null}

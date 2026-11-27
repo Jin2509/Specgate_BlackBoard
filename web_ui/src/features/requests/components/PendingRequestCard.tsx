@@ -32,7 +32,7 @@ export function PendingRequestCard({ joinRequest }: { joinRequest: JoinRequest }
             )}
           </p>
           {joinRequest.message ? (
-            <p className="text-[13px] text-muted-foreground italic">&ldquo;{joinRequest.message}&rdquo;</p>
+            <p className="text-[0.8125rem] text-muted-foreground italic">&ldquo;{joinRequest.message}&rdquo;</p>
           ) : null}
         </div>
         <form action={updateJoinRequest} className="ml-auto flex gap-2">

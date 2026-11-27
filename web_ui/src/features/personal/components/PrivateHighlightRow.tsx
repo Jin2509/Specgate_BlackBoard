@@ -130,7 +130,7 @@ export function PrivateHighlightRow({
                   maxLength={NOTE_MAX_LENGTH}
                   onChange={(event) => setNote(event.target.value)}
                   placeholder={t.privateHighlights.note}
-                  className="h-8 min-w-40 flex-1 rounded-md border border-border bg-input px-2 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="h-8 min-w-40 flex-1 rounded-md border border-border bg-input px-2 text-[0.8125rem] outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
                 <Button size="sm" disabled={isPending} onClick={handleSave}>
                   <Check /> {t.common.save}
@@ -141,7 +141,7 @@ export function PrivateHighlightRow({
               </div>
             </div>
           ) : (
-            <p className={cn("mt-1.5 text-[14.5px] leading-relaxed whitespace-pre-line", isSummary && "line-clamp-[10]")}>
+            <p className={cn("mt-1.5 text-[0.90625rem] leading-relaxed whitespace-pre-line", isSummary && "line-clamp-[10]")}>
               {item.text}
             </p>
           )}

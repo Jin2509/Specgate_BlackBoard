@@ -16,7 +16,7 @@ import { PROVIDER_DETAILS } from "../utils/auth-providers";
 
 const DISPLAY_NAME_MAX_LENGTH = 40;
 const CODE_MAX_LENGTH = 6;
-const LABEL_CLASS = "text-[13px] font-semibold text-muted-foreground";
+const LABEL_CLASS = "text-[0.8125rem] font-semibold text-muted-foreground";
 
 export function SignUpForm({ provider }: { provider: AuthProvider }) {
   const [state, formAction, isPending] = useActionState<SignUpState, FormData>(signUp, { step: "details" });

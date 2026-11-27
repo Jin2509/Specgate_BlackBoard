@@ -16,7 +16,7 @@ export function BriefSection({
 }) {
   return (
     <section>
-      <h3 className={cn("mb-3 flex items-center gap-1.5 text-[13px] font-semibold [&_svg]:size-4", toneClassName)}>
+      <h3 className={cn("mb-3 flex items-center gap-1.5 text-[0.8125rem] font-semibold [&_svg]:size-4", toneClassName)}>
         {icon}
         {title}
       </h3>

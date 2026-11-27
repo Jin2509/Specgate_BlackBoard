@@ -28,7 +28,7 @@ export function ModelPicker({ models, value }: { models: string[]; value: string
 
   return (
     <div className="flex flex-wrap items-center justify-between gap-2">
-      <label htmlFor="model" className="text-[13px] font-medium text-muted-foreground">
+      <label htmlFor="model" className="text-[0.8125rem] font-medium text-muted-foreground">
         {t.personal.model}
       </label>
       <Select

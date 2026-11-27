@@ -90,7 +90,7 @@ export function HighlightableList({
               <p
                 role="status"
                 style={{ top: tip.top, left: tip.left }}
-                className="absolute z-10 inline-flex h-8 items-center gap-1.5 rounded-md bg-card px-3 text-[13px] text-muted-foreground shadow-float"
+                className="absolute z-10 inline-flex h-8 items-center gap-1.5 rounded-md bg-card px-3 text-[0.8125rem] text-muted-foreground shadow-float"
               >
                 <Info className="size-4 text-subtle" /> {t.channel.ownSelectionNotice}
               </p>
@@ -112,7 +112,7 @@ export function HighlightableList({
         </div>
       </div>
       {savedNotice ? (
-        <p role="status" className="px-4 pb-1 text-[13px] text-muted-foreground">
+        <p role="status" className="px-4 pb-1 text-[0.8125rem] text-muted-foreground">
           {savedNotice}
         </p>
       ) : null}

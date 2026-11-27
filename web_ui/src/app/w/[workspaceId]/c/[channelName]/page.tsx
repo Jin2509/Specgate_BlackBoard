@@ -1,9 +1,8 @@
-// Shows a shared workspace channel with the idea board beside it; new messages arrive over the backend's event stream.
+// Shows a shared workspace channel with the idea board beside it; new messages arrive over the realtime WebSocket.
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 
-import { AutoRefresh } from "@/components/AutoRefresh";
 import { requireMe } from "@/features/auth/server";
 import { BoardPanel, toBoardCards } from "@/features/board";
 import { getBoard } from "@/features/board/server";
@@ -17,8 +16,6 @@ import { format, t } from "@/lib/i18n";
 import { startEarly } from "@/utils/start-early";
 
 const NOT_FOUND_STATUS = 404;
-/** Fallback refresh in case the event stream cannot be opened. */
-const FALLBACK_REFRESH_MS = 30_000;
 
 export const metadata: Metadata = { title: t.workspace.channels };
 
@@ -62,7 +59,6 @@ async function ChannelPageContent({ params }: PageProps<"/w/[workspaceId]/c/[cha
       panel={<BoardPanel workspaceId={workspace.id} cards={toBoardCards(board)} />}
     >
       <ChannelLive workspaceId={workspace.id} channelId={channel.id} lastSeq={page.lastSeq} />
-      <AutoRefresh intervalMs={FALLBACK_REFRESH_MS} />
       <MessageList
         messages={page.messages}
         workspaceId={workspace.id}

@@ -10,8 +10,8 @@ import { toDayClock } from "@/utils/date-format";
 export function ProcessedRequestsTable({ joinRequests }: { joinRequests: JoinRequest[] }) {
   return (
     <Panel title={t.requests.processed} icon={<History />}>
-      {joinRequests.length === 0 ? <p className="py-2 text-[13px] text-subtle">{t.requests.noProcessed}</p> : null}
-      <table hidden={joinRequests.length === 0} className="w-full text-[13px]">
+      {joinRequests.length === 0 ? <p className="py-2 text-[0.8125rem] text-subtle">{t.requests.noProcessed}</p> : null}
+      <table hidden={joinRequests.length === 0} className="w-full text-[0.8125rem]">
         <thead>
           <tr className="border-b text-left text-xs text-subtle">
             <th className="py-2 font-normal">{t.requests.columnRequester}</th>

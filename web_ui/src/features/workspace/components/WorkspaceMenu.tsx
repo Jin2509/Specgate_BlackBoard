@@ -38,11 +38,11 @@ export function WorkspaceMenu({
     <>
       <DropdownMenu>
         <DropdownMenuTrigger className="flex h-12 w-full shrink-0 items-center gap-2 border-b border-sidebar-border px-4 text-left transition-colors outline-none hover:bg-hover data-[state=open]:bg-hover">
-          <span className="min-w-0 flex-1 truncate text-[15px] font-semibold text-sidebar-accent-foreground">
+          <span className="min-w-0 flex-1 truncate text-[0.9375rem] font-semibold text-sidebar-accent-foreground">
             {workspace.name}
           </span>
           {isOwner && pendingRequestCount > 0 ? (
-            <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[11px] font-bold text-primary-foreground">
+            <span className="flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[0.6875rem] font-bold text-primary-foreground">
               {pendingRequestCount}
             </span>
           ) : null}
@@ -76,7 +76,7 @@ export function WorkspaceMenu({
               <Link href={`${basePath}/requests`}>
                 {t.workspace.joinRequests}
                 {pendingRequestCount > 0 ? (
-                  <span className="ml-auto rounded-full bg-destructive px-1.5 text-[11px] font-bold text-primary-foreground">
+                  <span className="ml-auto rounded-full bg-destructive px-1.5 text-[0.6875rem] font-bold text-primary-foreground">
                     {pendingRequestCount}
                   </span>
                 ) : (

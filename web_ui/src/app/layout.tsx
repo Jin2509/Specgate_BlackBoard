@@ -28,6 +28,8 @@ export const metadata: Metadata = {
     template: `%s · ${t.common.appTitle}`,
   },
   description: t.common.appDescription,
+  // Lets supporting browsers scale rem-based text with the OS font size; others keep the 16px default.
+  other: { "text-scale": "scale" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

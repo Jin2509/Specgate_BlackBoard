@@ -44,7 +44,7 @@ function TimelineEntry({ item, workspaceId }: { item: TimelineItem; workspaceId:
   if (item.kind === "own") {
     return (
       <li className="text-muted-foreground">
-        <p className="text-[11px] text-subtle">
+        <p className="text-[0.6875rem] text-subtle">
           {toDayClock(item.at)} · #{item.channelName}
           {item.replyTo ? format(t.personal.replyTo, { speaker: item.replyTo.speaker }) : ""}
           {item.fromDigest ? t.personal.fromDigest : ""}
@@ -56,7 +56,7 @@ function TimelineEntry({ item, workspaceId }: { item: TimelineItem; workspaceId:
   if (item.kind === "digest") {
     return (
       <li className="rounded-md border border-dashed border-border p-2 text-muted-foreground">
-        <p className="text-[11px] font-medium text-subtle">
+        <p className="text-[0.6875rem] font-medium text-subtle">
           {format(t.personal.digestBlock, { title: item.title, count: item.count })}
         </p>
         <p className="mt-0.5 line-clamp-4 whitespace-pre-line">{item.text}</p>

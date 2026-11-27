@@ -77,7 +77,7 @@ export function ChatSelectionBar({
             setIsSaving(false);
             if (failureMessage) showErrorToast(failureMessage);
           }}
-          className="ml-auto inline-flex h-7 items-center rounded-md bg-primary px-2.5 text-[13px] font-medium text-primary-foreground disabled:opacity-50"
+          className="ml-auto inline-flex h-7 items-center rounded-md bg-primary px-2.5 text-[0.8125rem] font-medium text-primary-foreground disabled:opacity-50"
         >
           {isSaving ? <LoaderCircle className="size-3.5 animate-spin" /> : t.common.save}
         </button>
@@ -92,7 +92,7 @@ export function ChatSelectionBar({
           maxLength={NOTE_MAX_LENGTH}
           onChange={(event) => setNote(event.target.value)}
           placeholder={t.personal.notePlaceholder}
-          className="mt-2 h-8 w-full rounded-md border border-border bg-input px-2 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="mt-2 h-8 w-full rounded-md border border-border bg-input px-2 text-[0.8125rem] outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
       ) : null}
     </div>

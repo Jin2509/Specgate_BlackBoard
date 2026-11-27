@@ -4,7 +4,7 @@ import { toAvatarColor } from "@/utils/avatar-color";
 import { cn } from "@/utils/cn";
 
 const SIZE_CLASSES = {
-  xs: "size-5 text-[10px]",
+  xs: "size-5 text-[0.625rem]",
   sm: "size-8 text-xs",
   md: "size-10 text-sm",
   lg: "size-20 text-2xl",

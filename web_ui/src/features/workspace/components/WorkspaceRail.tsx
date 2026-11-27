@@ -57,7 +57,7 @@ export function WorkspaceRail({
 
         <div className="w-full px-3 pt-1">
           <div aria-hidden className="h-px bg-rail-foreground/25" />
-          <p className="mt-2 text-center text-[11px] font-semibold text-rail-foreground/75">{t.workspace.sharedGroup}</p>
+          <p className="mt-2 text-center text-[0.6875rem] font-semibold text-rail-foreground/75">{t.workspace.sharedGroup}</p>
         </div>
 
         {workspaces.map((workspace) => (
@@ -89,7 +89,7 @@ export function WorkspaceRail({
         ))}
 
         {workspaces.length === 0 && pendingJoins.length === 0 ? (
-          <p className="px-2 text-center text-[11px] leading-snug text-rail-foreground/70">{t.workspace.noShared}</p>
+          <p className="px-2 text-center text-[0.6875rem] leading-snug text-rail-foreground/70">{t.workspace.noShared}</p>
         ) : null}
       </div>
 
@@ -149,7 +149,7 @@ function RailTile({
           />
           <span
             className={cn(
-              "relative flex size-11 items-center justify-center rounded-xl text-[14px] font-semibold transition-colors group-focus-visible:ring-2 group-focus-visible:ring-rail-foreground",
+              "relative flex size-11 items-center justify-center rounded-xl text-[0.875rem] font-semibold transition-colors group-focus-visible:ring-2 group-focus-visible:ring-rail-foreground",
               isActive
                 ? "bg-rail-active text-rail-active-foreground shadow-sm"
                 : isPending
@@ -161,7 +161,7 @@ function RailTile({
           </span>
           <span
             className={cn(
-              "w-full truncate text-center text-[11px] leading-tight",
+              "w-full truncate text-center text-[0.6875rem] leading-tight",
               isActive ? "font-semibold text-rail-foreground" : "text-rail-foreground/80 group-hover:text-rail-foreground",
             )}
           >
@@ -197,7 +197,7 @@ function RailBadges({ workspace }: { workspace: RailWorkspace }) {
       {pendingCount > 0 ? (
         <span
           aria-label={format(t.workspace.pendingCount, { count: pendingCount })}
-          className="tabular absolute -right-1.5 -bottom-1 flex h-4.5 min-w-4.5 items-center justify-center rounded-full border-2 border-rail bg-destructive px-1 text-[10px] font-bold text-primary-foreground"
+          className="tabular absolute -right-1.5 -bottom-1 flex h-4.5 min-w-4.5 items-center justify-center rounded-full border-2 border-rail bg-destructive px-1 text-[0.625rem] font-bold text-primary-foreground"
         >
           {pendingCount}
         </span>
@@ -222,7 +222,7 @@ function RailAction({
   children: ReactNode;
 }) {
   const className = cn(
-    "flex w-full flex-col items-center gap-0.5 rounded-lg py-1.5 text-[11px] leading-tight transition-colors outline-none focus-visible:ring-2 focus-visible:ring-rail-foreground",
+    "flex w-full flex-col items-center gap-0.5 rounded-lg py-1.5 text-[0.6875rem] leading-tight transition-colors outline-none focus-visible:ring-2 focus-visible:ring-rail-foreground",
     isActive
       ? "bg-rail-tile font-semibold text-rail-foreground"
       : "text-rail-foreground/85 hover:bg-rail-tile hover:text-rail-foreground",

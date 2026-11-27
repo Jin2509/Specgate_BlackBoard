@@ -32,15 +32,9 @@ export function PersonalSidebar({
   return (
     <aside className="flex w-60 shrink-0 flex-col border-r border-sidebar-border bg-sidebar">
       <div className="flex h-12 shrink-0 items-center gap-2 border-b border-sidebar-border px-4">
-        <h2 className="flex-1 truncate text-[15px] font-semibold text-sidebar-accent-foreground">{t.personal.sidebarTitle}</h2>
-        <Link
-          href={home}
-          aria-label={t.personal.newConversation}
-          title={t.personal.newConversation}
-          className="rounded p-1 text-subtle hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
-        >
-          <SquarePen className="size-4.5" />
-        </Link>
+        <h2 className="flex-1 truncate text-[0.9375rem] font-semibold text-sidebar-accent-foreground">
+          {t.personal.sidebarTitle}
+        </h2>
       </div>
 
       <div className="flex-1 scrollbar-thin overflow-y-auto px-2 pb-3">
@@ -63,17 +57,29 @@ export function PersonalSidebar({
             {providerKey ? <Bot className="size-4" /> : <KeyRound className="size-4" />}
           </span>
           <span className="min-w-0 flex-1 leading-tight">
-            <span className="block text-[11px] font-medium tracking-wide text-subtle uppercase">
+            <span className="block text-[0.6875rem] font-medium tracking-wide text-subtle uppercase">
               {providerKey ? t.personal.yourAgent : t.personal.noApiKey}
             </span>
-            <span className="block truncate text-[13px] text-foreground">
+            <span className="block truncate text-[0.8125rem] text-foreground">
               {providerKey ? <span className="font-mono">{providerKey.model}</span> : t.personal.enterKeyToStart}
             </span>
           </span>
           <ChevronRight className="size-4 shrink-0 text-subtle transition-transform group-hover/agent:translate-x-0.5" />
         </Link>
 
-        <NavGroup label={t.personal.conversations}>
+        <NavGroup
+          label={t.personal.conversations}
+          action={
+            <Link
+              href={home}
+              aria-label={t.personal.newConversation}
+              title={t.personal.newConversation}
+              className="rounded p-0.5 text-subtle hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            >
+              <SquarePen className="size-4" />
+            </Link>
+          }
+        >
           {conversations.map((conversation) => (
             <NavItem
               key={conversation.id}

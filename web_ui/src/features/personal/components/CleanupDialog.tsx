@@ -3,11 +3,11 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import { FormAlert } from "@/components/FormAlert";
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
 import { Select } from "@/components/ui/Select";
 import { format, t } from "@/lib/i18n";
-import { showErrorToast } from "@/stores/toast-store";
 import type { HighlightColor } from "@/types/conversation";
 import { HIGHLIGHT_COLORS } from "@/utils/highlight-colors";
 
@@ -23,6 +23,7 @@ export function CleanupDialog({
   conversations: Array<{ id: string; title: string }>;
 }) {
   const router = useRouter();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [color, setColor] = useState<HighlightColor | "">("");
   const [conversationId, setConversationId] = useState("");
   const [isSentOnly, setIsSentOnly] = useState(false);
@@ -32,12 +33,13 @@ export function CleanupDialog({
 
   function handleDelete() {
     startTransition(async () => {
+      setErrorMessage(null);
       const outcome = await deletePrivateHighlights({
         color: color || undefined,
         conversationId: conversationId || undefined,
         sentOnly: isSentOnly,
       });
-      if (!outcome.ok) return showErrorToast(outcome.error);
+      if (!outcome.ok) return setErrorMessage(outcome.error);
       setResultText(format(t.privateHighlights.cleanupDone, { deleted: outcome.value.deleted, total: outcome.value.total }));
       router.refresh();
     });
@@ -50,7 +52,7 @@ export function CleanupDialog({
           <DialogTitle>{t.privateHighlights.cleanupTitle}</DialogTitle>
           <DialogDescription>{t.privateHighlights.cleanupDescription}</DialogDescription>
         </DialogHeader>
-        <div className="grid gap-2 text-[13px]">
+        <div className="grid gap-2 text-[0.8125rem]">
           <Select
             aria-label={t.privateHighlights.color}
             size="lg"
@@ -85,6 +87,7 @@ export function CleanupDialog({
           </label>
         </div>
         {resultText ? <p className="text-sm text-muted-foreground">{resultText}</p> : null}
+        <FormAlert message={errorMessage} />
         <DialogFooter>
           <Button variant="secondary" onClick={() => onOpenChange(false)}>
             {t.common.close}

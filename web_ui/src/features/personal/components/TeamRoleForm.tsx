@@ -34,12 +34,12 @@ export function TeamRoleForm({ workspaceId, teamRole }: { workspaceId: string; t
         onChange={(event) => setValue(event.target.value)}
         placeholder={t.personal.teamRolePlaceholder}
         maxLength={TEAM_ROLE_MAX_LENGTH}
-        className="h-8 min-w-0 flex-1 rounded-md border border-border bg-input px-2 text-[13px] text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="h-8 min-w-0 flex-1 rounded-md border border-border bg-input px-2 text-[0.8125rem] text-foreground outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
       <button
         type="submit"
         disabled={isPending}
-        className="h-8 rounded-md border border-border px-2.5 text-[13px] font-medium text-muted-foreground hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+        className="h-8 rounded-md border border-border px-2.5 text-[0.8125rem] font-medium text-muted-foreground hover:bg-hover hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
       >
         {t.common.save}
       </button>

@@ -11,6 +11,7 @@ import { showErrorToast } from "@/stores/toast-store";
 import type { PrivateHighlight } from "@/types/conversation";
 import type { Profile } from "@/types/profile";
 import { cn } from "@/utils/cn";
+import { isImeComposing } from "@/utils/ime-composition";
 
 import { ChannelDocumentButton } from "./ChannelDocumentButton";
 import { HighlightPicker } from "./HighlightPicker";
@@ -114,6 +115,8 @@ export function Composer({
       event.preventDefault();
       setActiveIndex((index) => (index - 1 + items.length) % items.length);
     } else if (event.key === "Enter" || event.key === "Tab") {
+      // While Telex or VNI is composing, Enter confirms the word; it must not pick a suggestion.
+      if (isImeComposing(event.nativeEvent)) return;
       event.preventDefault();
       insertSuggestion(items[Math.min(activeIndex, items.length - 1)]);
     } else if (event.key === "Escape") {
@@ -167,7 +170,7 @@ export function Composer({
                 key={highlight.id}
                 className="flex items-start gap-2 rounded-md border-l-[3px] border-agent-line bg-muted px-2 py-1.5"
               >
-                <div className="min-w-0 flex-1 text-[13px]">
+                <div className="min-w-0 flex-1 text-[0.8125rem]">
                   <p className="text-xs font-medium text-agent">{toQuoteHeading(highlight, myName)}</p>
                   <p className="line-clamp-2 text-muted-foreground">{highlight.text}</p>
                 </div>
@@ -196,7 +199,7 @@ export function Composer({
             placeholder={
               quoteIds.length ? t.channel.placeholderWithQuotes : format(t.channel.placeholder, { channel: channelName })
             }
-            className="h-11 min-w-0 flex-1 bg-transparent text-[15px] text-foreground outline-none placeholder:text-subtle"
+            className="h-11 min-w-0 flex-1 bg-transparent text-[0.9375rem] text-foreground outline-none placeholder:text-subtle"
             aria-label={t.channel.messageLabel}
             autoComplete="off"
           />
@@ -221,7 +224,7 @@ export function Composer({
         </div>
       </div>
       {state.code === ALREADY_SENT_CODE && quoteIds.length ? (
-        <p role="alert" className="mt-1 flex flex-wrap items-center gap-2 px-1 text-[12.5px] text-proposed">
+        <p role="alert" className="mt-1 flex flex-wrap items-center gap-2 px-1 text-[0.78125rem] text-proposed">
           {state.error}
           <button
             type="submit"
@@ -233,7 +236,7 @@ export function Composer({
           </button>
         </p>
       ) : (
-        <p className="mt-1 px-1 text-[11.5px] text-subtle">{!isOnline ? t.channel.offline : t.channel.composerHint}</p>
+        <p className="mt-1 px-1 text-[0.71875rem] text-subtle">{!isOnline ? t.channel.offline : t.channel.composerHint}</p>
       )}
     </form>
   );

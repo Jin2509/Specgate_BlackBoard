@@ -23,7 +23,7 @@ export function Panel({
       {title ? (
         <div className="flex items-center gap-2 px-4 pt-3 pb-2">
           {icon ? <span className="text-subtle [&_svg]:size-4">{icon}</span> : null}
-          <h2 className="text-[13px] font-semibold text-muted-foreground">{title}</h2>
+          <h2 className="text-[0.8125rem] font-semibold text-muted-foreground">{title}</h2>
           {actions ? <div className="ml-auto flex items-center gap-2">{actions}</div> : null}
         </div>
       ) : null}

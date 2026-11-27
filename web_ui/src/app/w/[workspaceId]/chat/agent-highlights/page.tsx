@@ -42,13 +42,13 @@ async function AgentHighlightsContent({ params }: PageProps<"/w/[workspaceId]/ch
       />
       <PageBody>
         <div className={toContentWidthClassName("reading")}>
-          <p className="text-[15px] leading-relaxed text-muted-foreground">
+          <p className="text-[0.9375rem] leading-relaxed text-muted-foreground">
             {format(t.personal.agentHighlightsIntro, { limit })}
           </p>
 
           {groups.map((group) => (
             <section key={group.workspaceId} className="mt-6">
-              <h2 className="flex items-center gap-2 text-[13px] font-semibold text-subtle">
+              <h2 className="flex items-center gap-2 text-[0.8125rem] font-semibold text-subtle">
                 <Link href={toSharedHomePath(group.workspaceId)} className="hover:text-foreground hover:underline">
                   {group.workspaceName ?? group.workspaceId}
                 </Link>

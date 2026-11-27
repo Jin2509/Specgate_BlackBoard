@@ -15,7 +15,7 @@ export interface SelectOption<T extends string = string> {
 
 const SIZE_CLASSES = {
   sm: "h-7 px-2 text-xs",
-  md: "h-8 px-2.5 text-[13px]",
+  md: "h-8 px-2.5 text-[0.8125rem]",
   lg: "h-9 px-3 text-sm",
 } as const;
 
@@ -88,7 +88,7 @@ export function Select<T extends string>({
               <SelectPrimitive.Item
                 key={option.value}
                 value={toMenuValue(option.value)}
-                className="relative flex cursor-pointer items-center rounded-md py-1.5 pr-8 pl-2.5 text-[13px] outline-none select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50"
+                className="relative flex cursor-pointer items-center rounded-md py-1.5 pr-8 pl-2.5 text-[0.8125rem] outline-none select-none data-highlighted:bg-accent data-highlighted:text-accent-foreground data-disabled:pointer-events-none data-disabled:opacity-50"
               >
                 <SelectPrimitive.ItemText>{option.label}</SelectPrimitive.ItemText>
                 <SelectPrimitive.ItemIndicator className="absolute right-2 inline-flex items-center">

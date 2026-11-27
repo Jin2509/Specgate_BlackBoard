@@ -29,17 +29,21 @@ export function AgentContextPanel({
   return (
     <aside className="flex w-full flex-col border-l border-sidebar-border bg-sidebar">
       <div className="flex h-12 shrink-0 items-center border-b border-sidebar-border px-4">
-        <h2 className="truncate text-[13px] font-semibold text-sidebar-accent-foreground">
+        <h2 className="truncate text-[0.8125rem] font-semibold text-sidebar-accent-foreground">
           {format(t.personal.contextHeading, { name: workspace.name })}
         </h2>
       </div>
-      <div className="flex-1 scrollbar-thin space-y-5 overflow-y-auto p-4 text-[13px]">
-        <ContextSection icon={<Users />} title={t.personal.myTeamRole}>
+      <div className="flex-1 scrollbar-thin space-y-5 overflow-y-auto p-4 text-[0.8125rem]">
+        <ContextSection icon={<Users />} title={t.personal.myTeamRole} isInitiallyOpen={false}>
           <TeamRoleForm workspaceId={workspace.id} teamRole={context.myTeamRole} />
           <p className="mt-1 text-xs text-subtle">{t.personal.teamRoleHint}</p>
         </ContextSection>
 
-        <ContextSection icon={<Users />} title={format(t.personal.members, { count: context.team.length })}>
+        <ContextSection
+          icon={<Users />}
+          title={format(t.personal.members, { count: context.team.length })}
+          isInitiallyOpen={false}
+        >
           <ul className="space-y-2">
             {context.team.map((member) => (
               <li key={member.user.id} className="flex items-start gap-2">
@@ -57,7 +61,7 @@ export function AgentContextPanel({
                     {member.user.id === userId ? <span className="text-subtle">{t.personal.youTag}</span> : null}
                     {member.teamRole ? <span className="text-muted-foreground">: {member.teamRole}</span> : null}
                   </p>
-                  <p className="truncate text-[11.5px] text-agent">
+                  <p className="truncate text-[0.71875rem] text-agent">
                     {member.agent ? (
                       <>
                         {member.agent.name} <span className="font-mono text-subtle">{member.agent.model}</span>
@@ -72,12 +76,14 @@ export function AgentContextPanel({
           </ul>
         </ContextSection>
 
-        <ContextSection icon={<ClipboardList />} title={t.personal.tasks}>
+        <ContextSection icon={<ClipboardList />} title={t.personal.tasks} isInitiallyOpen={false}>
           {context.tasks.length > 0 ? (
             <ul className="space-y-1">
               {context.tasks.map((task) => (
                 <li key={task.number} className="leading-snug text-foreground">
-                  <span className="font-mono text-[11.5px] text-subtle">{format(t.tasks.number, { number: task.number })}</span>{" "}
+                  <span className="font-mono text-[0.71875rem] text-subtle">
+                    {format(t.tasks.number, { number: task.number })}
+                  </span>{" "}
                   {task.parentNumber ? (
                     <span className="text-subtle">{format(t.tasks.partOf, { number: task.parentNumber })} </span>
                   ) : null}
@@ -85,6 +91,12 @@ export function AgentContextPanel({
                   <span className={task.assigneeName ? "text-muted-foreground" : "text-proposed"}>
                     ({task.assigneeName ?? t.tasks.unassigned})
                   </span>
+                  {task.dueAt ? (
+                    <span className={task.isOverdue ? "font-medium text-rejected" : "text-subtle"}>
+                      {" "}
+                      · {format(task.isOverdue ? t.tasks.dueOverdue : t.tasks.dueLater, { time: toDayClock(task.dueAt) })}
+                    </span>
+                  ) : null}
                 </li>
               ))}
             </ul>
@@ -94,7 +106,7 @@ export function AgentContextPanel({
           <p className="mt-1 text-xs text-subtle">{t.personal.tasksHint}</p>
         </ContextSection>
 
-        <ContextSection icon={<KanbanSquare />} title={t.personal.board}>
+        <ContextSection icon={<KanbanSquare />} title={t.personal.board} isInitiallyOpen={false}>
           <p className="text-muted-foreground">
             {format(t.personal.boardSummary, { decided: context.decided.length, rejected: context.rejected.length })}
           </p>

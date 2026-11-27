@@ -11,7 +11,7 @@ export function BoardFooter({ notes }: { notes: BoardCard[] }) {
       <Panel
         icon={<StickyNote />}
         title={t.board.notes}
-        bodyClassName="space-y-1.5 text-[13px] leading-relaxed text-muted-foreground"
+        bodyClassName="space-y-1.5 text-[0.8125rem] leading-relaxed text-muted-foreground"
       >
         {notes.map((note) => (
           <p key={note.id}>
@@ -24,7 +24,7 @@ export function BoardFooter({ notes }: { notes: BoardCard[] }) {
       <Panel
         icon={<ListCollapse />}
         title={t.board.channelSummary}
-        bodyClassName="text-[13px] leading-relaxed text-muted-foreground"
+        bodyClassName="text-[0.8125rem] leading-relaxed text-muted-foreground"
       >
         <p>{t.board.channelSummaryHint}</p>
       </Panel>

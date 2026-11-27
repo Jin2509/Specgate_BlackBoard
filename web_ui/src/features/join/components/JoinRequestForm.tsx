@@ -15,7 +15,10 @@ import { toSharedHomePath } from "@/utils/route-paths";
 import { createJoinRequest } from "../api/join-actions";
 
 export function JoinRequestForm({ target }: { target: ExploreCard }) {
-  const [message, setMessage] = useState("");
+  // Prefilled like a chat app's friend request: the owner gets a polite note even when the user changes nothing.
+  const [message, setMessage] = useState(
+    target.relation === "pending" ? "" : format(t.join.defaultMessage, { owner: target.ownerName, name: target.name }),
+  );
 
   if (target.relation === "member") {
     return (
@@ -32,19 +35,19 @@ export function JoinRequestForm({ target }: { target: ExploreCard }) {
     <form action={createJoinRequest} className="flex min-h-0 flex-col self-start rounded-lg bg-card p-4">
       <input type="hidden" name="workspaceId" value={target.id} />
       <h2 className="text-lg font-semibold text-sidebar-accent-foreground">{format(t.join.askToJoin, { name: target.name })}</h2>
-      <p className="mt-1 text-[13.5px] leading-relaxed text-muted-foreground">{target.brief}</p>
+      <p className="mt-1 text-[0.84375rem] leading-relaxed text-muted-foreground">{target.brief}</p>
       <p className="mt-1 text-xs text-subtle">{format(t.join.ownerLine, { name: target.ownerName })}</p>
       {target.relation === "pending" && target.pendingRequestId ? (
         <Link
           href={`/join/${target.pendingRequestId}`}
-          className="mt-3 flex items-center gap-2 rounded-md bg-proposed-soft px-3 py-2 text-[13px] text-foreground hover:underline"
+          className="mt-3 flex items-center gap-2 rounded-md bg-proposed-soft px-3 py-2 text-[0.8125rem] text-foreground hover:underline"
         >
           <Clock className="size-4 text-proposed" /> {t.join.pendingLink}
         </Link>
       ) : null}
 
       <div className="mt-4 grid gap-1.5">
-        <Label htmlFor="join-message" className="text-[13px] font-semibold text-muted-foreground">
+        <Label htmlFor="join-message" className="text-[0.8125rem] font-semibold text-muted-foreground">
           {t.join.messageLabel}
         </Label>
         <Textarea

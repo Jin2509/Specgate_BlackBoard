@@ -56,7 +56,7 @@ export function MemberList({
                 {member.agent ? (
                   <>
                     <p className="truncate text-xs font-medium text-agent">{member.agent.label}</p>
-                    <p className="truncate font-mono text-[11px] text-subtle">
+                    <p className="truncate font-mono text-[0.6875rem] text-subtle">
                       {member.agent.model} · {PROVIDER_LABELS[member.agent.provider]}
                     </p>
                   </>

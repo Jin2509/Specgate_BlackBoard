@@ -85,7 +85,7 @@ function CommandRow({
   return (
     <MenuRow isActive={isActive} onPick={() => onPick(suggestion)}>
       <Icon className="size-4 text-subtle" />
-      <code className="rounded bg-input px-1 font-mono text-[12px] text-sidebar-accent-foreground">
+      <code className="rounded bg-input px-1 font-mono text-[0.75rem] text-sidebar-accent-foreground">
         {suggestion.command.name}
       </code>
       <span className="ml-auto text-xs text-muted-foreground">{suggestion.command.description}</span>
@@ -94,7 +94,7 @@ function CommandRow({
 }
 
 function MenuLabel({ children }: { children: ReactNode }) {
-  return <p className="px-2 pt-1 pb-1.5 text-[12.5px] font-semibold text-subtle">{children}</p>;
+  return <p className="px-2 pt-1 pb-1.5 text-[0.78125rem] font-semibold text-subtle">{children}</p>;
 }
 
 function MenuRow({ isActive, onPick, children }: { isActive: boolean; onPick: () => void; children: ReactNode }) {

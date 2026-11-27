@@ -241,6 +241,11 @@
   .scrollbar-none {
     scrollbar-width: none;
   }
+  /* A long list row painted only when near the viewport; the remembered height keeps the scrollbar still. */
+  .render-when-visible {
+    content-visibility: auto;
+    contain-intrinsic-size: auto none auto 6rem;
+  }
   /* A highlighted passage: a marker stroke under the text, without changing the text colour. */
   .chalk-mark {
     background: linear-gradient(transparent 58%, var(--mark) 58%);
@@ -248,21 +253,37 @@
   }
 }
 
-/* Private highlights are painted with the CSS Custom Highlight API, leaving the rendered Markdown DOM untouched. */
+/* Private highlights are painted with the CSS Custom Highlight API, leaving the rendered Markdown DOM untouched.
+   The pale fill alone is too faint against the page, so a solid underline in the same colour marks the passage too. */
 ::highlight(hl-yellow) {
   background-color: var(--hl-yellow);
+  text-decoration-line: underline;
+  text-decoration-color: var(--hl-yellow-solid);
+  text-decoration-thickness: 2px;
 }
 ::highlight(hl-green) {
   background-color: var(--hl-green);
+  text-decoration-line: underline;
+  text-decoration-color: var(--hl-green-solid);
+  text-decoration-thickness: 2px;
 }
 ::highlight(hl-blue) {
   background-color: var(--hl-blue);
+  text-decoration-line: underline;
+  text-decoration-color: var(--hl-blue-solid);
+  text-decoration-thickness: 2px;
 }
 ::highlight(hl-pink) {
   background-color: var(--hl-pink);
+  text-decoration-line: underline;
+  text-decoration-color: var(--hl-pink-solid);
+  text-decoration-thickness: 2px;
 }
 ::highlight(hl-purple) {
   background-color: var(--hl-purple);
+  text-decoration-line: underline;
+  text-decoration-color: var(--hl-purple-solid);
+  text-decoration-thickness: 2px;
 }
 
 /* Agent answers rendered as Markdown. */

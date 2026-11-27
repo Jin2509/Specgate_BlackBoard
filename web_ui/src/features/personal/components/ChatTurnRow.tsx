@@ -15,9 +15,12 @@ export function ChatTurnRow({
   isLocal = false,
   isTyping = false,
   canRegenerate = false,
+  isDeferred = false,
   onRegenerate,
 }: {
   turn: Turn;
+  /** Rendering waits until the row is near the viewport; only for rows off the first screen. */
+  isDeferred?: boolean;
   isLocal?: boolean;
   isTyping?: boolean;
   canRegenerate?: boolean;
@@ -31,19 +34,22 @@ export function ChatTurnRow({
       data-role={turn.role}
       data-error={turn.error || undefined}
       data-local={isLocal || undefined}
-      className="group grid grid-cols-[8.5rem_minmax(0,1fr)] gap-4 @max-xl:grid-cols-1 @max-xl:gap-1"
+      className={cn(
+        "group grid grid-cols-[8.5rem_minmax(0,1fr)] gap-4 @max-xl:grid-cols-1 @max-xl:gap-1",
+        isDeferred && "render-when-visible",
+      )}
     >
       <div className="pt-0.5 leading-tight" data-no-mark>
         <span className={cn("block truncate text-xs", isMine ? "font-semibold text-muted-foreground" : "font-mono text-agent")}>
           {isMine ? t.personal.you : turn.model}
         </span>
-        {turn.at ? <time className="text-[11px] text-subtle">{turn.at}</time> : null}
+        {turn.at ? <time className="text-[0.6875rem] text-subtle">{turn.at}</time> : null}
       </div>
       <div className="min-w-0">
         <div
           data-turn-body={turn.id}
           className={cn(
-            "text-[15px] leading-relaxed",
+            "text-[0.9375rem] leading-relaxed",
             isMine ? "border-l-2 border-border pl-3 whitespace-pre-wrap text-muted-foreground" : "text-foreground",
             turn.error && "text-destructive",
           )}

@@ -54,7 +54,7 @@ export function KeyForm({
       <input type="hidden" name="baseUrl" value={baseUrl} />
 
       <div className="grid gap-1.5">
-        <Label htmlFor="api-key" className="text-[13px] font-semibold text-muted-foreground">
+        <Label htmlFor="api-key" className="text-[0.8125rem] font-semibold text-muted-foreground">
           API key
         </Label>
         <div className="relative">
@@ -99,7 +99,7 @@ export function KeyForm({
           )}
           {isCustomShown ? (
             <>
-              <Label htmlFor="base-url" className="text-[13px] font-semibold text-muted-foreground">
+              <Label htmlFor="base-url" className="text-[0.8125rem] font-semibold text-muted-foreground">
                 {t.personal.apiAddress}
               </Label>
               <Input

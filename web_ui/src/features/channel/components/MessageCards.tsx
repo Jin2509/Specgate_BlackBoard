@@ -53,7 +53,7 @@ function CardView({ card, ownerColor }: { card: Card; ownerColor?: number }) {
             {card.model ? <span className="font-mono text-subtle">{card.model}</span> : null}
             {card.digest ? <span className="text-subtle">{t.channel.oldMessagesDigest}</span> : null}
           </figcaption>
-          <blockquote className="text-[14.5px] leading-relaxed whitespace-pre-line text-foreground">
+          <blockquote className="text-[0.90625rem] leading-relaxed whitespace-pre-line text-foreground">
             <CutMark isShown={card.cutStart} />
             <span data-part-text>{card.text}</span>
             <CutMark isShown={card.cutEnd} />
@@ -73,11 +73,11 @@ function CardView({ card, ownerColor }: { card: Card; ownerColor?: number }) {
             <span className="font-semibold text-insufficient">{card.title}</span>
             <span className="text-subtle">{format(t.channel.summaryByline, { speaker: card.speakerLabel })}</span>
           </header>
-          <div data-part-text className="mt-1.5 text-[14px]">
+          <div data-part-text className="mt-1.5 text-[0.875rem]">
             <Markdown text={card.text} />
           </div>
           {card.turns.length ? (
-            <details className="mt-2 text-[13px]">
+            <details className="mt-2 text-[0.8125rem]">
               <summary className="flex cursor-pointer items-center gap-1 text-subtle hover:text-foreground" data-no-select>
                 <ChevronRight className="size-3.5" /> {format(t.channel.originalTurns, { count: card.turns.length })}
               </summary>

@@ -98,7 +98,7 @@ export function CreateWorkspaceDialog({ isOpen, onOpenChange }: { isOpen: boolea
                 className="grid grid-cols-2 gap-1 p-1"
                 itemClassName="flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs"
               />
-              <p className="text-[11px] text-subtle">{t.workspace.visibilityHint}</p>
+              <p className="text-[0.6875rem] text-subtle">{t.workspace.visibilityHint}</p>
             </div>
 
             <p className="rounded-lg bg-input px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">

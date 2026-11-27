@@ -1,19 +1,20 @@
 "use client";
-// Lets the owner edit a task's description and choose who does it, themself included.
+// Lets the owner edit a task's description and deadline and choose who does it, themself included.
 import { LoaderCircle } from "lucide-react";
 import { useState, useTransition } from "react";
 
+import { FormAlert } from "@/components/FormAlert";
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { Select, type SelectOption } from "@/components/ui/Select";
 import { format, t } from "@/lib/i18n";
-import { showErrorToast } from "@/stores/toast-store";
 import type { Task } from "@/types/task";
 import type { TeamMember } from "@/types/workspace";
 
 import { updateTask } from "../api/task-actions";
+import { fromLocalInputValue, toLocalInputValue } from "../utils/deadline";
 
 const BODY_MAX_LENGTH = 200;
 const NOBODY = "";
@@ -35,8 +36,11 @@ export function TaskFormDialog({
   onOpenChange: (isOpen: boolean) => void;
   onSave: () => void;
 }) {
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [body, setBody] = useState(task.body);
   const [assigneeId, setAssigneeId] = useState(task.assignee?.id ?? NOBODY);
+  const initialDueInput = toLocalInputValue(task.dueAt);
+  const [dueInput, setDueInput] = useState(initialDueInput);
   const [isPending, startTransition] = useTransition();
   const assigneeOptions: Array<SelectOption> = [
     ...members.map((member) => ({
@@ -49,8 +53,16 @@ export function TaskFormDialog({
 
   function handleSubmit() {
     startTransition(async () => {
-      const outcome = await updateTask({ workspaceId, number: task.number, body, assigneeId });
-      if (!outcome.ok) return showErrorToast(outcome.error);
+      setErrorMessage(null);
+      const outcome = await updateTask({
+        workspaceId,
+        number: task.number,
+        body,
+        assigneeId,
+        // Sent only when changed, so a task already past its deadline can still be renamed.
+        ...(dueInput === initialDueInput ? {} : { dueAt: fromLocalInputValue(dueInput) }),
+      });
+      if (!outcome.ok) return setErrorMessage(outcome.error);
       onSave();
     });
   }
@@ -76,6 +88,18 @@ export function TaskFormDialog({
           <Label htmlFor="task-assignee">{t.tasks.assigneeLabel}</Label>
           <Select id="task-assignee" size="lg" value={assigneeId} onValueChange={setAssigneeId} options={assigneeOptions} />
         </div>
+        <div className="grid gap-1.5">
+          <Label htmlFor="task-due">{t.tasks.dueFieldLabel}</Label>
+          <div className="flex items-center gap-2">
+            <Input id="task-due" type="datetime-local" value={dueInput} onChange={(event) => setDueInput(event.target.value)} />
+            {dueInput ? (
+              <Button variant="ghost" size="sm" onClick={() => setDueInput("")}>
+                {t.tasks.dueClear}
+              </Button>
+            ) : null}
+          </div>
+        </div>
+        <FormAlert message={errorMessage} />
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             {t.common.cancel}

@@ -14,7 +14,7 @@ const STEPS: Array<{ icon: ReactNode; title: string; body: string }> = [
 export function JoinGuide() {
   return (
     <div>
-      <p className="text-[13px] font-semibold text-subtle">{t.auth.guideTitle}</p>
+      <p className="text-[0.8125rem] font-semibold text-subtle">{t.auth.guideTitle}</p>
       <ol className="mt-4 space-y-4">
         {STEPS.map((step) => (
           <li key={step.title} className="flex gap-3">
@@ -23,7 +23,7 @@ export function JoinGuide() {
             </span>
             <span>
               <span className="block text-sm font-semibold text-sidebar-accent-foreground">{step.title}</span>
-              <span className="mt-0.5 block text-[13px] leading-snug text-subtle">{step.body}</span>
+              <span className="mt-0.5 block text-[0.8125rem] leading-snug text-subtle">{step.body}</span>
             </span>
           </li>
         ))}

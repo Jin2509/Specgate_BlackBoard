@@ -51,7 +51,7 @@ export function ConversationTitle({ id, title }: { id: string; title: string }) 
         maxLength={TITLE_MAX_LENGTH}
         onChange={(event) => setValue(event.target.value)}
         onKeyDown={(event) => (event.key === "Escape" ? setIsEditing(false) : null)}
-        className="h-8 w-56 rounded-md border border-border bg-input px-2 text-[14px] font-normal outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        className="h-8 w-56 rounded-md border border-border bg-input px-2 text-[0.875rem] font-normal outline-none focus-visible:ring-2 focus-visible:ring-ring"
       />
       <Button size="sm" type="submit" disabled={isPending}>
         {t.common.save}

@@ -50,7 +50,7 @@ export function MessageItem({
         data-speaker={t.channel.systemSpeaker}
         data-own="false"
         data-system="true"
-        className="mt-3 flex items-start gap-2 py-0.5 pr-12 pl-18 text-[13.5px] text-muted-foreground"
+        className="mt-3 flex items-start gap-2 py-0.5 pr-12 pl-18 text-[0.84375rem] text-muted-foreground"
       >
         <Info className="mt-0.5 size-4 shrink-0 text-subtle" />
         <div className="min-w-0 flex-1">
@@ -95,7 +95,7 @@ export function MessageItem({
       <header className="flex flex-wrap items-center gap-x-1.5 leading-5.5" data-no-select>
         {isAgent ? (
           <>
-            <span className="text-[14px] font-semibold text-agent" style={ownerTint ? { color: ownerTint } : undefined}>
+            <span className="text-[0.875rem] font-semibold text-agent" style={ownerTint ? { color: ownerTint } : undefined}>
               {message.senderName}
             </span>
             <AiTag />
@@ -117,7 +117,7 @@ export function MessageItem({
       </header>
 
       {message.body.length > 0 ? (
-        <p data-part-body className="text-[15px] leading-[1.375rem] whitespace-pre-line text-foreground">
+        <p data-part-body className="text-[0.9375rem] leading-[1.375rem] whitespace-pre-line text-foreground">
           {message.body.map((segment, index) =>
             segment.t === "text" ? (
               <span key={index}>

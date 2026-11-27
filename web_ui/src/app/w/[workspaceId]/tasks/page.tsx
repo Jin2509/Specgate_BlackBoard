@@ -1,10 +1,10 @@
-// Shows the task board of a shared workspace: who does which task, and the owner's lock.
+// Shows the task board of a shared workspace: who does which task, deadlines, and the owner's locks.
 import type { Metadata } from "next";
 import { Suspense } from "react";
 
 import { requireMe } from "@/features/auth/server";
 import { TaskBoardView } from "@/features/tasks";
-import { getTaskBoard } from "@/features/tasks/server";
+import { getTaskBoard, toTaskViews } from "@/features/tasks/server";
 import { ContentSkeleton, isOwner } from "@/features/workspace";
 import { requireSharedWorkspace } from "@/features/workspace/server";
 import { t } from "@/lib/i18n";
@@ -28,7 +28,7 @@ async function TasksPageContent({ params }: PageProps<"/w/[workspaceId]/tasks">)
   return (
     <TaskBoardView
       workspaceId={workspace.id}
-      board={board}
+      board={{ locked: board.locked, tasks: toTaskViews(board.tasks, new Date()) }}
       members={workspace.members}
       viewerId={me.user.id}
       isOwner={isOwner(workspace)}

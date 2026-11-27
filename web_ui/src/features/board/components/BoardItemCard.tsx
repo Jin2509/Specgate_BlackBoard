@@ -1,5 +1,5 @@
 // Renders one card of the idea board: number, body, parts with their speakers, reason and who decided.
-import { Terminal, User } from "lucide-react";
+import { ChevronRight, Terminal, User } from "lucide-react";
 
 import { format, t } from "@/lib/i18n";
 import type { BoardCard } from "@/types/board";
@@ -43,14 +43,15 @@ export function BoardItemCard({
       onClick={onClick}
       className={cn(
         "block w-full text-left transition-colors",
-        isCompact ? "rounded px-2 py-1.5 hover:bg-hover" : "rounded-lg bg-card p-3",
-        onClick && "hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
+        isCompact ? "rounded px-2 py-1.5" : "rounded-lg bg-card p-3",
+        onClick &&
+          "group/card cursor-pointer border border-border shadow-xs hover:border-ring hover:bg-accent focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none",
         className,
       )}
     >
       <p
         className={cn(
-          isCompact ? "line-clamp-2 text-[13px] leading-snug text-muted-foreground" : "text-sm leading-snug text-foreground",
+          isCompact ? "line-clamp-2 text-[0.8125rem] leading-snug text-muted-foreground" : "text-sm leading-snug text-foreground",
           isRejected && "text-subtle line-through",
         )}
       >
@@ -59,7 +60,7 @@ export function BoardItemCard({
       </p>
 
       {card.parts?.length ? (
-        <ul className={cn("space-y-1", isCompact ? "text-[13px]" : "text-sm")}>
+        <ul className={cn("space-y-1", isCompact ? "text-[0.8125rem]" : "text-sm")}>
           {card.parts.map((part, index) => (
             <li key={index} className={cn(isCompact && "line-clamp-2", isRejected && "text-subtle line-through")}>
               <span className="font-medium text-muted-foreground">{part.speaker}: </span>
@@ -75,9 +76,15 @@ export function BoardItemCard({
         </p>
       ) : null}
 
-      <div className={cn("flex flex-wrap items-center gap-1.5 text-[11px] text-subtle", isCompact ? "mt-0.5" : "mt-2")}>
+      <div className={cn("flex flex-wrap items-center gap-1.5 text-[0.6875rem] text-subtle", isCompact ? "mt-0.5" : "mt-2")}>
         <AuthorIcon kind={card.createdBy.kind} />
         <span>{toCardFooter(card, isCompact)}</span>
+        {onClick ? (
+          <span className="ml-auto inline-flex items-center gap-0.5 font-medium text-primary-strong">
+            {t.board.decideHint}
+            <ChevronRight className="size-3 transition-transform group-hover/card:translate-x-0.5" />
+          </span>
+        ) : null}
       </div>
     </Container>
   );

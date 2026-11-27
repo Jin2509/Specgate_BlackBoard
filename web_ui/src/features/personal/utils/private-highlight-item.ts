@@ -16,7 +16,7 @@ export type PrivateHighlightItem = Omit<PrivateHighlight, "sends"> & {
 };
 
 export const FILTER_INPUT_CLASS_NAME =
-  "h-8 rounded-md border border-border bg-card px-2.5 text-[13px] shadow-xs outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring";
+  "h-8 rounded-md border border-border bg-card px-2.5 text-[0.8125rem] shadow-xs outline-none placeholder:text-subtle focus-visible:ring-2 focus-visible:ring-ring";
 
 export function toCollapsedWhitespace(text: string): string {
   return text.replace(/\s+/g, " ").trim();

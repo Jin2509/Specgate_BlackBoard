@@ -21,7 +21,7 @@ export function JoinCodePanel({
           <CopyButton
             text={joinCode.code}
             label={t.settings.copyCode}
-            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-card px-3 text-[13px] font-medium text-foreground hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-card px-3 text-[0.8125rem] font-medium text-foreground hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           />
           {isOwner ? <UpdateJoinCodeButton workspaceId={workspaceId} label={t.join.regenerate} /> : null}
         </div>

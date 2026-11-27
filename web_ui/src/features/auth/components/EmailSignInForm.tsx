@@ -13,7 +13,7 @@ import { submitEmailSignIn, type EmailSignInState } from "../api/auth-actions";
 
 const CODE_MAX_LENGTH = 6;
 const DISPLAY_NAME_MAX_LENGTH = 40;
-const LABEL_CLASS = "text-[13px] font-semibold text-muted-foreground";
+const LABEL_CLASS = "text-[0.8125rem] font-semibold text-muted-foreground";
 const PRIMARY_CLASS = "h-11 w-full rounded-xl";
 
 export function EmailSignInForm({ next }: { next: string }) {

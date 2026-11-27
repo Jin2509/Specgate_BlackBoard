@@ -15,7 +15,7 @@ export function ToneBadge({
     <span
       data-tone={tone}
       className={cn(
-        "inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-px text-[11px] leading-4 font-semibold whitespace-nowrap [&_svg]:size-3",
+        "inline-flex shrink-0 items-center gap-1 rounded px-1.5 py-px text-[0.6875rem] leading-4 font-semibold whitespace-nowrap [&_svg]:size-3",
         toneClasses.text,
         isSolid ? toneClasses.soft : "bg-muted",
         className,

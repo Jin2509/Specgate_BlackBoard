@@ -3,12 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import { FormAlert } from "@/components/FormAlert";
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
 import { Input } from "@/components/ui/Input";
 import { updateNickname } from "@/features/settings";
 import { format, t } from "@/lib/i18n";
-import { showErrorToast } from "@/stores/toast-store";
 
 const NICKNAME_MAX_LENGTH = 40;
 
@@ -22,14 +22,16 @@ export function NicknamePrompt({
   currentName: string;
 }) {
   const router = useRouter();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(true);
   const [nickname, setNickname] = useState(currentName);
   const [isPending, startTransition] = useTransition();
 
   function handleSave() {
     startTransition(async () => {
+      setErrorMessage(null);
       const outcome = await updateNickname(workspaceId, nickname);
-      if (!outcome.ok) return showErrorToast(outcome.error);
+      if (!outcome.ok) return setErrorMessage(outcome.error);
       setIsOpen(false);
       router.refresh();
     });
@@ -48,6 +50,7 @@ export function NicknamePrompt({
           maxLength={NICKNAME_MAX_LENGTH}
           onChange={(event) => setNickname(event.target.value)}
         />
+        <FormAlert message={errorMessage} />
         <DialogFooter>
           <Button variant="secondary" onClick={() => setIsOpen(false)}>
             {t.workspace.later}

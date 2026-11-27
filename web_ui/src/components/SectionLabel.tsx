@@ -5,6 +5,8 @@ import { cn } from "@/utils/cn";
 
 export function SectionLabel({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <h3 className={cn("flex items-center gap-1.5 text-[13px] font-semibold text-muted-foreground", className)}>{children}</h3>
+    <h3 className={cn("flex items-center gap-1.5 text-[0.8125rem] font-semibold text-muted-foreground", className)}>
+      {children}
+    </h3>
   );
 }

@@ -58,25 +58,11 @@ export function WorkspaceSidebar({
 
       <div className="flex-1 scrollbar-thin overflow-y-auto px-2 pb-3">
         <div className="px-2 pt-4">
-          <p className="text-[13px] font-semibold text-subtle">{t.workspace.brief}</p>
-          <p className="mt-1 text-[13px] leading-snug text-muted-foreground">{workspace.brief}</p>
+          <p className="text-[0.8125rem] font-semibold text-subtle">{t.workspace.brief}</p>
+          <p className="mt-1 text-[0.8125rem] leading-snug text-muted-foreground">{workspace.brief}</p>
         </div>
 
-        <NavGroup
-          label={t.workspace.channels}
-          action={
-            isViewerOwner ? (
-              <button
-                type="button"
-                aria-label={t.workspace.createChannel}
-                onClick={() => setIsNewChannelOpen(true)}
-                className="rounded text-subtle hover:text-sidebar-accent-foreground"
-              >
-                <Plus className="size-4" />
-              </button>
-            ) : undefined
-          }
-        >
+        <NavGroup label={t.workspace.channels}>
           {workspace.channels.map((channel) => {
             const isActive = isAt(`/c/${channel.name}`) || isAt(`/c/${channel.id}`);
             const dot = toChannelDot(channel, liveChannels, isActive);
@@ -97,7 +83,7 @@ export function WorkspaceSidebar({
             <button
               type="button"
               onClick={() => setIsNewChannelOpen(true)}
-              className="flex h-8 items-center gap-1.5 rounded-md px-2 text-left text-[14px] text-subtle transition-colors hover:bg-hover hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              className="flex h-8 items-center gap-1.5 rounded-md px-2 text-left text-[0.875rem] text-subtle transition-colors hover:bg-hover hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
             >
               <Plus className="size-4" /> {t.workspace.createChannel}
             </button>
@@ -138,8 +124,8 @@ export function WorkspaceSidebar({
             <div key={agent.ownerId} className="flex h-10 items-center gap-2.5 rounded px-2 hover:bg-hover">
               <ActorAvatar kind="agent" initial={agent.name} colorIndex={agent.color} size="sm" />
               <div className="min-w-0 leading-tight">
-                <p className="truncate text-[13px] font-medium text-muted-foreground">{agent.label}</p>
-                <p className="truncate font-mono text-[11px] text-subtle">{agent.model}</p>
+                <p className="truncate text-[0.8125rem] font-medium text-muted-foreground">{agent.label}</p>
+                <p className="truncate font-mono text-[0.6875rem] text-subtle">{agent.model}</p>
               </div>
             </div>
           ))}

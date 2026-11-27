@@ -7,6 +7,9 @@ import type { Message } from "@/types/message";
 import { HighlightableList } from "./HighlightableList";
 import { MessageItem } from "./MessageItem";
 
+/** The newest messages fill the first screen, so they render at once; older ones wait until scrolled near. */
+const EAGER_MESSAGE_COUNT = 30;
+
 export function MessageList({
   messages,
   workspaceId,
@@ -38,14 +41,10 @@ export function MessageList({
       </div>
       {messages.length > 0 ? <div aria-hidden className="mx-4 mb-2 h-px bg-border" /> : null}
       <div className="pb-4">
-        {messages.map((message) => (
-          <MessageItem
-            key={message.id}
-            message={message}
-            workspaceId={workspaceId}
-            viewerId={viewerId}
-            marks={marksByMessageId[message.id]}
-          />
+        {messages.map((message, index) => (
+          <div key={message.id} className={index < messages.length - EAGER_MESSAGE_COUNT ? "render-when-visible" : undefined}>
+            <MessageItem message={message} workspaceId={workspaceId} viewerId={viewerId} marks={marksByMessageId[message.id]} />
+          </div>
         ))}
       </div>
     </HighlightableList>

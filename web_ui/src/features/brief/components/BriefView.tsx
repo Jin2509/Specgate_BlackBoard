@@ -1,5 +1,6 @@
 // Renders the summary the backend builds from the idea board, or an empty state until the owner builds one.
 import { Check, FileText, MessagesSquare, StickyNote, X } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { PageBody } from "@/components/PageBody";
 import { PageHeader } from "@/components/PageHeader";
@@ -9,7 +10,7 @@ import type { Brief } from "@/types/board";
 import { cn } from "@/utils/cn";
 import { toContentWidthClassName } from "@/utils/content-width";
 
-import { BriefActions } from "./BriefActions";
+import { BriefActions, BriefRebuildButton } from "./BriefActions";
 import { BriefRow } from "./BriefRow";
 import { BriefSection } from "./BriefSection";
 import { toLowerFirst } from "../utils/lower-first";
@@ -33,11 +34,15 @@ export function BriefView({
         icon={<FileText />}
         title={t.brief.pageTitle}
         meta={t.brief.pageMeta}
-        actions={<BriefActions workspaceId={workspaceId} markdown={brief?.markdown ?? null} canRebuild={canRebuild} />}
+        actions={<BriefActions markdown={brief?.markdown ?? null} />}
       />
       <PageBody>
         {brief ? (
-          <BriefArticle brief={brief} meta={meta} />
+          <BriefArticle
+            brief={brief}
+            meta={meta}
+            rebuild={canRebuild ? <BriefRebuildButton workspaceId={workspaceId} hasBrief /> : null}
+          />
         ) : (
           <div className="mx-auto max-w-xl rounded-lg border border-dashed border-border px-6 py-10 text-center">
             <FileText className="mx-auto size-8 text-subtle" />
@@ -45,6 +50,11 @@ export function BriefView({
               {format(t.brief.emptyTitle, { name: workspaceName })}
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">{canRebuild ? t.brief.emptyOwner : t.brief.emptyMember}</p>
+            {canRebuild ? (
+              <div className="mt-4">
+                <BriefRebuildButton workspaceId={workspaceId} hasBrief={false} />
+              </div>
+            ) : null}
           </div>
         )}
       </PageBody>
@@ -52,12 +62,16 @@ export function BriefView({
   );
 }
 
-function BriefArticle({ brief, meta }: { brief: Brief; meta: string }) {
+function BriefArticle({ brief, meta, rebuild }: { brief: Brief; meta: string; rebuild: ReactNode }) {
   return (
     <article className={cn(toContentWidthClassName("wide"), "rounded-lg bg-card px-6 py-6 md:px-10 md:py-8")}>
-      <p className="text-[13px] font-semibold text-subtle">{t.brief.eyebrow}</p>
+      <p className="text-[0.8125rem] font-semibold text-subtle">{t.brief.eyebrow}</p>
       <h2 className="mt-1 text-2xl font-bold text-sidebar-accent-foreground">{brief.title}</h2>
-      <p className="mt-1 text-xs text-subtle">{meta}</p>
+      <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-2">
+        <p className="text-xs text-subtle">{meta}</p>
+        {rebuild ?? <p className="text-xs text-subtle">{t.brief.ownerBuilds}</p>}
+      </div>
+      {rebuild ? <p className="mt-1 text-xs text-subtle">{t.brief.rebuildHint}</p> : null}
       <p className="mt-3 text-sm text-muted-foreground">{format(t.brief.briefLine, { brief: brief.brief })}</p>
 
       <div className="mt-6 grid gap-x-12 gap-y-6 border-t border-border pt-6 @3xl:grid-cols-2">
@@ -69,7 +83,7 @@ function BriefArticle({ brief, meta }: { brief: Brief; meta: string }) {
                 {idea.deciderName ? format(t.brief.decidedBy, { name: idea.deciderName }) : ""}
               </BriefRow>
             ))}
-            {brief.decided.length === 0 ? <p className="text-[13px] text-subtle">{t.brief.noneDecided}</p> : null}
+            {brief.decided.length === 0 ? <p className="text-[0.8125rem] text-subtle">{t.brief.noneDecided}</p> : null}
           </BriefSection>
           <BriefSection icon={<X />} title={t.brief.rejected} toneClassName="text-rejected">
             {brief.rejected.map((idea) => (
@@ -77,7 +91,7 @@ function BriefArticle({ brief, meta }: { brief: Brief; meta: string }) {
                 {format(t.brief.becauseNoPeriod, { reason: toLowerFirst(idea.reason) })}
               </BriefRow>
             ))}
-            {brief.rejected.length === 0 ? <p className="text-[13px] text-subtle">{t.brief.noneRejected}</p> : null}
+            {brief.rejected.length === 0 ? <p className="text-[0.8125rem] text-subtle">{t.brief.noneRejected}</p> : null}
           </BriefSection>
         </div>
         <div className="space-y-6">
@@ -87,10 +101,10 @@ function BriefArticle({ brief, meta }: { brief: Brief; meta: string }) {
                 {format(t.brief.raisedBy, { name: idea.authorName })}
               </BriefRow>
             ))}
-            {brief.discussing.length === 0 ? <p className="text-[13px] text-subtle">{t.brief.noneDiscussing}</p> : null}
+            {brief.discussing.length === 0 ? <p className="text-[0.8125rem] text-subtle">{t.brief.noneDiscussing}</p> : null}
           </BriefSection>
           <BriefSection icon={<StickyNote />} title={t.brief.notes} toneClassName="text-muted-foreground">
-            <p className="text-[13px] text-muted-foreground">
+            <p className="text-[0.8125rem] text-muted-foreground">
               {brief.notes.length ? brief.notes.map((note) => note.body).join(" ") : t.brief.noNotes}
             </p>
           </BriefSection>

@@ -33,7 +33,7 @@ export function DocumentAttachmentCard({
   const [isOpen, setIsOpen] = useState(false);
   return (
     <div className="mt-1.5 max-w-xl rounded-lg border border-border bg-card p-3">
-      <div className="flex items-center gap-2 text-[13px]">
+      <div className="flex items-center gap-2 text-[0.8125rem]">
         <FileText className="size-4 shrink-0 text-primary-strong" aria-hidden />
         <span className="min-w-0 truncate font-medium text-foreground" title={fileName}>
           {fileName}
@@ -42,11 +42,11 @@ export function DocumentAttachmentCard({
           {toFileSizeLabel(sizeBytes)} · {format(t.documents.charCount, { count: charCount.toLocaleString() })}
         </span>
       </div>
-      <p className="mt-1.5 line-clamp-3 text-[13px] leading-relaxed text-muted-foreground">{toPreview(markdown)}</p>
+      <p className="mt-1.5 line-clamp-3 text-[0.8125rem] leading-relaxed text-muted-foreground">{toPreview(markdown)}</p>
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="mt-1.5 text-[13px] font-medium text-primary-strong hover:underline"
+        className="mt-1.5 text-[0.8125rem] font-medium text-primary-strong hover:underline"
       >
         {t.documents.openText}
       </button>

@@ -1,16 +1,16 @@
 "use client";
 // Reviews and sends private highlights to a channel as one message under the user's name, one quote card per item.
 import { LoaderCircle, Send } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import { FormAlert } from "@/components/FormAlert";
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
 import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { format, t } from "@/lib/i18n";
-import { showErrorToast } from "@/stores/toast-store";
+import { showSuccessToast } from "@/stores/toast-store";
 import { cn } from "@/utils/cn";
 
 import { createHighlightSend } from "../api/private-highlight-actions";
@@ -67,6 +67,7 @@ function SendForm({
   onSent: () => void;
 }) {
   const router = useRouter();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [workspaceId, setWorkspaceId] = useState(targets[0]?.id ?? "");
   const target = targets.find((candidate) => candidate.id === workspaceId);
   const [channelId, setChannelId] = useState(target?.channels[0]?.id ?? "");
@@ -75,7 +76,6 @@ function SendForm({
   );
   const [ownWords, setOwnWords] = useState("");
   const [duplicateNotice, setDuplicateNotice] = useState<string | null>(null);
-  const [sentTo, setSentTo] = useState<{ workspaceId: string; channelName: string } | null>(null);
   const [isPending, startTransition] = useTransition();
   const myName = target?.myName ?? t.privateHighlights.fallbackName;
   const channel = target?.channels.find((candidate) => candidate.id === channelId);
@@ -83,6 +83,7 @@ function SendForm({
 
   function handleSend(isConfirmed: boolean) {
     startTransition(async () => {
+      setErrorMessage(null);
       const overrides = Object.fromEntries(
         items.filter((item) => textsById[item.id] !== item.text).map((item) => [item.id, textsById[item.id]]),
       );
@@ -96,31 +97,13 @@ function SendForm({
       });
       if (!outcome.ok) {
         if (outcome.code === "ALREADY_SENT") return setDuplicateNotice(outcome.error);
-        return showErrorToast(outcome.error);
+        return setErrorMessage(outcome.error);
       }
-      setSentTo({ workspaceId, channelName: channel?.name ?? channelId });
+      showSuccessToast(format(t.privateHighlights.sentToChannel, { channel: channel?.name ?? channelId }));
       onSent();
       router.refresh();
     });
   }
-
-  if (sentTo)
-    return (
-      <>
-        <DialogHeader>
-          <DialogTitle>{format(t.privateHighlights.sentToChannel, { channel: sentTo.channelName })}</DialogTitle>
-          <DialogDescription>{t.privateHighlights.snapshotNote}</DialogDescription>
-        </DialogHeader>
-        <DialogFooter>
-          <Button variant="secondary" onClick={onClose}>
-            {t.common.close}
-          </Button>
-          <Button asChild>
-            <Link href={`/w/${sentTo.workspaceId}/c/${sentTo.channelName}`}>{t.privateHighlights.openChannel}</Link>
-          </Button>
-        </DialogFooter>
-      </>
-    );
 
   return (
     <>
@@ -129,7 +112,7 @@ function SendForm({
         <DialogDescription>{format(t.privateHighlights.sendDescription, { name: myName })}</DialogDescription>
       </DialogHeader>
       <div className="grid grid-cols-2 gap-2">
-        <label className="grid gap-1 text-[13px] font-medium text-muted-foreground">
+        <label className="grid gap-1 text-[0.8125rem] font-medium text-muted-foreground">
           {t.privateHighlights.sharedWorkspace}
           <Select
             aria-label={t.privateHighlights.sharedWorkspace}
@@ -142,7 +125,7 @@ function SendForm({
             options={targets.map((candidate) => ({ value: candidate.id, label: candidate.name }))}
           />
         </label>
-        <label className="grid gap-1 text-[13px] font-medium text-muted-foreground">
+        <label className="grid gap-1 text-[0.8125rem] font-medium text-muted-foreground">
           {t.privateHighlights.channel}
           <Select
             aria-label={t.privateHighlights.channel}
@@ -153,7 +136,7 @@ function SendForm({
           />
         </label>
       </div>
-      <label className="grid gap-1 text-[13px] font-medium text-muted-foreground">
+      <label className="grid gap-1 text-[0.8125rem] font-medium text-muted-foreground">
         {t.privateHighlights.ownWords}
         <input
           value={ownWords}
@@ -183,6 +166,7 @@ function SendForm({
         </p>
       ) : null}
       {duplicateNotice ? <p className="text-sm text-proposed">{duplicateNotice}</p> : null}
+      <FormAlert message={errorMessage} />
       <DialogFooter>
         <Button variant="secondary" onClick={onClose}>
           {t.common.cancel}

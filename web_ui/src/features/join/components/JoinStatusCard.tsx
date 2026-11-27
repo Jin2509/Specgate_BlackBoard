@@ -36,7 +36,7 @@ export function JoinStatusCard({
 
   return (
     <div className="flex flex-col items-center text-center">
-      {isPending ? <AutoRefresh /> : null}
+      {isPending ? <AutoRefresh eventType="join.request.changed" match={{ requestId: joinRequest.id }} /> : null}
       <span className="relative flex size-20 items-center justify-center rounded-3xl bg-primary text-2xl font-bold text-primary-foreground">
         {workspace.short}
         <span className="absolute -right-1.5 -bottom-1.5 flex size-8 items-center justify-center rounded-full border-4 border-canvas bg-card">
@@ -45,7 +45,7 @@ export function JoinStatusCard({
       </span>
 
       <h1 className="mt-5 text-2xl font-semibold text-sidebar-accent-foreground">{toTitle(joinRequest.status)}</h1>
-      <p className="mt-2 text-[15px] text-muted-foreground">{toBody(joinRequest.status, workspace)}</p>
+      <p className="mt-2 text-[0.9375rem] text-muted-foreground">{toBody(joinRequest.status, workspace)}</p>
 
       <dl className="mt-5 grid w-full gap-2 rounded-md bg-card p-3 text-left text-sm">
         <StatusRow label={t.join.rowBrief}>{workspace.brief}</StatusRow>
@@ -96,7 +96,7 @@ export function JoinStatusCard({
 function StatusRow({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="grid grid-cols-[80px_minmax(0,1fr)] gap-2">
-      <dt className="text-[13px] font-semibold text-subtle">{label}</dt>
+      <dt className="text-[0.8125rem] font-semibold text-subtle">{label}</dt>
       <dd className="leading-snug text-foreground">{children}</dd>
     </div>
   );

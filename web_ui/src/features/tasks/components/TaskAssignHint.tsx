@@ -29,7 +29,7 @@ export function TaskAssignHint({
     );
   }
   return (
-    <p className="mb-4 flex items-start gap-2 text-[13px] leading-relaxed text-muted-foreground">
+    <p className="mb-4 flex items-start gap-2 text-[0.8125rem] leading-relaxed text-muted-foreground">
       <Info className="mt-0.5 size-4 shrink-0 text-subtle" />
       {isOwner ? t.tasks.ownerHint : t.tasks.memberHint}
     </p>

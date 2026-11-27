@@ -31,7 +31,7 @@ export function NavItem({
       href={href}
       aria-current={isActive ? "page" : undefined}
       className={cn(
-        "flex h-8 items-center gap-1.5 rounded px-2 text-[15px] font-medium transition-colors [&>svg]:size-5 [&>svg]:shrink-0",
+        "flex h-8 items-center gap-1.5 rounded px-2 text-[0.9375rem] font-medium transition-colors [&>svg]:size-5 [&>svg]:shrink-0",
         isActive
           ? "bg-sidebar-accent text-sidebar-accent-foreground"
           : "text-sidebar-foreground hover:bg-hover hover:text-muted-foreground",

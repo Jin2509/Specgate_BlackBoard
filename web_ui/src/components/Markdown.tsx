@@ -31,7 +31,7 @@ export function Markdown({ text }: { text: string }) {
           pre({ children }) {
             return (
               <div className="overflow-hidden rounded-md border border-border">
-                <div className="flex items-center justify-between bg-hover px-3 py-1 text-[11.5px] text-subtle select-none">
+                <div className="flex items-center justify-between bg-hover px-3 py-1 text-[0.71875rem] text-subtle select-none">
                   <span className="font-mono">{toLanguage(children) ?? t.common.code}</span>
                   <CopyButton text={toPlainText(children).replace(/\n$/, "")} label={t.common.copyCode} />
                 </div>

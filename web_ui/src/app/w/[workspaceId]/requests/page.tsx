@@ -16,8 +16,6 @@ import { requireSharedWorkspace } from "@/features/workspace/server";
 import { format, t } from "@/lib/i18n";
 import { toSharedHomePath } from "@/utils/route-paths";
 
-const REFRESH_INTERVAL_MS = 10_000;
-
 export const metadata: Metadata = { title: t.requests.pageTitle };
 
 export default function RequestsPage(props: PageProps<"/w/[workspaceId]/requests">) {
@@ -41,7 +39,7 @@ async function RequestsPageContent({ params }: PageProps<"/w/[workspaceId]/reque
         meta={format(t.requests.pendingMeta, { count: pending.length })}
       />
       <PageBody className="space-y-4">
-        <AutoRefresh intervalMs={REFRESH_INTERVAL_MS} />
+        <AutoRefresh eventType="join.request.changed" match={{ workspaceId: workspace.id }} />
         {pending.length === 0 ? (
           <Panel>
             <p className="py-6 text-center text-sm text-subtle">{t.requests.noPending}</p>

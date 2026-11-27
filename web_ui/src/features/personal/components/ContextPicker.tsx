@@ -39,7 +39,7 @@ export function ContextPicker({
 
   return (
     <div className={cn("flex items-center gap-1.5", className)}>
-      <label htmlFor="context-workspace" className="flex items-center gap-1 text-[13px] text-subtle">
+      <label htmlFor="context-workspace" className="flex items-center gap-1 text-[0.8125rem] text-subtle">
         <Users className="size-4" />
         <span className="@max-3xl/header:sr-only">{t.personal.teamContext}</span>
       </label>

@@ -12,6 +12,8 @@ export function MessageSegment({ segment }: { segment: Segment }) {
         </span>
       );
     case "command":
-      return <code className="rounded-[3px] bg-input px-1 py-px font-mono text-[13px] text-muted-foreground">{segment.v}</code>;
+      return (
+        <code className="rounded-[3px] bg-input px-1 py-px font-mono text-[0.8125rem] text-muted-foreground">{segment.v}</code>
+      );
   }
 }

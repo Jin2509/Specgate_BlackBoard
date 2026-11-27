@@ -6,7 +6,7 @@ export function AiTag({ className }: { className?: string }) {
   return (
     <span
       className={cn(
-        "inline-flex h-4 items-center rounded-sm border border-agent-line px-1 text-[10.5px] leading-none font-medium text-agent",
+        "inline-flex h-4 items-center rounded-sm border border-agent-line px-1 text-[0.65625rem] leading-none font-medium text-agent",
         className,
       )}
     >

@@ -11,7 +11,7 @@ export function ConnectionBanner() {
   return (
     <div
       role="status"
-      className="fixed inset-x-0 top-0 z-50 flex items-center justify-center gap-2 bg-proposed px-4 py-1.5 text-[13px] font-medium text-primary-foreground"
+      className="fixed inset-x-0 top-0 z-50 flex items-center justify-center gap-2 bg-proposed px-4 py-1.5 text-[0.8125rem] font-medium text-primary-foreground"
     >
       <WifiOff className="size-4" /> {t.common.offline}
     </div>

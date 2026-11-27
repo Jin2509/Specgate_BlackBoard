@@ -17,7 +17,7 @@ export function JoinCodeForm({ shouldAutoFocus = false, className }: { shouldAut
 
   return (
     <form action={formAction} className={cn("grid gap-2", className)}>
-      <label htmlFor="join-code" className="text-[13px] font-semibold text-subtle">
+      <label htmlFor="join-code" className="text-[0.8125rem] font-semibold text-subtle">
         {t.join.codeLabel}
       </label>
       <div

@@ -3,10 +3,10 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
+import { FormAlert } from "@/components/FormAlert";
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
 import { format, t } from "@/lib/i18n";
-import { showErrorToast } from "@/stores/toast-store";
 import type { Turn } from "@/types/conversation";
 
 import { listTurns } from "../api/conversation-actions";
@@ -25,6 +25,7 @@ export function AttachTurnsDialog({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [turns, setTurns] = useState<Turn[] | null>(null);
   const [chosenIds, setChosenIds] = useState<string[]>(item.attachedTurns.map((turn) => turn.id));
   const [hasLoadFailed, setHasLoadFailed] = useState(false);
@@ -37,7 +38,7 @@ export function AttachTurnsDialog({
       if (outcome.ok) setTurns(outcome.value);
       else {
         setHasLoadFailed(true);
-        showErrorToast(outcome.error);
+        setErrorMessage(outcome.error);
       }
     });
     return () => {
@@ -47,8 +48,9 @@ export function AttachTurnsDialog({
 
   function handleSave() {
     startTransition(async () => {
+      setErrorMessage(null);
       const outcome = await updatePrivateHighlight(item.id, { attachedTurnIds: chosenIds });
-      if (!outcome.ok) return showErrorToast(outcome.error);
+      if (!outcome.ok) return setErrorMessage(outcome.error);
       onClose();
       router.refresh();
     });
@@ -78,7 +80,7 @@ export function AttachTurnsDialog({
                       )
                     }
                   />
-                  <span className="min-w-0 text-[13px]">
+                  <span className="min-w-0 text-[0.8125rem]">
                     <span className="font-medium text-subtle">{turn.role === "user" ? t.personal.you : turn.model}: </span>
                     <span className="line-clamp-3">{turn.text}</span>
                   </span>
@@ -88,6 +90,7 @@ export function AttachTurnsDialog({
           })}
           {turns === null && !hasLoadFailed ? <li className="text-sm text-subtle">{t.common.loading}</li> : null}
         </ul>
+        <FormAlert message={errorMessage} />
         <DialogFooter>
           <Button variant="secondary" onClick={onClose}>
             {t.common.cancel}

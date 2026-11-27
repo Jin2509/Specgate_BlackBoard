@@ -4,12 +4,12 @@ import { LoaderCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 
+import { FormAlert } from "@/components/FormAlert";
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
 import { Input } from "@/components/ui/Input";
 import { Label } from "@/components/ui/Label";
 import { t } from "@/lib/i18n";
-import { showErrorToast } from "@/stores/toast-store";
 
 import { updateNickname } from "../api/member-actions";
 
@@ -27,6 +27,7 @@ export function RenameDialog({
   onOpenChange: (isOpen: boolean) => void;
 }) {
   const router = useRouter();
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [nickname, setNickname] = useState(currentName);
   const [isPending, startTransition] = useTransition();
 
@@ -38,8 +39,9 @@ export function RenameDialog({
           onSubmit={(event) => {
             event.preventDefault();
             startTransition(async () => {
+              setErrorMessage(null);
               const outcome = await updateNickname(workspaceId, nickname);
-              if (!outcome.ok) return showErrorToast(outcome.error);
+              if (!outcome.ok) return setErrorMessage(outcome.error);
               onOpenChange(false);
               router.refresh();
             });
@@ -60,6 +62,7 @@ export function RenameDialog({
               className="h-9"
             />
           </div>
+          <FormAlert message={errorMessage} />
           <DialogFooter>
             <Button type="button" variant="secondary" onClick={() => onOpenChange(false)}>
               {t.common.cancel}

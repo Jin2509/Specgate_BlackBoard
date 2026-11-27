@@ -46,7 +46,7 @@ export function ConversationActions({
         disabled={!hasAnswer || isPending}
         title={t.personal.summarizeTitle}
         onClick={handleSummarize}
-        className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border px-2.5 text-[13px] font-medium text-muted-foreground hover:bg-hover hover:text-foreground disabled:opacity-40"
+        className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border px-2.5 text-[0.8125rem] font-medium text-muted-foreground hover:bg-hover hover:text-foreground disabled:opacity-40"
       >
         {isPending ? <LoaderCircle className="size-4 animate-spin" /> : <ListCollapse className="size-4" />}
         <span className="@max-2xl/header:sr-only">{t.personal.summarizeForTeam}</span>

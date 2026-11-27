@@ -10,7 +10,7 @@ export default function NotFound() {
     <AuthScreen className="max-w-120 text-center">
       <p className="font-mono text-sm text-subtle">404</p>
       <h1 className="mt-1 text-2xl font-semibold text-sidebar-accent-foreground">{t.common.notFoundTitle}</h1>
-      <p className="mt-2 text-[15px] text-muted-foreground">{t.common.notFoundWorkspaceBody}</p>
+      <p className="mt-2 text-[0.9375rem] text-muted-foreground">{t.common.notFoundWorkspaceBody}</p>
       <Button asChild className="mt-6 h-11 w-full text-base">
         <Link href="/" prefetch={false}>
           {t.common.backToYourPage}

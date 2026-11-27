@@ -29,6 +29,8 @@ async function Home() {
   const personalWorkspaceId = me.personalWorkspaceId ?? "";
   const personalHome = toPersonalHomePath(personalWorkspaceId);
   const teamPath = me.lastSharedPath ?? (me.workspaces[0] ? toSharedHomePath(me.workspaces[0].id) : null);
+  const teamWorkspace = me.workspaces.find((workspace) => teamPath?.startsWith(`/w/${workspace.id}/`));
+  const otherWorkspaces = me.workspaces.filter((workspace) => workspace.id !== teamWorkspace?.id);
   const firstName = me.user.displayName.split(" ").slice(-1)[0];
 
   return (
@@ -44,14 +46,14 @@ async function Home() {
           <h1 className="mt-4 text-2xl font-bold text-sidebar-accent-foreground">
             {format(t.home.greeting, { name: firstName })}
           </h1>
-          <p className="mt-2 max-w-md text-[15px] leading-relaxed text-muted-foreground">{t.home.lead}</p>
+          <p className="mt-2 max-w-md text-[0.9375rem] leading-relaxed text-muted-foreground">{t.home.lead}</p>
           <div className="mt-6 flex w-full max-w-xl flex-col gap-2.5 sm:flex-row">
             <HomeButton href={me.key ? personalHome : `${personalHome}/key`} icon={<MessageSquare />}>
               {me.key ? t.home.chatWithAgent : t.home.enterKey}
             </HomeButton>
             {teamPath ? (
               <HomeButton href={teamPath} icon={<Users />} isSecondary>
-                {t.home.workWithTeam}
+                {teamWorkspace ? format(t.home.workWithNamedTeam, { name: teamWorkspace.name }) : t.home.workWithTeam}
               </HomeButton>
             ) : (
               <HomeButton href={`/w/${personalWorkspaceId}/explore`} icon={<Users />} isSecondary>
@@ -59,7 +61,21 @@ async function Home() {
               </HomeButton>
             )}
           </div>
-          {me.workspaces.length === 0 ? <p className="mt-3 text-[13px] text-subtle">{t.home.noTeamHint}</p> : null}
+          {me.workspaces.length === 0 ? <p className="mt-3 text-[0.8125rem] text-subtle">{t.home.noTeamHint}</p> : null}
+          {teamPath && otherWorkspaces.length > 0 ? (
+            <nav aria-label={t.home.otherTeams} className="mt-4 flex max-w-xl flex-wrap items-center justify-center gap-2">
+              <span className="text-[0.8125rem] text-subtle">{t.home.otherTeams}</span>
+              {otherWorkspaces.map((workspace) => (
+                <Link
+                  key={workspace.id}
+                  href={toSharedHomePath(workspace.id)}
+                  className="rounded-full border border-border bg-card px-3 py-1 text-[0.8125rem] text-foreground hover:bg-hover focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+                >
+                  {workspace.name}
+                </Link>
+              ))}
+            </nav>
+          ) : null}
         </div>
       </main>
     </>
@@ -81,7 +97,7 @@ function HomeButton({
     <Link
       href={href}
       className={cn(
-        "inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg px-4 text-[15px] font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none [&_svg]:size-4.5",
+        "inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg px-4 text-[0.9375rem] font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none [&_svg]:size-4.5",
         isSecondary
           ? "border border-border bg-card text-foreground hover:bg-hover"
           : "bg-primary text-primary-foreground hover:bg-primary-strong",

@@ -3,13 +3,13 @@
 import { Lightbulb, LoaderCircle, StickyNote } from "lucide-react";
 import { useState, useTransition } from "react";
 
+import { FormAlert } from "@/components/FormAlert";
 import { SegmentedControl, type SegmentOption } from "@/components/SegmentedControl";
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
 import { Label } from "@/components/ui/Label";
 import { Textarea } from "@/components/ui/Textarea";
 import { t } from "@/lib/i18n";
-import { showErrorToast } from "@/stores/toast-store";
 import type { BoardItemKind } from "@/types/board";
 
 import { createBoardItem } from "../api/board-actions";
@@ -44,14 +44,16 @@ export function AddItemDialog({
   onOpenChange: (isOpen: boolean) => void;
   onAdd: () => void;
 }) {
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [kind, setKind] = useState<BoardItemKind>("idea");
   const [body, setBody] = useState("");
   const [isPending, startTransition] = useTransition();
 
   function handleSubmit() {
     startTransition(async () => {
+      setErrorMessage(null);
       const outcome = await createBoardItem({ workspaceId, kind, body });
-      if (!outcome.ok) return showErrorToast(outcome.error);
+      if (!outcome.ok) return setErrorMessage(outcome.error);
       setBody("");
       onAdd();
     });
@@ -85,6 +87,7 @@ export function AddItemDialog({
             placeholder={t.board.contentPlaceholder}
           />
         </div>
+        <FormAlert message={errorMessage} />
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             {t.common.cancel}

@@ -36,7 +36,7 @@ export function WorkspaceCardButton({
           <span className="truncate font-semibold text-sidebar-accent-foreground">{workspace.name}</span>
           <RelationBadge relation={workspace.relation} />
         </span>
-        <span className="line-clamp-2 text-[13px] leading-snug text-subtle">{workspace.brief}</span>
+        <span className="line-clamp-2 text-[0.8125rem] leading-snug text-subtle">{workspace.brief}</span>
         <span className="mt-auto flex items-center gap-3 pt-2 text-xs text-subtle">
           <span className="inline-flex items-center gap-1">
             <Users className="size-3.5" /> {format(t.join.memberCount, { count: workspace.memberCount })}

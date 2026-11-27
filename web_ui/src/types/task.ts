@@ -1,7 +1,8 @@
-// Defines the task board of a shared workspace: a tree of tasks, who does each one, and the owner's lock.
+// Defines the task board of a shared workspace: a tree of tasks, who does each one, deadlines and the owner's locks.
 import type { Profile } from "./profile";
 
-export type TaskStatus = "doing" | "done";
+/** To do, in progress, done. */
+export type TaskStatus = "todo" | "doing" | "done";
 
 export interface Task {
   id: string;
@@ -10,6 +11,12 @@ export interface Task {
   parentNumber: number | null;
   body: string;
   status: TaskStatus;
+  /** The owner's lock: nobody claims, hands back, reassigns, edits or deletes it; progress still moves. */
+  locked: boolean;
+  /** ISO 8601 deadline, or null when the task has none. */
+  dueAt: string | null;
+  /** The deadline has passed and the task is not done. */
+  isOverdue: boolean;
   /** Null while nobody is in charge: any member may take it, the owner may assign it. */
   assignee: Profile | null;
   createdBy: string;
@@ -29,4 +36,7 @@ export interface ContextTask {
   parentNumber: number | null;
   body: string;
   assigneeName: string | null;
+  status: TaskStatus;
+  dueAt: string | null;
+  isOverdue: boolean;
 }

@@ -62,10 +62,13 @@ export function PrivateHighlightsView({
 
   return (
     <div className={toContentWidthClassName("reading")}>
-      <p className="text-[15px] leading-relaxed text-muted-foreground">{t.privateHighlights.intro}</p>
+      <p className="text-[0.9375rem] leading-relaxed text-muted-foreground">{t.privateHighlights.intro}</p>
 
       {list.nearLimit ? (
-        <p role="status" className="mt-3 flex items-center gap-2 rounded-md bg-proposed-soft px-3 py-2 text-[13px] text-proposed">
+        <p
+          role="status"
+          className="mt-3 flex items-center gap-2 rounded-md bg-proposed-soft px-3 py-2 text-[0.8125rem] text-proposed"
+        >
           <TriangleAlert className="size-4" /> {format(t.privateHighlights.nearLimit, { total: list.total, limit: list.limit })}
         </p>
       ) : null}
@@ -130,7 +133,7 @@ export function PrivateHighlightsView({
       </div>
 
       <div className="sticky top-0 z-10 mt-3 flex flex-wrap items-center gap-2 bg-canvas py-2">
-        <span className="text-[13px] text-subtle">
+        <span className="text-[0.8125rem] text-subtle">
           {pickedIds.length
             ? format(t.privateHighlights.pickedCount, { count: pickedIds.length })
             : format(t.privateHighlights.itemCount, { count: visibleItems.length })}
@@ -173,7 +176,10 @@ export function PrivateHighlightsView({
         items={itemsToSend}
         targets={targets}
         onClose={() => setItemsToSend(null)}
-        onSent={() => setPickedIds([])}
+        onSent={() => {
+          setPickedIds([]);
+          setItemsToSend(null);
+        }}
       />
       <CleanupDialog isOpen={isCleaning} onOpenChange={setIsCleaning} conversations={conversations} />
     </div>

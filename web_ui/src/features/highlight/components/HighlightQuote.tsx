@@ -27,7 +27,7 @@ export function HighlightQuote({
 }) {
   return (
     <figure className={cn("max-w-xl rounded-r-md border-l-[3px] border-mark-line bg-card py-2 pr-3 pl-3", className)}>
-      <blockquote className="text-[14.5px] leading-relaxed text-foreground">
+      <blockquote className="text-[0.90625rem] leading-relaxed text-foreground">
         <span className="chalk-mark box-decoration-clone">{text}</span>
       </blockquote>
       <figcaption className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-subtle">

@@ -3,13 +3,13 @@
 import { Info, LoaderCircle, X } from "lucide-react";
 import { useState, useTransition } from "react";
 
+import { FormAlert } from "@/components/FormAlert";
 import { SegmentedControl } from "@/components/SegmentedControl";
 import { Button } from "@/components/ui/Button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/Dialog";
 import { Label } from "@/components/ui/Label";
 import { Textarea } from "@/components/ui/Textarea";
 import { format, t } from "@/lib/i18n";
-import { showErrorToast } from "@/stores/toast-store";
 import type { HighlightLabel } from "@/types/highlight";
 import { toEllipsizedText, toExcerpt } from "@/utils/excerpt";
 import { HIGHLIGHT_LABEL_META } from "@/utils/status-meta";
@@ -62,6 +62,7 @@ function DraftForm({
 }) {
   const otherSegments = draft.segments.filter((segment) => !segment.own);
   const ownSegments = draft.segments.filter((segment) => segment.own);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [texts, setTexts] = useState(otherSegments.map((segment) => segment.text));
   const [removedIndexes, setRemovedIndexes] = useState<number[]>([]);
   const [label, setLabel] = useState<HighlightLabel>("important");
@@ -74,6 +75,7 @@ function DraftForm({
 
   function handleSave() {
     startTransition(async () => {
+      setErrorMessage(null);
       const outcome = await createHighlight({
         workspaceId: draft.workspaceId,
         channelId: draft.channelId,
@@ -87,7 +89,7 @@ function DraftForm({
         note: note.trim() || undefined,
       });
       if (outcome.ok) onSaved(ownSegments.length + outcome.skippedCount);
-      else showErrorToast(outcome.error);
+      else setErrorMessage(outcome.error);
     });
   }
 
@@ -149,7 +151,7 @@ function DraftForm({
         ))}
       </ul>
       <div className="grid gap-1.5">
-        <Label htmlFor="highlight-note" className="text-[13px] font-semibold text-muted-foreground">
+        <Label htmlFor="highlight-note" className="text-[0.8125rem] font-semibold text-muted-foreground">
           {t.channel.myNoteOptional}
         </Label>
         <Textarea
@@ -161,7 +163,7 @@ function DraftForm({
         />
       </div>
       <div className="grid gap-1.5">
-        <span className="text-[13px] font-semibold text-muted-foreground">{t.channel.label}</span>
+        <span className="text-[0.8125rem] font-semibold text-muted-foreground">{t.channel.label}</span>
         <SegmentedControl
           aria-label={t.channel.labelAria}
           value={label}
@@ -171,6 +173,7 @@ function DraftForm({
           options={LABELS.map((value) => ({ value, label: HIGHLIGHT_LABEL_META[value].label }))}
         />
       </div>
+      <FormAlert message={errorMessage} />
       <DialogFooter>
         <Button variant="secondary" onClick={onClose}>
           {t.common.cancel}

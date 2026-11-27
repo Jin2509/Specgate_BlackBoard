@@ -32,7 +32,7 @@ export function Toaster() {
           <MascotAvatar mood={toast.tone === "error" ? "worried" : "happy"} className="size-9 shrink-0" />
           <div
             className={cn(
-              "relative flex min-w-0 flex-1 items-start gap-1.5 rounded-2xl rounded-bl-sm border bg-popover py-2 pr-1.5 pl-3 text-[13px] text-popover-foreground shadow-lg",
+              "relative flex min-w-0 flex-1 items-start gap-1.5 rounded-2xl rounded-bl-sm border bg-popover py-2 pr-1.5 pl-3 text-[0.8125rem] text-popover-foreground shadow-lg",
               toast.tone === "error" ? "border-rejected-line" : "border-decided-line",
             )}
           >
